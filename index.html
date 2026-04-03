@@ -33,9 +33,10 @@
 body{font-family:var(--font-body);background:var(--bg);color:var(--text);min-height:100dvh;-webkit-font-smoothing:antialiased}
 
 /* ─── ヘッダー ─── */
-.app-header{padding:14px 20px 10px;background:var(--bg);position:sticky;top:0;z-index:100;border-bottom:1px solid var(--border)}
-.header-date{font-family:var(--font-accent);font-size:12px;color:var(--text-light);letter-spacing:.5px}
-.header-title{font-family:var(--font-accent);font-size:20px;font-weight:600;color:var(--text);margin-top:1px;display:flex;align-items:center;gap:7px}
+.app-header{padding:12px 20px 10px;background:var(--bg);position:sticky;top:0;z-index:100;border-bottom:1px solid var(--border)}
+.header-title{font-family:var(--font-accent);font-size:18px;font-weight:600;color:var(--text-light);display:flex;align-items:center;gap:7px;margin-bottom:2px}
+.header-icon{width:20px;height:20px;border-radius:5px;vertical-align:middle;flex-shrink:0}
+.header-date{font-family:var(--font-accent);font-size:22px;font-weight:600;color:var(--text);letter-spacing:.3px;line-height:1.2}
 
 /* ─── コンテンツ ─── */
 .app-content{padding-bottom:calc(var(--tabbar-h) + env(safe-area-inset-bottom,16px))}
@@ -136,6 +137,19 @@ body{font-family:var(--font-body);background:var(--bg);color:var(--text);min-hei
 .temp-min{color:#7BAFD4;font-size:18px}
 .weather-precip{font-size:12px;color:var(--text-light)}
 .weather-umbrella{margin-top:12px;padding-top:10px;border-top:1px solid var(--border);font-family:var(--font-accent);font-size:13px;color:var(--text-light)}
+.weather-hourly-row{display:flex;gap:4px;overflow-x:auto;padding:12px 0 2px;margin-top:10px;border-top:1px solid var(--border);-webkit-overflow-scrolling:touch}
+.weather-hourly-row::-webkit-scrollbar{display:none}
+.weather-hour-item{display:flex;flex-direction:column;align-items:center;gap:3px;min-width:54px;padding:6px 4px;border-radius:10px;background:rgba(255,255,255,.5);flex-shrink:0}
+.weather-hour-label{font-size:11px;color:var(--text-light);font-weight:600}
+.weather-hour-icon{font-size:18px;line-height:1}
+.weather-hour-temp{font-size:13px;font-weight:700;color:var(--text)}
+.weather-hour-precip{font-size:10px;color:var(--text-faint)}
+.weather-tomorrow{display:flex;align-items:center;gap:10px;padding:10px 0 2px;margin-top:10px;border-top:1px solid var(--border)}
+.weather-tomorrow-label{font-family:var(--font-accent);font-size:12px;color:var(--text-light);min-width:28px}
+.weather-tomorrow-icon{font-size:22px;line-height:1}
+.weather-tomorrow-desc{font-family:var(--font-accent);font-size:13px;color:var(--text);flex:1}
+.weather-tomorrow-temp{font-size:13px;font-weight:600}
+.weather-tomorrow-precip{font-size:12px;color:var(--text-faint)}
 .weather-loading{text-align:center;padding:28px;color:var(--text-faint);font-family:var(--font-accent);font-size:14px}
 
 /* ─── ホームカード ─── */
@@ -145,7 +159,10 @@ body{font-family:var(--font-body);background:var(--bg);color:var(--text);min-hei
 .home-card-arrow{color:var(--text-faint);font-size:16px}
 
 /* ─── ウィッシュリスト ─── */
-.wish-filter-row{display:flex;gap:8px;padding:0 2px;margin-bottom:14px}
+.wish-filter-row{display:flex;gap:8px;padding:0 2px;margin-bottom:10px}
+.wish-catfilter-row{display:flex;gap:6px;overflow-x:auto;padding:0 2px 12px;-webkit-overflow-scrolling:touch}
+.wish-catfilter-row::-webkit-scrollbar{display:none}
+.wish-catfilter-row .wish-filter-btn{flex-shrink:0;padding:5px 12px;font-size:11px}
 .wish-filter-btn{padding:6px 14px;border-radius:20px;border:1px solid var(--border);background:var(--bg);font-size:12px;font-family:var(--font-body);cursor:pointer;color:var(--text-light);transition:all .2s}
 .wish-filter-btn.active{background:var(--accent);border-color:var(--accent);color:#fff}
 .wish-card{background:var(--bg-card);border-radius:var(--radius);box-shadow:0 1px 4px var(--shadow),0 0 0 1px rgba(0,0,0,.02);margin-bottom:10px;display:flex;overflow:hidden}
@@ -230,8 +247,8 @@ body{font-family:var(--font-body);background:var(--bg);color:var(--text);min-hei
 <body>
 
 <div class="app-header">
+  <div class="header-title"><img src="apple-touch-icon.png" class="header-icon" alt=""> 灯だまり手帳</div>
   <div class="header-date" id="dateDisplay"></div>
-  <div class="header-title">🕯 灯だまり手帳</div>
 </div>
 
 <div class="app-content">
@@ -341,6 +358,7 @@ body{font-family:var(--font-body);background:var(--bg);color:var(--text);min-hei
         <button class="wish-filter-btn active" data-wf="want" onclick="setWishFilter('want')">💫 やりたい</button>
         <button class="wish-filter-btn" data-wf="done" onclick="setWishFilter('done')">✅ やった！</button>
       </div>
+      <div class="wish-catfilter-row" id="wishCatFilterRow"></div>
     </div>
     <div class="panel-body" id="wishList"></div>
     <button class="wish-fab show" id="wishFab" onclick="openModal('wish-add')">＋</button>
@@ -417,7 +435,7 @@ body{font-family:var(--font-body);background:var(--bg);color:var(--text);min-hei
 
 <!-- ローディング -->
 <div class="loading-overlay" id="loadingOverlay">
-  <div class="loading-inner">🕯<br>読み込み中…</div>
+  <div class="loading-inner"><img src="apple-touch-icon.png" style="width:48px;height:48px;border-radius:12px;display:block;margin:0 auto 10px"><br>読み込み中…</div>
 </div>
 
 <script>
@@ -439,7 +457,7 @@ const WISH_CAT_COLORS={
   'お出かけ':'#A8C4A0','食べもの':'#D4A9B0','体験':'#A8C9E8',
   '買いもの':'#C4BA96','創作':'#C0A8D4','部屋づくり':'#C4B49A','その他':'#B8AFA6'
 };
-const SHOP_CATS=['食品','日用品','画材','その他'];
+const SHOP_CATS=['食品・日用品','画材','その他'];
 
 function gt(){const n=new Date();return n.getFullYear()+'-'+String(n.getMonth()+1).padStart(2,'0')+'-'+String(n.getDate()).padStart(2,'0')}
 function esc(s){const e=document.createElement('div');e.textContent=s;return e.innerHTML}
@@ -456,7 +474,7 @@ let D={
   routineMessageDate:'',routineRarity:'',
   _loadedDate:'',
 };
-let curModal=null,curTaskType='once',curWishCat='その他',curShopCat='その他',curWishFilter='want';
+let curModal=null,curTaskType='once',curWishCat='その他',curShopCat='食品・日用品',curShopCatFilter='すべて',curWishFilter='want',curWishCatFilter='すべて';
 
 // ═══════════════════════════════════════════════
 // データ読み込み
@@ -517,7 +535,7 @@ document.querySelectorAll('.stab').forEach(t=>{
 // ═══════════════════════════════════════════════
 function updateDate(){
   const n=new Date(),ds=['日','月','火','水','木','金','土'];
-  document.getElementById('dateDisplay').textContent=`${n.getMonth()+1}月${n.getDate()}日（${ds[n.getDay()]}）`;
+  document.getElementById('dateDisplay').textContent=`${n.getFullYear()}年${n.getMonth()+1}月${n.getDate()}日（${ds[n.getDay()]}）`;
 }
 
 // ═══════════════════════════════════════════════
@@ -538,12 +556,22 @@ async function fetchWeather(){
     if(c&&Date.now()-c.ts<3600000&&c.date===gt())return c.data;
   }catch(e){}
   try{
-    const url=`https://api.open-meteo.com/v1/forecast?latitude=${W_LAT}&longitude=${W_LON}&daily=temperature_2m_max,temperature_2m_min,precipitation_probability_max,weathercode&timezone=Asia%2FTokyo&forecast_days=1`;
+    const url=`https://api.open-meteo.com/v1/forecast?latitude=${W_LAT}&longitude=${W_LON}&daily=temperature_2m_max,temperature_2m_min,precipitation_probability_max,weathercode&hourly=temperature_2m,precipitation_probability,weathercode&timezone=Asia%2FTokyo&forecast_days=2`;
     const res=await fetch(url);
     if(!res.ok)throw new Error();
     const j=await res.json();
     const d=j.daily;
-    const data={max:Math.round(d.temperature_2m_max[0]),min:Math.round(d.temperature_2m_min[0]),precip:d.precipitation_probability_max[0],code:d.weathercode[0]};
+    const today={max:Math.round(d.temperature_2m_max[0]),min:Math.round(d.temperature_2m_min[0]),precip:d.precipitation_probability_max[0],code:d.weathercode[0]};
+    const tomorrow={max:Math.round(d.temperature_2m_max[1]),min:Math.round(d.temperature_2m_min[1]),precip:d.precipitation_probability_max[1],code:d.weathercode[1]};
+    const nowH=new Date().getHours();
+    const todayStr=gt();
+    const hourly=[];
+    j.hourly.time.forEach((t,i)=>{
+      const dateStr=t.slice(0,10),hour=parseInt(t.slice(11,13));
+      if(dateStr===todayStr&&hour>nowH&&hour%3===0)
+        hourly.push({hour,temp:Math.round(j.hourly.temperature_2m[i]),precip:j.hourly.precipitation_probability[i],code:j.hourly.weathercode[i]});
+    });
+    const data={...today,hourly,tomorrow};
     localStorage.setItem(W_CACHE,JSON.stringify({ts:Date.now(),date:gt(),data}));
     return data;
   }catch(e){return null}
@@ -564,7 +592,7 @@ function renderWeather(data){
   }
   const w=WMO[data.code]||{l:'--',i:'🌡'};
   const umbrella=data.precip>=40;
-  el.innerHTML=`<div class="weather-main">
+  let h=`<div class="weather-main">
     <div class="weather-icon-large">${w.i}</div>
     <div class="weather-info">
       <div class="weather-desc">${w.l}</div>
@@ -572,6 +600,19 @@ function renderWeather(data){
       <div class="weather-precip">降水確率 ${data.precip}%</div>
     </div>
   </div>${umbrella?'<div class="weather-umbrella">☂️ 傘があると安心です</div>':''}`;
+  if(data.hourly&&data.hourly.length){
+    h+='<div class="weather-hourly-row">';
+    data.hourly.forEach(hh=>{
+      const hw=WMO[hh.code]||{i:'🌡'};
+      h+=`<div class="weather-hour-item"><div class="weather-hour-label">${hh.hour}時</div><div class="weather-hour-icon">${hw.i}</div><div class="weather-hour-temp">${hh.temp}°</div><div class="weather-hour-precip">${hh.precip}%</div></div>`;
+    });
+    h+='</div>';
+  }
+  if(data.tomorrow){
+    const tw=WMO[data.tomorrow.code]||{l:'--',i:'🌡'};
+    h+=`<div class="weather-tomorrow"><div class="weather-tomorrow-label">明日</div><div class="weather-tomorrow-icon">${tw.i}</div><div class="weather-tomorrow-desc">${tw.l}</div><div class="weather-tomorrow-temp"><span class="temp-max">${data.tomorrow.max}°</span><span class="temp-min"> / ${data.tomorrow.min}°</span></div><div class="weather-tomorrow-precip">${data.tomorrow.precip}%</div></div>`;
+  }
+  el.innerHTML=h;
 }
 
 // ═══════════════════════════════════════════════
@@ -803,12 +844,21 @@ function updateSage(){
 // ═══════════════════════════════════════════════
 function setWishFilter(f){
   curWishFilter=f;
-  document.querySelectorAll('.wish-filter-btn').forEach(b=>b.classList.toggle('active',b.dataset.wf===f));
+  document.querySelectorAll('.wish-filter-btn[data-wf]').forEach(b=>b.classList.toggle('active',b.dataset.wf===f));
   renderWish();
+}
+function renderWishCatFilter(){
+  const el=document.getElementById('wishCatFilterRow');if(!el)return;
+  const cats=['すべて',...WISH_CATS];
+  el.innerHTML=cats.map(c=>`<button class="wish-filter-btn ${c===curWishCatFilter?'active':''}" onclick="setWishCatFilter('${c}')">${c}</button>`).join('');
+}
+function setWishCatFilter(c){
+  curWishCatFilter=c;renderWishCatFilter();renderWish();
 }
 function renderWish(){
   const el=document.getElementById('wishList');
-  const items=D.wishItems.filter(w=>w.status===(curWishFilter==='want'?'want':'done'));
+  let items=D.wishItems.filter(w=>w.status===(curWishFilter==='want'?'want':'done'));
+  if(curWishCatFilter!=='すべて')items=items.filter(w=>w.category===curWishCatFilter);
   if(!items.length){
     el.innerHTML=`<div class="wish-empty">${curWishFilter==='want'?'ウィッシュリストはまだ空です。\n✨ やりたいことを追加してみましょう':'まだやった！がありません'}</div>`;
     return;
@@ -849,16 +899,28 @@ function delWish(id){
 // ═══════════════════════════════════════════════
 // 買い物リスト
 // ═══════════════════════════════════════════════
-let curShopCatFilter='すべて';
-function renderShopCatPills(){
-  const el=document.getElementById('shopCatPills');
-  const all=['すべて',...SHOP_CATS];
-  el.innerHTML=all.map(c=>`<button class="shop-cat-pill ${c===curShopCatFilter?'active':''}" onclick="setShopFilter('${c}')">${c}</button>`).join('');
+function normShopCat(cat){
+  if(cat==='食品'||cat==='日用品')return '食品・日用品';
+  return SHOP_CATS.includes(cat)?cat:'その他';
 }
-function setShopFilter(c){curShopCatFilter=c;renderShopCatPills();renderShop()}
+function shopCatMatch(item,filter){
+  if(filter==='すべて')return true;
+  const nc=normShopCat(item.category);
+  return nc===filter;
+}
+function renderShopPills(){
+  const el=document.getElementById('shopCatPills');if(!el)return;
+  const all=['すべて',...SHOP_CATS];
+  el.innerHTML=all.map(c=>`<button class="shop-cat-pill ${c===curShopCatFilter?'active':''}" onclick="selectShopPill('${c}')">${c}</button>`).join('');
+}
+function selectShopPill(c){
+  curShopCatFilter=c;
+  if(c!=='すべて')curShopCat=c;
+  renderShopPills();renderShop();
+}
 function renderShop(){
   const el=document.getElementById('shopContent');
-  const items=curShopCatFilter==='すべて'?D.shopItems:D.shopItems.filter(x=>x.category===curShopCatFilter);
+  const items=D.shopItems.filter(x=>shopCatMatch(x,curShopCatFilter));
   const unchecked=items.filter(x=>!x.checked);
   const checked=items.filter(x=>x.checked);
   const all=[...unchecked,...checked];
@@ -869,15 +931,12 @@ function renderShop(){
   if(showGroups){
     const order=[...SHOP_CATS];
     const grouped={};
-    all.forEach(x=>{if(!grouped[x.category])grouped[x.category]=[];grouped[x.category].push(x)});
+    all.forEach(x=>{const nc=normShopCat(x.category);if(!grouped[nc])grouped[nc]=[];grouped[nc].push(x)});
     order.forEach(cat=>{
       if(!grouped[cat]||!grouped[cat].length)return;
       h+=`<div class="shop-cat-header">${cat}</div>`;
       h+=renderShopGroup(grouped[cat]);
     });
-    if(grouped['その他']&&grouped['その他'].length&&!h.includes('その他')){
-      h+=`<div class="shop-cat-header">その他</div>`;h+=renderShopGroup(grouped['その他']);
-    }
   }else{
     h+=renderShopGroup(all);
   }
@@ -1056,23 +1115,13 @@ function showAiDiscardResult(data,item){
   document.getElementById('aiContent').innerHTML=h;document.getElementById('aiCloseBtn').style.display='';
 }
 
-// ═══════════════════════════════════════════════
-// 買い物 ── ショートカットカテゴリ
-// ═══════════════════════════════════════════════
-function initShopCatPills(){
-  const el=document.getElementById('shopCatPills');
-  el.innerHTML=SHOP_CATS.map(c=>`<button class="shop-cat-pill ${c===curShopCat?'active':''}" onclick="selectShopCat('${c}')">${c}</button>`).join('');
-}
-function selectShopCat(c){
-  curShopCat=c;
-  document.querySelectorAll('.shop-cat-pill').forEach(p=>p.classList.toggle('active',p.textContent===c));
-}
+
 
 // ═══════════════════════════════════════════════
 // 一括レンダー
 // ═══════════════════════════════════════════════
 function renderAll(){
-  updateDate();renderRoutines();renderTasks();renderDiscards();renderDiscardLog();renderLongTasks();renderRS();renderWish();renderShop();updateHomeSummary();
+  updateDate();renderRoutines();renderTasks();renderDiscards();renderDiscardLog();renderLongTasks();renderRS();renderWishCatFilter();renderWish();renderShopPills();renderShop();updateHomeSummary();
   const k=getGeminiKey();const el=document.getElementById('geminiKeyInput');if(el)el.value=k;
 }
 
@@ -1080,7 +1129,6 @@ function renderAll(){
 // 初期化
 // ═══════════════════════════════════════════════
 (async()=>{
-  initShopCatPills();
   try{await loadData()}catch(e){console.error('loadData error:',e)}
   renderAll();
   // 天気取得（非同期・レンダー後）
