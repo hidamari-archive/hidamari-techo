@@ -1425,18 +1425,21 @@ function saveIcalUrl(){
   btn.textContent='保存しました';setTimeout(()=>btn.textContent='保存',1500);
   loadCalendar();
 }
-async function fetchIcalText(url){
-  try{
-    const c=JSON.parse(localStorage.getItem(ICAL_CACHE)||'null');
-    if(c&&Date.now()-c.ts<1800000)return c.text;
-  }catch(e){}
+async function fetchIcalText(url,force=false){
+  if(!force){
+    try{
+      const c=JSON.parse(localStorage.getItem(ICAL_CACHE)||'null');
+      if(c&&Date.now()-c.ts<1800000)return c.text;
+    }catch(e){}
+  }
+  const fetchOpts=force?{cache:'no-cache'}:{};
   const proxies=[
     `https://corsproxy.io/?${encodeURIComponent(url)}`,
     `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(url)}`,
   ];
   for(const proxyUrl of proxies){
     try{
-      const res=await fetch(proxyUrl);
+      const res=await fetch(proxyUrl,fetchOpts);
       if(!res.ok)continue;
       const text=await res.text();
       if(text.includes('BEGIN:VCALENDAR')){
@@ -1504,17 +1507,19 @@ function renderCalEvents(items){
   ).join('');
 }
 function reloadCalendar(){
+  const btn=document.querySelector('#calCard button');
+  if(btn){btn.textContent='…';btn.disabled=true;}
   localStorage.removeItem(ICAL_CACHE);
-  loadCalendar();
+  loadCalendar(true).finally(()=>{if(btn){btn.textContent='↻';btn.disabled=false;}});
 }
-async function loadCalendar(){
+async function loadCalendar(force=false){
   const url=getIcalUrl();
   const card=document.getElementById('calCard');if(!card)return;
   if(!url){card.style.display='none';return}
   card.style.display='block';
   document.getElementById('calEvents').innerHTML='<div class="cal-empty" style="color:var(--text-faint)">読み込み中…</div>';
   try{
-    const text=await fetchIcalText(url);
+    const text=await fetchIcalText(url,force);
     renderCalEvents(getTodayEvents(parseIcal(text)));
   }catch(e){
     document.getElementById('calEvents').innerHTML='<div class="cal-err">予定を読み込めませんでした</div>';
