@@ -319,6 +319,7 @@ body{font-family:var(--font-body);background:var(--bg);color:var(--text);min-hei
       <div class="cal-card" id="calCard" style="display:none">
         <div class="cal-card-header">
           <div class="cal-card-title">📅 今日の予定</div>
+          <button onclick="reloadCalendar()" style="background:none;border:none;color:var(--text-faint);font-size:16px;cursor:pointer;padding:2px 4px" title="更新">↻</button>
         </div>
         <div id="calEvents"></div>
       </div>
@@ -1501,6 +1502,10 @@ function renderCalEvents(items){
       ?`<div class="cal-event"><span class="cal-allday-badge">終日</span><div class="cal-event-title">${esc(ev.title)}</div></div>`
       :`<div class="cal-event"><div class="cal-event-time">${ev.time}</div><div class="cal-event-dot"></div><div class="cal-event-title">${esc(ev.title)}</div></div>`
   ).join('');
+}
+function reloadCalendar(){
+  localStorage.removeItem(ICAL_CACHE);
+  loadCalendar();
 }
 async function loadCalendar(){
   const url=getIcalUrl();
