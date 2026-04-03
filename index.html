@@ -1427,14 +1427,24 @@ function saveIcalUrl(){
 async function fetchIcalText(url){
   try{
     const c=JSON.parse(localStorage.getItem(ICAL_CACHE)||'null');
-    if(c&&Date.now()-c.ts<1800000)return c.text; // 30分キャッシュ
+    if(c&&Date.now()-c.ts<1800000)return c.text;
   }catch(e){}
-  const proxy='https://api.allorigins.win/get?url='+encodeURIComponent(url);
-  const res=await fetch(proxy);if(!res.ok)throw new Error('fetch');
-  const j=await res.json();
-  const text=j.contents;if(!text)throw new Error('empty');
-  localStorage.setItem(ICAL_CACHE,JSON.stringify({ts:Date.now(),text}));
-  return text;
+  const proxies=[
+    `https://corsproxy.io/?${encodeURIComponent(url)}`,
+    `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(url)}`,
+  ];
+  for(const proxyUrl of proxies){
+    try{
+      const res=await fetch(proxyUrl);
+      if(!res.ok)continue;
+      const text=await res.text();
+      if(text.includes('BEGIN:VCALENDAR')){
+        localStorage.setItem(ICAL_CACHE,JSON.stringify({ts:Date.now(),text}));
+        return text;
+      }
+    }catch(e){continue}
+  }
+  throw new Error('fetch failed');
 }
 function unescIcal(s){return s.replace(/\\n/g,'\n').replace(/\\,/g,',').replace(/\\;/g,';').replace(/\\\\/g,'\\')}
 function parseIcal(text){
