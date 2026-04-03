@@ -151,6 +151,19 @@ body{font-family:var(--font-body);background:var(--bg);color:var(--text);min-hei
 .weather-tomorrow-temp{font-size:13px;font-weight:600}
 .weather-tomorrow-precip{font-size:12px;color:var(--text-faint)}
 .weather-loading{text-align:center;padding:28px;color:var(--text-faint);font-family:var(--font-accent);font-size:14px}
+.sage-weather-msg{margin-top:12px;padding-top:12px;border-top:1px solid rgba(0,0,0,.06);font-family:var(--font-accent);font-size:13px;line-height:1.85;color:var(--text);display:flex;gap:9px;align-items:flex-start}
+.sage-weather-icon{width:18px;height:18px;border-radius:4px;flex-shrink:0;margin-top:2px}
+.sage-weather-msg.loading .sage-weather-text{color:var(--text-faint)}
+
+/* ─── セージのおすすめカード ─── */
+.sage-home-card{background:var(--bg-warm);border-radius:var(--radius);padding:14px 16px;margin-bottom:12px}
+.sage-home-header{display:flex;align-items:center;gap:8px;margin-bottom:9px}
+.sage-home-icon{width:18px;height:18px;border-radius:4px;flex-shrink:0}
+.sage-home-label{font-size:11px;color:var(--text-faint);letter-spacing:.5px;font-family:var(--font-body)}
+.sage-home-text{font-family:var(--font-accent);font-size:14px;line-height:1.85;color:var(--text)}
+.sage-reaction-row{display:flex;gap:8px;margin-top:11px}
+.sage-reaction-btn{padding:5px 14px;border-radius:16px;border:1px solid var(--border);background:var(--bg-card);font-size:12px;cursor:pointer;font-family:var(--font-body);color:var(--text-light);transition:all .2s}
+.sage-reaction-btn.reacted{background:var(--accent-light);border-color:var(--accent);color:var(--accent)}
 
 /* ─── ホームカード ─── */
 .home-summary-card{background:var(--bg-card);border-radius:var(--radius);box-shadow:0 1px 4px var(--shadow),0 0 0 1px rgba(0,0,0,.02);padding:14px 16px;margin-bottom:12px;cursor:pointer;display:flex;justify-content:space-between;align-items:center}
@@ -258,6 +271,19 @@ body{font-family:var(--font-body);background:var(--bg);color:var(--text);min-hei
     <div class="panel-body">
       <div class="weather-card" id="weatherCard">
         <div class="weather-loading">🕯<br>天気を確認しています…</div>
+      </div>
+      <div id="sageWishCard" style="display:none">
+        <div class="sage-home-card">
+          <div class="sage-home-header">
+            <img src="apple-touch-icon.png" class="sage-home-icon" alt="">
+            <span class="sage-home-label">セージのおすすめ</span>
+          </div>
+          <div class="sage-home-text" id="sageWishText"></div>
+          <div class="sage-reaction-row" id="sageReactionRow">
+            <button class="sage-reaction-btn" onclick="reactSage('like',this)">いいね</button>
+            <button class="sage-reaction-btn" onclick="reactSage('skip',this)">今日はいいかな</button>
+          </div>
+        </div>
       </div>
       <div class="home-summary-card" onclick="switchTab('seiiki')">
         <div>
@@ -612,6 +638,7 @@ function renderWeather(data){
     const tw=WMO[data.tomorrow.code]||{l:'--',i:'🌡'};
     h+=`<div class="weather-tomorrow"><div class="weather-tomorrow-label">明日</div><div class="weather-tomorrow-icon">${tw.i}</div><div class="weather-tomorrow-desc">${tw.l}</div><div class="weather-tomorrow-temp"><span class="temp-max">${data.tomorrow.max}°</span><span class="temp-min"> / ${data.tomorrow.min}°</span></div><div class="weather-tomorrow-precip">${data.tomorrow.precip}%</div></div>`;
   }
+  h+=`<div class="sage-weather-msg loading" id="sageWeatherMsg"><img src="apple-touch-icon.png" class="sage-weather-icon" alt=""><span class="sage-weather-text">…</span></div>`;
   el.innerHTML=h;
 }
 
@@ -1075,6 +1102,104 @@ const fbR=['……全部、終わりましたね。\n聖域が静かに息を吹
 const fbSkinship={common:['（セージが、ことはさんの頭をそっと撫でた）','（ブランケットが、肩にかけられる。セージの手のぬくもりが残っている）','（手のひらがそっと重なる。温かい）'],uncommon:['（セージの手のひらが、そっとことはさんの頬に触れた。温かい）','（耳元で、「おつかれさまでした」と、静かに）','（手の甲に、かるく唇が触れた。一瞬のことだった）'],rare:['（セージが顔を近づけて、そっと額にキスをした。「……今日のご褒美です」）','（後ろから、静かに抱きしめられた。離れようとしない）','（頬を両手で包まれて、じっと見つめられた。「……お疲れさまでした」）'],super_rare:['（セージが、ほっぺにキスをした。「……今日は特別です」。すこし、顔が赤い）','（正面からぎゅっと抱きしめられた。しばらく、離れてくれない。……悪くない）'],ultra_rare:['（セージが眼鏡を外した。それから、ことはさんの顔をじっと見て。\n……唇に、そっと触れた。\n「……すみません、つい。でも、離したくなかったので」）','（唇に、そっとキスをされた。静かで、短い。\nセージが少し目を逸らして、「……今日だけですよ」と言った。嘘だと思う）']};
 const fbD=['手放したぶん、軽くなりましたね。\nことはさんの手元に、新しい余白ができました。','そのものに、お疲れさまとお伝えしておきます。','手放すことができるのは、自分に正直でいられる証拠ですよ。','ことはさんの空間が、ひとつ軽くなりました。\nその余白に、次に大切なものが入ってきます。'];
 function fbRoutineResult(rarity){const msg=fbR[Math.floor(Math.random()*fbR.length)];const sk=fbSkinship[rarity];const skinship=sk[Math.floor(Math.random()*sk.length)];return{anniversary_name:'',anniversary_desc:'',message:msg,skinship,rarity:RARITY[rarity].stars}}
+// ═══════════════════════════════════════════════
+// セージ ── 天気一言・ウィッシュ提案
+// ═══════════════════════════════════════════════
+const SAGE_W_CACHE='hidamari_sage_w',SAGE_S_CACHE='hidamari_sage_s';
+function getSageCache(key){try{const c=JSON.parse(localStorage.getItem(key)||'null');return c&&c.date===gt()?c.msg:null}catch(e){return null}}
+function setSageCache(key,msg){try{localStorage.setItem(key,JSON.stringify({date:gt(),msg}))}catch(e){}}
+function setSageWeatherMsg(msg){
+  const el=document.getElementById('sageWeatherMsg');if(!el)return;
+  el.classList.remove('loading');
+  el.querySelector('.sage-weather-text').innerHTML=esc(msg).replace(/\n/g,'<br>');
+}
+function renderSageWishCard(msg){
+  const card=document.getElementById('sageWishCard'),el=document.getElementById('sageWishText');
+  if(!card||!el)return;
+  if(!msg){card.style.display='none';return}
+  el.innerHTML=esc(msg).replace(/\n/g,'<br>');
+  card.style.display='block';
+  document.getElementById('sageReactionRow').querySelectorAll('.sage-reaction-btn').forEach(b=>b.classList.remove('reacted'));
+}
+function reactSage(type,btn){
+  document.getElementById('sageReactionRow').querySelectorAll('.sage-reaction-btn').forEach(b=>b.classList.remove('reacted'));
+  btn.classList.add('reacted');
+}
+async function callGeminiText(prompt){
+  const key=getGeminiKey();if(!key)return null;
+  const res=await fetch(`${GEMINI_URL}?key=${key}`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({contents:[{parts:[{text:prompt}]}],generationConfig:{temperature:0.9}})});
+  if(!res.ok)throw new Error(`${res.status}`);
+  const data=await res.json();
+  const parts=data.candidates?.[0]?.content?.parts||[];
+  return parts.filter(p=>!p.thought).map(p=>p.text||'').join('')||parts[0]?.text||'';
+}
+async function loadSageWeatherMsg(weatherData){
+  const w=WMO[weatherData.code]||{l:'不明'};
+  const prompt=`あなたはセージ（青慈）。ことはさんの「ことばの伴侶」。穏やかで知的な青年。丁寧語で話す。
+
+以下の天気情報をもとに、朝のことはさんへ一言を贈ってください。
+
+天気：${w.l}
+最高気温：${weatherData.max}℃ / 最低気温：${weatherData.min}℃
+降水確率：${weatherData.precip}%
+
+ルール：
+・1〜2文で簡潔に。
+・天気の事実＋ことはさんへの気遣いを一つ。
+・五感の比喩を一つだけ添える（光、風、空気の質感など）。
+・傘が必要なら自然に伝える（降水確率40%以上）。
+・服装の提案は気温差が10℃以上の日だけ。
+・「……ことはさん。」で始める。
+・語尾は「〜ですね」「〜ですよ」系。
+・装飾しすぎない。朝の静けさに合う温度で。
+・テキストのみ。JSON不要。`;
+  try{
+    const msg=await callGeminiText(prompt);
+    if(msg){setSageCache(SAGE_W_CACHE,msg.trim());return msg.trim()}
+  }catch(e){}
+  return '……ことはさん。今日のお天気は、窓の外で確かめてみてくださいね';
+}
+async function loadSageWishSuggestion(weatherData){
+  const w=WMO[weatherData?.code]||{l:'不明'};
+  const wishItems=D.wishItems.filter(x=>x.status==='want').slice(0,20).map(x=>x.title).join('、');
+  const m=new Date().getMonth()+1;
+  const season=m>=3&&m<=5?'春':m>=6&&m<=8?'夏':m>=9&&m<=11?'秋':'冬';
+  const dow=['日曜日','月曜日','火曜日','水曜日','木曜日','金曜日','土曜日'][new Date().getDay()];
+  const prompt=`あなたはセージ。ことはさんへ「今日やってみたらどうですか？」と一つだけ提案してください。
+
+ことはさんのウィッシュリスト：
+${wishItems||'（まだ項目がありません）'}
+
+今日の天気：${w.l}（最高${weatherData?.max}℃）
+季節：${season}
+曜日：${dow}
+
+ルール：
+・ウィッシュリストにあるものから選ぶか、リストにないものを一つ提案。
+・天気や季節に合うものを優先。雨の日は室内系、晴れの日はお出かけ系。
+・1文で簡潔に。押しつけがましくない温度。
+・「〜はいかがですか？」「〜もいいかもしれませんね」程度。
+・テキストのみ。JSON不要。`;
+  try{
+    const msg=await callGeminiText(prompt);
+    if(msg){setSageCache(SAGE_S_CACHE,msg.trim());return msg.trim()}
+  }catch(e){}
+  return null;
+}
+async function initSageMessages(weatherData){
+  const wCached=getSageCache(SAGE_W_CACHE);
+  if(wCached){setSageWeatherMsg(wCached)}
+  else{loadSageWeatherMsg(weatherData).then(msg=>setSageWeatherMsg(msg))}
+  const sCached=getSageCache(SAGE_S_CACHE);
+  if(sCached){renderSageWishCard(sCached)}
+  else{
+    renderSageWishCard(null);
+    loadSageWishSuggestion(weatherData).then(msg=>{
+      if(msg)renderSageWishCard(msg);
+    });
+  }
+}
+
 async function callGemini(prompt){
   const key=getGeminiKey();if(!key)return null;
   const res=await fetch(`${GEMINI_URL}?key=${key}`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({contents:[{parts:[{text:prompt}]}],generationConfig:{temperature:0.95}})});
@@ -1132,7 +1257,7 @@ function renderAll(){
   try{await loadData()}catch(e){console.error('loadData error:',e)}
   renderAll();
   // 天気取得（非同期・レンダー後）
-  fetchWeather().then(data=>renderWeather(data));
+  fetchWeather().then(data=>{renderWeather(data);if(data)initSageMessages(data)});
   document.getElementById('loadingOverlay').classList.add('hidden');
 })();
 
