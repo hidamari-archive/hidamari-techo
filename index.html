@@ -319,9 +319,10 @@ body{font-family:var(--font-body);background:var(--bg);color:var(--text);min-hei
       <div class="cal-card" id="calCard" style="display:none">
         <div class="cal-card-header">
           <div class="cal-card-title">📅 今日の予定</div>
-          <button onclick="reloadCalendar()" style="background:none;border:none;color:var(--text-faint);font-size:16px;cursor:pointer;padding:2px 4px" title="更新">↻</button>
+          <button onclick="reloadCalendar()" style="background:none;border:none;color:var(--text-faint);font-size:16px;cursor:pointer;padding:2px 6px" title="更新">↻</button>
         </div>
         <div id="calEvents"></div>
+        <div id="calUpdatedAt" style="font-size:10px;color:var(--text-faint);text-align:right;margin-top:6px;padding-top:4px;border-top:1px solid var(--border)"></div>
       </div>
       <div class="home-summary-card" onclick="switchTab('seiiki')">
         <div>
@@ -1432,21 +1433,23 @@ async function fetchIcalText(url,force=false){
       if(c&&Date.now()-c.ts<1800000)return c.text;
     }catch(e){}
   }
-  const fetchOpts=force?{cache:'no-cache'}:{};
+  // キャッシュバスター：プロキシのサーバーキャッシュも強制的に無効化
+  const targetUrl=force?url+(url.includes('?')?'&':'?')+'_cb='+Date.now():url;
   const proxies=[
-    `https://corsproxy.io/?${encodeURIComponent(url)}`,
-    `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(url)}`,
+    `https://corsproxy.io/?${encodeURIComponent(targetUrl)}`,
+    `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(targetUrl)}`,
   ];
   for(const proxyUrl of proxies){
     try{
-      const res=await fetch(proxyUrl,fetchOpts);
-      if(!res.ok)continue;
+      const res=await fetch(proxyUrl,{cache:'no-cache'});
+      if(!res.ok){console.warn('cal proxy not ok:',res.status,proxyUrl);continue}
       const text=await res.text();
       if(text.includes('BEGIN:VCALENDAR')){
         localStorage.setItem(ICAL_CACHE,JSON.stringify({ts:Date.now(),text}));
         return text;
       }
-    }catch(e){continue}
+      console.warn('cal: response does not contain VCALENDAR',text.slice(0,200));
+    }catch(e){console.warn('cal proxy error:',e,proxyUrl);continue}
   }
   throw new Error('fetch failed');
 }
@@ -1518,10 +1521,16 @@ async function loadCalendar(force=false){
   if(!url){card.style.display='none';return}
   card.style.display='block';
   document.getElementById('calEvents').innerHTML='<div class="cal-empty" style="color:var(--text-faint)">読み込み中…</div>';
+  console.log('loadCalendar start, force='+force);
   try{
     const text=await fetchIcalText(url,force);
+    console.log('loadCalendar: got ical, length='+text.length);
     renderCalEvents(getTodayEvents(parseIcal(text)));
+    const now=new Date();
+    const ts=`${now.getHours()}:${String(now.getMinutes()).padStart(2,'0')}`;
+    const el=document.getElementById('calUpdatedAt');if(el)el.textContent='最終更新 '+ts;
   }catch(e){
+    console.error('loadCalendar error:',e);
     document.getElementById('calEvents').innerHTML='<div class="cal-err">予定を読み込めませんでした</div>';
   }
 }
