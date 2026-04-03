@@ -613,7 +613,9 @@ async function loadData(){
     const {data}=await db.from('hk_routines').insert(seeds).select().order('sort_order');
     routines=data||[];
   }
-  D.routines=routines;
+  // 重複除去（同じtextのものは最初の1件だけ残す）
+  const seen=new Set();
+  D.routines=routines.filter(r=>{if(seen.has(r.text))return false;seen.add(r.text);return true});
   D.routineChecks=(cR.data||[]).map(c=>c.routine_id);
   D.todayTasks=(tR.data||[]).filter(t=>!t.done||t.done_date===today);
   D.todayDiscards=dR.data||[];
