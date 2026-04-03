@@ -251,6 +251,37 @@ body{font-family:var(--font-body);background:var(--bg);color:var(--text);min-hei
 .ai-rarity{font-size:13px;letter-spacing:3px;margin-bottom:5px}
 .ai-skinship-text{font-family:var(--font-accent);font-size:13px;line-height:1.85;color:var(--text-light);font-style:italic}
 
+/* ─── PINロック ─── */
+.pin-overlay{position:fixed;inset:0;background:var(--bg);z-index:1000;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 20px}
+.pin-logo{width:64px;height:64px;border-radius:16px;margin-bottom:14px;display:block}
+.pin-app-name{font-family:var(--font-accent);font-size:18px;color:var(--text);margin-bottom:4px}
+.pin-prompt{font-family:var(--font-accent);font-size:13px;color:var(--text-light);margin-bottom:28px;text-align:center}
+.pin-dots{display:flex;gap:16px;margin-bottom:32px;align-items:center;height:18px}
+.pin-dot{width:14px;height:14px;border-radius:50%;border:2px solid var(--border);transition:all .15s;flex-shrink:0}
+.pin-dot.filled{background:var(--accent);border-color:var(--accent)}
+.pin-dot.error{background:var(--danger);border-color:var(--danger)}
+@keyframes pinShake{0%,100%{transform:translateX(0)}20%,60%{transform:translateX(-7px)}40%,80%{transform:translateX(7px)}}
+.pin-dots.shake{animation:pinShake .38s ease}
+.pin-keypad{display:grid;grid-template-columns:repeat(3,72px);gap:12px}
+.pin-key{width:72px;height:72px;border-radius:50%;border:none;background:var(--bg-card);box-shadow:0 2px 6px var(--shadow);font-size:22px;font-family:var(--font-body);color:var(--text);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .15s;-webkit-tap-highlight-color:transparent}
+.pin-key:active{background:var(--accent-light)}
+.pin-key.del{font-size:18px;color:var(--text-light)}
+.pin-key.empty{background:none;box-shadow:none;pointer-events:none}
+.pin-error-msg{font-family:var(--font-accent);font-size:13px;color:var(--danger);margin-top:16px;min-height:18px;text-align:center}
+
+/* ─── カレンダー ─── */
+.cal-card{background:var(--bg-card);border-radius:var(--radius);box-shadow:0 1px 4px var(--shadow),0 0 0 1px rgba(0,0,0,.02);padding:14px 16px;margin-bottom:12px}
+.cal-card-header{display:flex;align-items:center;gap:8px;margin-bottom:10px}
+.cal-card-title{font-family:var(--font-accent);font-size:14px;font-weight:600;color:var(--text);flex:1}
+.cal-event{display:flex;gap:10px;padding:8px 0;border-bottom:1px solid var(--border);align-items:flex-start}
+.cal-event:last-child{border-bottom:none}
+.cal-event-time{font-size:12px;color:var(--text-light);min-width:44px;padding-top:2px;font-weight:600;flex-shrink:0}
+.cal-event-dot{width:7px;height:7px;border-radius:50%;background:var(--accent);flex-shrink:0;margin-top:5px}
+.cal-event-title{font-size:14px;color:var(--text);line-height:1.4;flex:1}
+.cal-allday-badge{font-size:10px;color:var(--text-faint);background:var(--accent-light);border-radius:4px;padding:2px 6px;flex-shrink:0;margin-top:2px}
+.cal-empty{font-family:var(--font-accent);font-size:13px;color:var(--text-faint);text-align:center;padding:10px 0}
+.cal-err{font-size:12px;color:var(--danger);text-align:center;padding:10px 0}
+
 /* ─── ローディング ─── */
 .loading-overlay{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;z-index:999}
 .loading-overlay.hidden{display:none}
@@ -284,6 +315,12 @@ body{font-family:var(--font-body);background:var(--bg);color:var(--text);min-hei
             <button class="sage-reaction-btn" onclick="reactSage('skip',this)">今日はいいかな</button>
           </div>
         </div>
+      </div>
+      <div class="cal-card" id="calCard" style="display:none">
+        <div class="cal-card-header">
+          <div class="cal-card-title">📅 今日の予定</div>
+        </div>
+        <div id="calEvents"></div>
       </div>
       <div class="home-summary-card" onclick="switchTab('seiiki')">
         <div>
@@ -365,6 +402,30 @@ body{font-family:var(--font-body);background:var(--bg);color:var(--text);min-hei
             <div><div style="font-size:14px;margin-bottom:3px">Gemini APIキー</div><div class="ai-key-note">灯だまり色帖・聖域と共通のキーをご利用いただけます。</div></div>
             <input id="geminiKeyInput" class="modal-input" type="password" placeholder="AIzaSy..." autocomplete="off" style="margin:0">
             <button class="modal-btn primary" onclick="saveGeminiKeyFn()" style="flex:none" id="geminiSaveBtn">保存</button>
+          </div>
+        </div>
+      </div>
+      <div class="section">
+        <div class="section-title" style="margin-bottom:10px">カレンダー連携</div>
+        <div class="card">
+          <div class="ai-key-wrap">
+            <div><div style="font-size:14px;margin-bottom:3px">Google カレンダー iCal URL</div>
+            <div class="ai-key-note">Google カレンダー → 設定 → 対象カレンダー →「iCal 形式の非公開のアドレス」をコピーして貼り付けてください。</div></div>
+            <input id="icalUrlInput" class="modal-input" type="password" placeholder="https://calendar.google.com/calendar/ical/..." autocomplete="off" style="margin:0">
+            <button class="modal-btn primary" onclick="saveIcalUrl()" style="flex:none" id="icalSaveBtn">保存</button>
+          </div>
+        </div>
+      </div>
+      <div class="section">
+        <div class="section-title" style="margin-bottom:10px">セキュリティ</div>
+        <div class="card">
+          <div class="settings-item" id="pinSettingRow">
+            <span id="pinSettingLabel">PIN未設定（タップで設定）</span>
+            <button class="reset-btn" style="background:var(--accent-light);color:var(--accent);border:none" onclick="startPinSetup()" id="pinSettingBtn">設定</button>
+          </div>
+          <div class="settings-item" id="pinRemoveRow" style="display:none">
+            <span>PINを解除</span>
+            <button class="reset-btn" onclick="removePin()">解除</button>
           </div>
         </div>
       </div>
@@ -457,6 +518,32 @@ body{font-family:var(--font-body);background:var(--bg);color:var(--text);min-hei
       <button class="modal-btn primary" onclick="submitModal()">追加</button>
     </div>
   </div>
+</div>
+
+<!-- PINロック -->
+<div class="pin-overlay" id="pinOverlay" style="display:none">
+  <img src="apple-touch-icon.png" class="pin-logo" alt="">
+  <div class="pin-app-name">灯だまり手帳</div>
+  <div class="pin-prompt" id="pinPrompt">PINを入力してください</div>
+  <div class="pin-dots" id="pinDots">
+    <div class="pin-dot" id="pd0"></div><div class="pin-dot" id="pd1"></div>
+    <div class="pin-dot" id="pd2"></div><div class="pin-dot" id="pd3"></div>
+  </div>
+  <div class="pin-keypad">
+    <button class="pin-key" onclick="pinKey('1')">1</button>
+    <button class="pin-key" onclick="pinKey('2')">2</button>
+    <button class="pin-key" onclick="pinKey('3')">3</button>
+    <button class="pin-key" onclick="pinKey('4')">4</button>
+    <button class="pin-key" onclick="pinKey('5')">5</button>
+    <button class="pin-key" onclick="pinKey('6')">6</button>
+    <button class="pin-key" onclick="pinKey('7')">7</button>
+    <button class="pin-key" onclick="pinKey('8')">8</button>
+    <button class="pin-key" onclick="pinKey('9')">9</button>
+    <div class="pin-key empty"></div>
+    <button class="pin-key" onclick="pinKey('0')">0</button>
+    <button class="pin-key del" onclick="pinDel()">⌫</button>
+  </div>
+  <div class="pin-error-msg" id="pinErrorMsg"></div>
 </div>
 
 <!-- ローディング -->
@@ -1103,6 +1190,88 @@ const fbSkinship={common:['（セージが、ことはさんの頭をそっと�
 const fbD=['手放したぶん、軽くなりましたね。\nことはさんの手元に、新しい余白ができました。','そのものに、お疲れさまとお伝えしておきます。','手放すことができるのは、自分に正直でいられる証拠ですよ。','ことはさんの空間が、ひとつ軽くなりました。\nその余白に、次に大切なものが入ってきます。'];
 function fbRoutineResult(rarity){const msg=fbR[Math.floor(Math.random()*fbR.length)];const sk=fbSkinship[rarity];const skinship=sk[Math.floor(Math.random()*sk.length)];return{anniversary_name:'',anniversary_desc:'',message:msg,skinship,rarity:RARITY[rarity].stars}}
 // ═══════════════════════════════════════════════
+// PINロック
+// ═══════════════════════════════════════════════
+const PIN_STORE='hidamari_pin';
+let pinBuf='',pinMode='unlock',pinStep1='';
+function getPin(){return localStorage.getItem(PIN_STORE)||''}
+function setPin(p){localStorage.setItem(PIN_STORE,p)}
+function initPin(){
+  if(!getPin()){document.getElementById('pinOverlay').style.display='none';return}
+  if(sessionStorage.getItem('hidamari_unlocked')==='1'){document.getElementById('pinOverlay').style.display='none';return}
+  pinMode='unlock';
+  document.getElementById('pinPrompt').textContent='PINを入力してください';
+  document.getElementById('pinOverlay').style.display='flex';
+  _pinDots();
+}
+function pinKey(d){
+  if(pinBuf.length>=4)return;
+  pinBuf+=d;_pinDots();
+  if(pinBuf.length===4)setTimeout(_pinProcess,80);
+}
+function pinDel(){if(pinBuf.length>0){pinBuf=pinBuf.slice(0,-1);_pinDots()}}
+function _pinDots(){
+  for(let i=0;i<4;i++){
+    const el=document.getElementById('pd'+i);
+    el.classList.toggle('filled',i<pinBuf.length);el.classList.remove('error');
+  }
+  document.getElementById('pinErrorMsg').textContent='';
+}
+function _pinError(msg){
+  pinBuf='';
+  const dots=document.getElementById('pinDots');
+  for(let i=0;i<4;i++)document.getElementById('pd'+i).classList.add('error');
+  dots.classList.add('shake');
+  setTimeout(()=>{dots.classList.remove('shake');_pinDots()},400);
+  document.getElementById('pinErrorMsg').textContent=msg;
+}
+function _pinProcess(){
+  if(pinMode==='unlock'){
+    if(pinBuf===getPin()){
+      sessionStorage.setItem('hidamari_unlocked','1');
+      document.getElementById('pinOverlay').style.display='none';pinBuf='';
+    }else{_pinError('PINが違います')}
+  }else if(pinMode==='setup1'){
+    pinStep1=pinBuf;pinBuf='';
+    document.getElementById('pinPrompt').textContent='もう一度入力してください';
+    _pinDots();pinMode='setup2';
+  }else if(pinMode==='setup2'){
+    if(pinBuf===pinStep1){
+      setPin(pinBuf);pinBuf='';pinStep1='';
+      sessionStorage.setItem('hidamari_unlocked','1');
+      document.getElementById('pinOverlay').style.display='none';
+      updatePinSettingUI();
+    }else{
+      _pinError('一致しませんでした');
+      pinMode='setup1';
+      setTimeout(()=>{document.getElementById('pinPrompt').textContent='新しいPINを入力してください'},450);
+    }
+  }
+}
+function startPinSetup(){
+  pinMode='setup1';pinBuf='';pinStep1='';
+  document.getElementById('pinPrompt').textContent='新しいPINを入力してください';
+  document.getElementById('pinErrorMsg').textContent='';
+  document.getElementById('pinOverlay').style.display='flex';
+  _pinDots();
+}
+function removePin(){
+  if(!confirm('PINロックを解除しますか？'))return;
+  localStorage.removeItem(PIN_STORE);sessionStorage.removeItem('hidamari_unlocked');
+  updatePinSettingUI();
+}
+function updatePinSettingUI(){
+  const hasPin=!!getPin();
+  const label=document.getElementById('pinSettingLabel');
+  const btn=document.getElementById('pinSettingBtn');
+  const removeRow=document.getElementById('pinRemoveRow');
+  if(!label)return;
+  label.textContent=hasPin?'PIN設定済み':'PIN未設定';
+  if(btn)btn.textContent=hasPin?'変更':'設定';
+  if(removeRow)removeRow.style.display=hasPin?'flex':'none';
+}
+
+// ═══════════════════════════════════════════════
 // セージ ── 天気一言・ウィッシュ提案
 // ═══════════════════════════════════════════════
 const SAGE_W_CACHE='hidamari_sage_w',SAGE_S_CACHE='hidamari_sage_s';
@@ -1243,21 +1412,119 @@ function showAiDiscardResult(data,item){
 
 
 // ═══════════════════════════════════════════════
+// Google カレンダー
+// ═══════════════════════════════════════════════
+const ICAL_CACHE='hidamari_ical';
+function getIcalUrl(){return localStorage.getItem('hidamari_ical_url')||''}
+function saveIcalUrl(){
+  const val=document.getElementById('icalUrlInput').value.trim();
+  localStorage.setItem('hidamari_ical_url',val);
+  localStorage.removeItem(ICAL_CACHE);
+  const btn=document.getElementById('icalSaveBtn');
+  btn.textContent='保存しました';setTimeout(()=>btn.textContent='保存',1500);
+  loadCalendar();
+}
+async function fetchIcalText(url){
+  try{
+    const c=JSON.parse(localStorage.getItem(ICAL_CACHE)||'null');
+    if(c&&Date.now()-c.ts<1800000)return c.text; // 30分キャッシュ
+  }catch(e){}
+  const proxy='https://api.allorigins.win/get?url='+encodeURIComponent(url);
+  const res=await fetch(proxy);if(!res.ok)throw new Error('fetch');
+  const j=await res.json();
+  const text=j.contents;if(!text)throw new Error('empty');
+  localStorage.setItem(ICAL_CACHE,JSON.stringify({ts:Date.now(),text}));
+  return text;
+}
+function unescIcal(s){return s.replace(/\\n/g,'\n').replace(/\\,/g,',').replace(/\\;/g,';').replace(/\\\\/g,'\\')}
+function parseIcal(text){
+  const events=[];
+  const unfolded=text.replace(/\r\n/g,'\n').replace(/\r/g,'\n').replace(/\n[ \t]/g,'');
+  const lines=unfolded.split('\n');
+  let ev=null;
+  for(const line of lines){
+    if(line==='BEGIN:VEVENT'){ev={};continue}
+    if(line==='END:VEVENT'&&ev){events.push(ev);ev=null;continue}
+    if(!ev)continue;
+    const ci=line.indexOf(':');if(ci<0)continue;
+    const rawKey=line.slice(0,ci),val=line.slice(ci+1);
+    const baseKey=rawKey.split(';')[0].toUpperCase();
+    ev[baseKey]={value:val};
+  }
+  return events;
+}
+function icalToDate(dtObj){
+  if(!dtObj)return null;
+  const v=dtObj.value.trim();
+  if(/^\d{8}$/.test(v))return{allDay:true,str:v.slice(0,4)+'-'+v.slice(4,6)+'-'+v.slice(6,8)};
+  const y=+v.slice(0,4),mo=+v.slice(4,6)-1,d=+v.slice(6,8),h=+v.slice(9,11),mi=+v.slice(11,13);
+  const date=v.endsWith('Z')?new Date(Date.UTC(y,mo,d,h,mi)):new Date(y,mo,d,h,mi);
+  return{allDay:false,date};
+}
+function getTodayEvents(events){
+  const todayStr=gt(),todayD=todayStr.replace(/-/g,'');
+  const result=[];
+  for(const ev of events){
+    const sum=unescIcal(ev['SUMMARY']?.value||'（タイトルなし）');
+    const dtS=icalToDate(ev['DTSTART']);if(!dtS)continue;
+    if(dtS.allDay){
+      const dtE=icalToDate(ev['DTEND']);
+      const eStr=(dtE?.str||dtS.str).replace(/-/g,'');
+      if(todayD>=dtS.str.replace(/-/g,'')&&todayD<eStr)
+        result.push({title:sum,allDay:true,sort:-1});
+    }else{
+      const d=dtS.date;
+      const ds=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+      if(ds===todayStr){
+        const h=d.getHours(),m=d.getMinutes();
+        result.push({title:sum,allDay:false,time:`${h}:${String(m).padStart(2,'0')}`,sort:h*60+m});
+      }
+    }
+  }
+  return result.sort((a,b)=>a.sort-b.sort);
+}
+function renderCalEvents(items){
+  const el=document.getElementById('calEvents');if(!el)return;
+  if(!items.length){el.innerHTML='<div class="cal-empty">今日の予定はありません</div>';return}
+  el.innerHTML=items.map(ev=>
+    ev.allDay
+      ?`<div class="cal-event"><span class="cal-allday-badge">終日</span><div class="cal-event-title">${esc(ev.title)}</div></div>`
+      :`<div class="cal-event"><div class="cal-event-time">${ev.time}</div><div class="cal-event-dot"></div><div class="cal-event-title">${esc(ev.title)}</div></div>`
+  ).join('');
+}
+async function loadCalendar(){
+  const url=getIcalUrl();
+  const card=document.getElementById('calCard');if(!card)return;
+  if(!url){card.style.display='none';return}
+  card.style.display='block';
+  document.getElementById('calEvents').innerHTML='<div class="cal-empty" style="color:var(--text-faint)">読み込み中…</div>';
+  try{
+    const text=await fetchIcalText(url);
+    renderCalEvents(getTodayEvents(parseIcal(text)));
+  }catch(e){
+    document.getElementById('calEvents').innerHTML='<div class="cal-err">予定を読み込めませんでした</div>';
+  }
+}
+
+// ═══════════════════════════════════════════════
 // 一括レンダー
 // ═══════════════════════════════════════════════
 function renderAll(){
   updateDate();renderRoutines();renderTasks();renderDiscards();renderDiscardLog();renderLongTasks();renderRS();renderWishCatFilter();renderWish();renderShopPills();renderShop();updateHomeSummary();
   const k=getGeminiKey();const el=document.getElementById('geminiKeyInput');if(el)el.value=k;
+  const iu=getIcalUrl();const iel=document.getElementById('icalUrlInput');if(iel)iel.value=iu;
+  updatePinSettingUI();
 }
 
 // ═══════════════════════════════════════════════
 // 初期化
 // ═══════════════════════════════════════════════
 (async()=>{
+  initPin();
   try{await loadData()}catch(e){console.error('loadData error:',e)}
   renderAll();
-  // 天気取得（非同期・レンダー後）
   fetchWeather().then(data=>{renderWeather(data);if(data)initSageMessages(data)});
+  loadCalendar();
   document.getElementById('loadingOverlay').classList.add('hidden');
 })();
 
