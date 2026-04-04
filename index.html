@@ -293,6 +293,34 @@ body{font-family:var(--font-body);background:var(--bg);color:var(--text);min-hei
 .cal-empty{font-family:var(--font-accent);font-size:12px;color:var(--text-faint);text-align:center;padding:6px 0}
 .cal-err{font-size:12px;color:var(--danger);text-align:center;padding:10px 0}
 
+/* ─── ニュースタブ ─── */
+.news-header{display:flex;align-items:center;padding:8px 12px;border-bottom:1px solid var(--border);background:var(--bg)}
+.news-header-title{font-family:var(--font-accent);font-size:12px;color:var(--text-light);flex:1;letter-spacing:.3px}
+.news-refresh-btn{background:none;border:none;color:var(--text-faint);font-size:17px;cursor:pointer;padding:2px 4px;line-height:1}
+.news-cat-row{display:flex;gap:6px;overflow-x:auto;padding:8px 12px;border-bottom:1px solid var(--border);background:var(--bg);-webkit-overflow-scrolling:touch}
+.news-cat-row::-webkit-scrollbar{display:none}
+.news-cat-btn{padding:4px 12px;border-radius:14px;border:1px solid var(--border);background:var(--bg);font-size:11px;font-family:var(--font-body);cursor:pointer;color:var(--text-light);white-space:nowrap;flex-shrink:0;transition:all .2s}
+.news-cat-btn.active{background:var(--accent);border-color:var(--accent);color:#fff}
+.news-card{background:var(--bg-card);border-radius:var(--radius-sm);box-shadow:0 1px 3px var(--shadow),0 0 0 1px rgba(0,0,0,.02);padding:10px 12px;margin-bottom:6px;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:opacity .15s;display:block}
+.news-card:active{opacity:.75}
+.news-meta-row{display:flex;align-items:center;gap:5px;margin-bottom:4px}
+.news-source{font-size:10px;color:var(--text-faint)}
+.news-cat-badge{font-size:9px;color:var(--text-faint);background:var(--bg-warm);border-radius:3px;padding:1px 5px;letter-spacing:.2px;flex-shrink:0}
+.news-time{font-size:10px;color:var(--text-faint);margin-left:auto;white-space:nowrap}
+.news-title{font-family:var(--font-accent);font-size:13px;color:var(--text);line-height:1.55}
+.news-empty{text-align:center;padding:36px 20px;color:var(--text-faint);font-family:var(--font-accent);font-size:13px;line-height:2.2}
+.news-feed-err{font-size:11px;color:var(--text-faint);text-align:center;padding:6px 0}
+.news-manage-btn{display:block;width:100%;padding:10px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--bg);color:var(--text-light);font-size:12px;font-family:var(--font-body);cursor:pointer;text-align:center}
+.feed-manage-card{background:var(--bg-card);border-radius:var(--radius);box-shadow:0 1px 4px var(--shadow),0 0 0 1px rgba(0,0,0,.02);padding:14px;margin-top:8px}
+.feed-manage-ttl{font-family:var(--font-accent);font-size:13px;font-weight:600;color:var(--text);margin-bottom:8px}
+.feed-row{display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid var(--border)}
+.feed-row:last-of-type{border-bottom:none}
+.feed-row-info{flex:1;min-width:0}
+.feed-row-name{font-size:13px;color:var(--text);margin-bottom:1px}
+.feed-row-url{font-size:10px;color:var(--text-faint);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.feed-cat-tag{font-size:9px;color:var(--text-faint);background:var(--bg-warm);border-radius:3px;padding:1px 6px;flex-shrink:0}
+.feed-add-form{display:flex;flex-direction:column;gap:7px;margin-top:12px;padding-top:12px;border-top:1px solid var(--border)}
+.feed-add-label{font-size:11px;color:var(--text-light);font-family:var(--font-accent)}
 /* ─── ローディング ─── */
 .loading-overlay{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;z-index:999}
 .loading-overlay.hidden{display:none}
@@ -468,6 +496,20 @@ body{font-family:var(--font-body);background:var(--bg);color:var(--text);min-hei
     <button class="wish-fab show" id="wishFab" onclick="openModal('wish-add')">＋</button>
   </div>
 
+  <!-- ニュースタブ -->
+  <div class="tab-panel" id="tab-news">
+    <div class="news-header">
+      <span class="news-header-title">📰 ニュース</span>
+      <button class="news-refresh-btn" onclick="refreshNews()" title="更新">↺</button>
+    </div>
+    <div class="news-cat-row" id="newsCatRow"></div>
+    <div class="panel-body" id="newsList"></div>
+    <div class="panel-body" id="newsFeedManage" style="display:none"></div>
+    <div class="panel-body" style="padding-top:0">
+      <button class="news-manage-btn" onclick="toggleFeedManage()">⚙ フィード管理</button>
+    </div>
+  </div>
+
   <!-- 買い物タブ -->
   <div class="tab-panel" id="tab-shop">
     <div class="shop-add-bar">
@@ -489,6 +531,9 @@ body{font-family:var(--font-body);background:var(--bg);color:var(--text);min-hei
   </button>
   <button class="btab" data-tab="seiiki" onclick="switchTab('seiiki')">
     <span class="btab-icon">☑</span><span class="btab-label">聖域</span>
+  </button>
+  <button class="btab" data-tab="news" onclick="switchTab('news')">
+    <span class="btab-icon">📰</span><span class="btab-label">ニュース</span>
   </button>
   <button class="btab" data-tab="wish" onclick="switchTab('wish')">
     <span class="btab-icon">✨</span><span class="btab-label">ウィッシュ</span>
@@ -652,6 +697,7 @@ function switchTab(tab){
   document.querySelectorAll('.btab').forEach(b=>b.classList.toggle('active',b.dataset.tab===tab));
   document.getElementById('tab-'+tab).classList.add('active');
   document.getElementById('wishFab').classList.toggle('show',tab==='wish');
+  if(tab==='news'&&!_newsLoaded)loadNews();
 }
 document.querySelectorAll('.stab').forEach(t=>{
   t.addEventListener('click',()=>{
@@ -1663,6 +1709,202 @@ function renderAll(){
   const k=getGeminiKey();const el=document.getElementById('geminiKeyInput');if(el)el.value=k;
   const iu=getIcalUrl();const iel=document.getElementById('icalUrlInput');if(iel)iel.value=iu;
   updatePinSettingUI();
+}
+
+// ═══════════════════════════════════════════════
+// ニュース
+// ═══════════════════════════════════════════════
+const DEFAULT_FEEDS=[
+  {id:'f1',name:'美術手帖',url:'https://bijutsutecho.com/magazine/feed',cat:'美術'},
+  {id:'f2',name:'Tokyo Art Beat',url:'https://www.tokyoartbeat.com/feed',cat:'美術'},
+  {id:'f3',name:'ITmedia AI+',url:'https://rss.itmedia.co.jp/rss/2.0/aiplus.xml',cat:'AI'},
+  {id:'f4',name:'Gigazine',url:'https://gigazine.net/news/rss_2.0/',cat:'AI'},
+  {id:'f5',name:'流山市',url:'https://www.city.nagareyama.chiba.jp/rss.xml',cat:'地域'},
+  {id:'f6',name:'柏市',url:'https://www.city.kashiwa.lg.jp/rss.xml',cat:'地域'},
+];
+const NEWS_CATS=['すべて','美術','AI','地域'];
+const RSS2JSON='https://api.rss2json.com/v1/api.json?count=15&rss_url=';
+let _newsLoaded=false;
+let _newsCat='すべて';
+let _newsItems=[];
+let _feedManageOpen=false;
+
+function getFeeds(){
+  try{const s=localStorage.getItem('hidamari_feeds');return s?JSON.parse(s):DEFAULT_FEEDS;}
+  catch(e){return DEFAULT_FEEDS;}
+}
+function saveFeeds(feeds){localStorage.setItem('hidamari_feeds',JSON.stringify(feeds));}
+
+function newsCache(id){return'hidamari_news_'+id;}
+function getNewsCache(id){
+  try{
+    const s=localStorage.getItem(newsCache(id));
+    if(!s)return null;
+    const c=JSON.parse(s);
+    if(Date.now()-c.ts>30*60*1000)return null;
+    return c.items;
+  }catch(e){return null;}
+}
+function setNewsCache(id,items){
+  try{localStorage.setItem(newsCache(id),JSON.stringify({ts:Date.now(),items}));}catch(e){}
+}
+
+async function fetchFeed(feed){
+  const cached=getNewsCache(feed.id);
+  if(cached)return{feed,items:cached,ok:true};
+  try{
+    const r=await fetch(RSS2JSON+encodeURIComponent(feed.url));
+    const j=await r.json();
+    if(j.status==='ok'&&j.items){
+      const items=j.items.slice(0,15).map(i=>({
+        title:i.title||'',
+        url:i.link||'',
+        pubDate:i.pubDate||'',
+        source:feed.name,
+        cat:feed.cat,
+      }));
+      setNewsCache(feed.id,items);
+      return{feed,items,ok:true};
+    }
+    return{feed,items:[],ok:false};
+  }catch(e){
+    return{feed,items:[],ok:false};
+  }
+}
+
+async function loadNews(){
+  _newsLoaded=true;
+  const list=document.getElementById('newsList');
+  list.innerHTML='<div class="news-empty">読み込み中…</div>';
+  renderNewsCats();
+  const feeds=getFeeds();
+  const results=await Promise.all(feeds.map(f=>fetchFeed(f)));
+  _newsItems=[];
+  results.forEach(r=>{
+    if(r.ok)_newsItems.push(...r.items);
+  });
+  _newsItems.sort((a,b)=>{
+    const da=a.pubDate?new Date(a.pubDate):0;
+    const db=b.pubDate?new Date(b.pubDate):0;
+    return db-da;
+  });
+  renderNews();
+  if(results.some(r=>!r.ok)){
+    const errDiv=document.createElement('div');
+    errDiv.className='news-feed-err';
+    const failedNames=results.filter(r=>!r.ok).map(r=>r.feed.name).join('、');
+    errDiv.textContent='読み込めなかったフィード：'+failedNames;
+    list.prepend(errDiv);
+  }
+}
+
+function renderNewsCats(){
+  const row=document.getElementById('newsCatRow');
+  if(!row)return;
+  row.innerHTML=NEWS_CATS.map(c=>`<button class="news-cat-btn${c===_newsCat?' active':''}" onclick="setNewsCat('${c}')">${c}</button>`).join('');
+}
+
+function setNewsCat(cat){
+  _newsCat=cat;
+  renderNewsCats();
+  renderNews();
+}
+
+function renderNews(){
+  const list=document.getElementById('newsList');
+  if(!list)return;
+  const items=_newsCat==='すべて'?_newsItems:_newsItems.filter(i=>i.cat===_newsCat);
+  if(items.length===0){
+    list.innerHTML='<div class="news-empty">ニュースがありません</div>';
+    return;
+  }
+  list.innerHTML=items.map(i=>`
+    <div class="news-card" onclick="openNewsItem('${encodeURIComponent(i.url)}')">
+      <div class="news-meta-row">
+        <span class="news-source">${esc(i.source)}</span>
+        <span class="news-cat-badge">${esc(i.cat)}</span>
+        <span class="news-time">${timeAgo(i.pubDate)}</span>
+      </div>
+      <div class="news-title">${esc(i.title)}</div>
+    </div>`).join('');
+}
+
+function openNewsItem(encodedUrl){
+  const url=decodeURIComponent(encodedUrl);
+  if(url&&(url.startsWith('http://')||url.startsWith('https://')))window.open(url,'_blank');
+}
+
+function refreshNews(){
+  const feeds=getFeeds();
+  feeds.forEach(f=>{try{localStorage.removeItem(newsCache(f.id));}catch(e){}});
+  _newsLoaded=false;
+  loadNews();
+}
+
+function toggleFeedManage(){
+  _feedManageOpen=!_feedManageOpen;
+  document.getElementById('newsFeedManage').style.display=_feedManageOpen?'block':'none';
+  if(_feedManageOpen)renderFeedManage();
+}
+
+function renderFeedManage(){
+  const el=document.getElementById('newsFeedManage');
+  if(!el)return;
+  const feeds=getFeeds();
+  const catOpts=NEWS_CATS.filter(c=>c!=='すべて').map(c=>`<option value="${c}">${c}</option>`).join('');
+  el.innerHTML=`
+    <div class="feed-manage-card">
+      <div class="feed-manage-ttl">登録フィード</div>
+      ${feeds.map(f=>`
+        <div class="feed-row">
+          <div class="feed-row-info">
+            <div class="feed-row-name">${esc(f.name)}</div>
+            <div class="feed-row-url">${esc(f.url)}</div>
+          </div>
+          <span class="feed-cat-tag">${esc(f.cat)}</span>
+          <button class="item-delete" onclick="deleteFeed('${f.id}')">✕</button>
+        </div>`).join('')}
+      <div class="feed-add-form">
+        <div class="feed-add-label">フィードを追加</div>
+        <input class="modal-input" id="feedAddName" type="text" placeholder="名前" style="margin-bottom:0">
+        <input class="modal-input" id="feedAddUrl" type="url" placeholder="RSS URL" style="margin-bottom:0">
+        <select class="modal-input" id="feedAddCat" style="margin-bottom:0">${catOpts}</select>
+        <button class="modal-btn primary" onclick="addFeed()" style="align-self:flex-end">追加</button>
+      </div>
+    </div>`;
+}
+
+function addFeed(){
+  const name=(document.getElementById('feedAddName').value||'').trim();
+  const url=(document.getElementById('feedAddUrl').value||'').trim();
+  const cat=document.getElementById('feedAddCat').value;
+  if(!name||!url)return;
+  const feeds=getFeeds();
+  const id='f'+Date.now();
+  feeds.push({id,name,url,cat});
+  saveFeeds(feeds);
+  renderFeedManage();
+}
+
+function deleteFeed(id){
+  const feeds=getFeeds().filter(f=>f.id!==id);
+  saveFeeds(feeds);
+  try{localStorage.removeItem(newsCache(id));}catch(e){}
+  renderFeedManage();
+  _newsLoaded=false;
+  loadNews();
+}
+
+function timeAgo(dateStr){
+  if(!dateStr)return'';
+  const d=new Date(dateStr);
+  if(isNaN(d))return'';
+  const diff=Math.floor((Date.now()-d)/1000);
+  if(diff<60)return'たった今';
+  if(diff<3600)return Math.floor(diff/60)+'分前';
+  if(diff<86400)return Math.floor(diff/3600)+'時間前';
+  if(diff<86400*7)return Math.floor(diff/86400)+'日前';
+  return`${d.getMonth()+1}/${d.getDate()}`;
 }
 
 // ═══════════════════════════════════════════════
