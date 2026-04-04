@@ -500,14 +500,12 @@ body{font-family:var(--font-body);background:var(--bg);color:var(--text);min-hei
   <div class="tab-panel" id="tab-news">
     <div class="news-header">
       <span class="news-header-title">📰 ニュース</span>
+      <button class="news-refresh-btn" onclick="toggleFeedManage()" id="newsManageBtn" title="フィード管理">⚙</button>
       <button class="news-refresh-btn" onclick="refreshNews()" title="更新">↺</button>
     </div>
+    <div id="newsFeedManage" style="display:none"></div>
     <div class="news-cat-row" id="newsCatRow"></div>
     <div class="panel-body" id="newsList"></div>
-    <div class="panel-body" id="newsFeedManage" style="display:none"></div>
-    <div class="panel-body" style="padding-top:0">
-      <button class="news-manage-btn" onclick="toggleFeedManage()">⚙ フィード管理</button>
-    </div>
   </div>
 
   <!-- 買い物タブ -->
@@ -1722,7 +1720,11 @@ const DEFAULT_FEEDS=[
   {id:'f5',name:'流山市',url:'https://www.city.nagareyama.chiba.jp/rss.xml',cat:'地域'},
   {id:'f6',name:'柏市',url:'https://www.city.kashiwa.lg.jp/rss.xml',cat:'地域'},
 ];
-const NEWS_CATS=['すべて','美術','AI','地域'];
+function getNewsCats(){
+  const feeds=getFeeds();
+  const cats=[...new Set(feeds.map(f=>f.cat).filter(Boolean))];
+  return['すべて',...cats];
+}
 const CORS_PROXY='https://corsproxy.io/?';
 let _newsLoaded=false;
 let _newsCat='すべて';
@@ -1829,7 +1831,9 @@ async function loadNews(){
 function renderNewsCats(){
   const row=document.getElementById('newsCatRow');
   if(!row)return;
-  row.innerHTML=NEWS_CATS.map(c=>`<button class="news-cat-btn${c===_newsCat?' active':''}" onclick="setNewsCat('${c}')">${c}</button>`).join('');
+  const cats=getNewsCats();
+  if(!cats.includes(_newsCat))_newsCat='すべて';
+  row.innerHTML=cats.map(c=>`<button class="news-cat-btn${c===_newsCat?' active':''}" onclick="setNewsCat('${c}')">${c}</button>`).join('');
 }
 
 function setNewsCat(cat){
@@ -1872,6 +1876,8 @@ function refreshNews(){
 function toggleFeedManage(){
   _feedManageOpen=!_feedManageOpen;
   document.getElementById('newsFeedManage').style.display=_feedManageOpen?'block':'none';
+  const btn=document.getElementById('newsManageBtn');
+  if(btn)btn.style.color=_feedManageOpen?'var(--accent)':'';
   if(_feedManageOpen)renderFeedManage();
 }
 
@@ -1879,39 +1885,47 @@ function renderFeedManage(){
   const el=document.getElementById('newsFeedManage');
   if(!el)return;
   const feeds=getFeeds();
-  const catOpts=NEWS_CATS.filter(c=>c!=='すべて').map(c=>`<option value="${c}">${c}</option>`).join('');
+  const existingCats=getNewsCats().filter(c=>c!=='すべて');
+  const datalist=existingCats.map(c=>`<option value="${c}">`).join('');
   el.innerHTML=`
-    <div class="feed-manage-card">
-      <div class="feed-manage-ttl">登録フィード</div>
-      ${feeds.map(f=>`
-        <div class="feed-row">
-          <div class="feed-row-info">
-            <div class="feed-row-name">${esc(f.name)}</div>
-            <div class="feed-row-url">${esc(f.url)}</div>
-          </div>
-          <span class="feed-cat-tag">${esc(f.cat)}</span>
-          <button class="item-delete" onclick="deleteFeed('${f.id}')">✕</button>
-        </div>`).join('')}
-      <div class="feed-add-form">
-        <div class="feed-add-label">フィードを追加</div>
+    <div class="feed-manage-card" style="margin:8px 12px 0;border-radius:var(--radius);background:var(--bg-card);box-shadow:0 1px 4px var(--shadow);padding:12px 14px">
+      <div class="feed-add-form" style="margin-top:0;padding-top:0;border-top:none">
+        <div class="feed-manage-ttl">フィードを追加</div>
+        <datalist id="feedCatList">${datalist}</datalist>
         <input class="modal-input" id="feedAddName" type="text" placeholder="名前" style="margin-bottom:0">
         <input class="modal-input" id="feedAddUrl" type="url" placeholder="RSS URL" style="margin-bottom:0">
-        <select class="modal-input" id="feedAddCat" style="margin-bottom:0">${catOpts}</select>
+        <input class="modal-input" id="feedAddCat" type="text" placeholder="カテゴリ（例：美術）" list="feedCatList" style="margin-bottom:0">
         <button class="modal-btn primary" onclick="addFeed()" style="align-self:flex-end">追加</button>
       </div>
+      ${feeds.length>0?`
+      <div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border)">
+        <div class="feed-manage-ttl" style="margin-bottom:6px">登録済みフィード</div>
+        ${feeds.map(f=>`
+          <div class="feed-row">
+            <div class="feed-row-info">
+              <div class="feed-row-name">${esc(f.name)}</div>
+              <div class="feed-row-url">${esc(f.url)}</div>
+            </div>
+            <span class="feed-cat-tag">${esc(f.cat)}</span>
+            <button class="item-delete" onclick="deleteFeed('${f.id}')">✕</button>
+          </div>`).join('')}
+      </div>`:''}
     </div>`;
 }
 
 function addFeed(){
   const name=(document.getElementById('feedAddName').value||'').trim();
   const url=(document.getElementById('feedAddUrl').value||'').trim();
-  const cat=document.getElementById('feedAddCat').value;
+  const cat=(document.getElementById('feedAddCat').value||'').trim()||'その他';
   if(!name||!url)return;
   const feeds=getFeeds();
   const id='f'+Date.now();
   feeds.push({id,name,url,cat});
   saveFeeds(feeds);
   renderFeedManage();
+  renderNewsCats();
+  _newsLoaded=false;
+  loadNews();
 }
 
 function deleteFeed(id){
