@@ -123,13 +123,13 @@ body{font-family:var(--font-body);background:var(--bg);color:var(--text);min-hei
 .log-summary{font-family:var(--font-accent);font-size:12px;color:var(--text-light);padding:6px 2px 12px;text-align:center}
 
 /* ─── 天気カード ─── */
-.weather-card{background:var(--bg-card);border-radius:var(--radius);box-shadow:0 1px 4px var(--shadow),0 0 0 1px rgba(0,0,0,.02);padding:18px 20px;margin-bottom:16px;transition:background .5s}
+.weather-card{background:var(--bg-card);border-radius:var(--radius);box-shadow:0 1px 4px var(--shadow),0 0 0 1px rgba(0,0,0,.02);padding:12px 14px;margin-bottom:12px;transition:background .5s}
 .weather-card.morning{background:linear-gradient(135deg,#FFF3E4,#FFF8F0)}
 .weather-card.noon{background:var(--bg-card)}
 .weather-card.evening{background:linear-gradient(135deg,#FFF0E0,#FDF6EC)}
 .weather-card.night{background:linear-gradient(135deg,#EEF0F8,#F2F4FB)}
-.weather-main{display:flex;align-items:center;gap:18px}
-.weather-icon-large{font-size:52px;line-height:1}
+.weather-main{display:flex;align-items:center;gap:12px}
+.weather-icon-large{font-size:42px;line-height:1}
 .weather-info{flex:1}
 .weather-desc{font-family:var(--font-accent);font-size:16px;font-weight:600;color:var(--text);margin-bottom:4px}
 .weather-temp{font-size:22px;font-weight:700;color:var(--text);margin-bottom:3px}
@@ -154,6 +154,15 @@ body{font-family:var(--font-body);background:var(--bg);color:var(--text);min-hei
 .sage-weather-msg{margin-top:12px;padding-top:12px;border-top:1px solid rgba(0,0,0,.06);font-family:var(--font-accent);font-size:13px;line-height:1.85;color:var(--text);display:flex;gap:9px;align-items:flex-start}
 .sage-weather-icon{width:18px;height:18px;border-radius:4px;flex-shrink:0;margin-top:2px}
 .sage-weather-msg.loading .sage-weather-text{color:var(--text-faint)}
+/* ─── 天気カード 追加レイアウト ─── */
+.weather-top-row{display:flex;align-items:center;gap:12px}
+.weather-today-col{flex:1;min-width:0}
+.weather-tmrw-col{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;border-left:1px solid var(--border);padding-left:12px;flex-shrink:0;min-width:70px}
+.weather-tmrw-col-label{font-family:var(--font-accent);font-size:10px;color:var(--text-faint);letter-spacing:.5px}
+.weather-tmrw-col-icon{font-size:22px;line-height:1}
+.weather-tmrw-col-desc{font-family:var(--font-accent);font-size:11px;color:var(--text);text-align:center}
+.weather-tmrw-col-temp{font-size:11px;font-weight:600;text-align:center}
+.weather-tmrw-col-precip{font-size:10px;color:var(--text-faint)}
 
 /* ─── セージのおすすめカード ─── */
 .sage-home-card{background:var(--bg-warm);border-radius:var(--radius);padding:14px 16px;margin-bottom:12px}
@@ -322,11 +331,15 @@ body{font-family:var(--font-body);background:var(--bg);color:var(--text);min-hei
           <button onclick="reloadCalendar()" style="background:none;border:none;color:var(--text-faint);font-size:16px;cursor:pointer;padding:2px 6px" title="更新">↻</button>
         </div>
         <div id="calEvents"></div>
+        <div id="calTomorrowSection" style="display:none">
+          <div style="font-size:11px;color:var(--text-faint);padding:7px 0 4px;border-top:1px dashed var(--border);margin-top:4px;font-family:var(--font-accent);letter-spacing:.3px">明日</div>
+          <div id="calTomorrowEvents"></div>
+        </div>
         <div id="calUpdatedAt" style="font-size:10px;color:var(--text-faint);text-align:right;margin-top:6px;padding-top:4px;border-top:1px solid var(--border)"></div>
       </div>
       <div class="home-summary-card" onclick="switchTab('seiiki')">
         <div>
-          <div class="home-card-label">✅ 聖域メンテナンス</div>
+          <div class="home-card-label">☑ 聖域メンテナンス</div>
           <div class="home-card-value" id="homeSeiikiSummary">読み込み中…</div>
         </div>
         <div class="home-card-arrow">›</div>
@@ -473,7 +486,7 @@ body{font-family:var(--font-body);background:var(--bg);color:var(--text);min-hei
     <span class="btab-icon">🏠</span><span class="btab-label">ホーム</span>
   </button>
   <button class="btab" data-tab="seiiki" onclick="switchTab('seiiki')">
-    <span class="btab-icon">✅</span><span class="btab-label">聖域</span>
+    <span class="btab-icon">☑</span><span class="btab-label">聖域</span>
   </button>
   <button class="btab" data-tab="wish" onclick="switchTab('wish')">
     <span class="btab-icon">✨</span><span class="btab-label">ウィッシュ</span>
@@ -682,11 +695,17 @@ async function fetchWeather(){
     const tomorrow={max:Math.round(d.temperature_2m_max[1]),min:Math.round(d.temperature_2m_min[1]),precip:d.precipitation_probability_max[1],code:d.weathercode[1]};
     const nowH=new Date().getHours();
     const todayStr=gt();
+    const tm=new Date(todayStr+'T12:00:00');tm.setDate(tm.getDate()+1);
+    const tomorrowStr=tm.getFullYear()+'-'+String(tm.getMonth()+1).padStart(2,'0')+'-'+String(tm.getDate()).padStart(2,'0');
     const hourly=[];
     j.hourly.time.forEach((t,i)=>{
       const dateStr=t.slice(0,10),hour=parseInt(t.slice(11,13));
-      if(dateStr===todayStr&&hour>nowH&&hour%3===0)
-        hourly.push({hour,temp:Math.round(j.hourly.temperature_2m[i]),precip:j.hourly.precipitation_probability[i],code:j.hourly.weathercode[i]});
+      if(hour%3===0){
+        if(dateStr===todayStr&&hour>nowH)
+          hourly.push({hour,temp:Math.round(j.hourly.temperature_2m[i]),precip:j.hourly.precipitation_probability[i],code:j.hourly.weathercode[i],day:'today'});
+        else if(dateStr===tomorrowStr)
+          hourly.push({hour,temp:Math.round(j.hourly.temperature_2m[i]),precip:j.hourly.precipitation_probability[i],code:j.hourly.weathercode[i],day:'tomorrow'});
+      }
     });
     const data={...today,hourly,tomorrow};
     localStorage.setItem(W_CACHE,JSON.stringify({ts:Date.now(),date:gt(),data}));
@@ -709,39 +728,53 @@ function renderWeather(data){
   }
   const w=WMO[data.code]||{l:'--',i:'🌡'};
   const umbrella=data.precip>=40;
-  let h=`<div class="weather-main">
+  let h=`<div class="weather-top-row"><div class="weather-today-col"><div class="weather-main">
     <div class="weather-icon-large">${w.i}</div>
     <div class="weather-info">
       <div class="weather-desc">${w.l}</div>
       <div class="weather-temp"><span class="temp-max">${data.max}°</span> / <span class="temp-min">${data.min}°</span></div>
-      <div class="weather-precip">降水確率 ${data.precip}%</div>
+      <div class="weather-precip">降水確率 ${data.precip}%${umbrella?' ☂️':''}</div>
     </div>
-  </div>${umbrella?'<div class="weather-umbrella">☂️ 傘があると安心です</div>':''}`;
+  </div></div>`;
+  if(data.tomorrow){
+    const tw=WMO[data.tomorrow.code]||{l:'--',i:'🌡'};
+    const tumb=data.tomorrow.precip>=40;
+    h+=`<div class="weather-tmrw-col">
+      <div class="weather-tmrw-col-label">明日</div>
+      <div class="weather-tmrw-col-icon">${tw.i}</div>
+      <div class="weather-tmrw-col-desc">${tw.l}</div>
+      <div class="weather-tmrw-col-temp"><span class="temp-max">${data.tomorrow.max}°</span> <span class="temp-min">${data.tomorrow.min}°</span></div>
+      <div class="weather-tmrw-col-precip">${data.tomorrow.precip}%${tumb?' ☂️':''}</div>
+    </div>`;
+  }
+  h+=`</div>`;
   if(data.hourly&&data.hourly.length){
     h+='<div class="weather-hourly-row">';
+    let lastDay='';
     data.hourly.forEach(hh=>{
+      if(lastDay&&hh.day&&hh.day!==lastDay){
+        h+=`<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:0 5px;flex-shrink:0;gap:2px"><div style="width:1px;height:14px;background:var(--border)"></div><div style="font-size:9px;color:var(--text-faint);writing-mode:vertical-lr;letter-spacing:1px">明日</div><div style="width:1px;height:14px;background:var(--border)"></div></div>`;
+      }
+      if(hh.day)lastDay=hh.day;
       const hw=WMO[hh.code]||{i:'🌡'};
       h+=`<div class="weather-hour-item"><div class="weather-hour-label">${hh.hour}時</div><div class="weather-hour-icon">${hw.i}</div><div class="weather-hour-temp">${hh.temp}°</div><div class="weather-hour-precip">${hh.precip}%</div></div>`;
     });
     h+='</div>';
   }
-  if(data.tomorrow){
-    const tw=WMO[data.tomorrow.code]||{l:'--',i:'🌡'};
-    h+=`<div class="weather-tomorrow"><div class="weather-tomorrow-label">明日</div><div class="weather-tomorrow-icon">${tw.i}</div><div class="weather-tomorrow-desc">${tw.l}</div><div class="weather-tomorrow-temp"><span class="temp-max">${data.tomorrow.max}°</span><span class="temp-min"> / ${data.tomorrow.min}°</span></div><div class="weather-tomorrow-precip">${data.tomorrow.precip}%</div></div>`;
-  }
-  h+=`<div class="sage-weather-msg loading" id="sageWeatherMsg"><img src="apple-touch-icon.png" class="sage-weather-icon" alt=""><span class="sage-weather-text">…</span></div>`;
   el.innerHTML=h;
 }
 
 // ═══════════════════════════════════════════════
 // ホーム概要
 // ═══════════════════════════════════════════════
+function mkDots(done,tot){return '●'.repeat(Math.min(done,tot))+'○'.repeat(Math.max(0,tot-done))}
 function updateHomeSummary(){
   const rTot=D.routines.length,rDone=D.routineChecks.filter(id=>D.routines.some(r=>r.id===id)).length;
   const tTot=D.todayTasks.length,tDone=D.todayTasks.filter(x=>x.done).length;
   const allDone=rTot>0&&rDone===rTot&&(tTot===0||tDone===tTot);
+  const tPart=tTot?`　タスク ${mkDots(tDone,tTot)}`:'';
   document.getElementById('homeSeiikiSummary').textContent=
-    allDone?'今日のメンテナンス、完了です ✨':`ルーティン ${rDone}/${rTot}　タスク ${tDone}/${tTot}`;
+    allDone?'完了 ✨':`${mkDots(rDone,rTot)}${tPart}`;
   const unchecked=D.shopItems.filter(x=>!x.checked).length;
   document.getElementById('homeShopSummary').textContent=
     unchecked===0?'買い物リストは空です':`${unchecked} 件未購入`;
@@ -1289,12 +1322,17 @@ function setSageWeatherMsg(msg){
 function renderSageWishCard(msg){
   const card=document.getElementById('sageWishCard'),el=document.getElementById('sageWishText');
   if(!card||!el)return;
-  if(!msg){card.style.display='none';return}
+  if(!msg||msg==='__dismissed__'){card.style.display='none';return}
   el.innerHTML=esc(msg).replace(/\n/g,'<br>');
   card.style.display='block';
   document.getElementById('sageReactionRow').querySelectorAll('.sage-reaction-btn').forEach(b=>b.classList.remove('reacted'));
 }
 function reactSage(type,btn){
+  if(type==='skip'){
+    document.getElementById('sageWishCard').style.display='none';
+    setSageCache(SAGE_S_CACHE,'__dismissed__');
+    return;
+  }
   document.getElementById('sageReactionRow').querySelectorAll('.sage-reaction-btn').forEach(b=>b.classList.remove('reacted'));
   btn.classList.add('reacted');
 }
@@ -1360,9 +1398,6 @@ ${wishItems||'（まだ項目がありません）'}
   return null;
 }
 async function initSageMessages(weatherData){
-  const wCached=getSageCache(SAGE_W_CACHE);
-  if(wCached){setSageWeatherMsg(wCached)}
-  else{loadSageWeatherMsg(weatherData).then(msg=>setSageWeatherMsg(msg))}
   const sCached=getSageCache(SAGE_S_CACHE);
   if(sCached){renderSageWishCard(sCached)}
   else{
@@ -1480,6 +1515,25 @@ function icalToDate(dtObj){
   const date=v.endsWith('Z')?new Date(Date.UTC(y,mo,d,h,mi)):new Date(y,mo,d,h,mi);
   return{allDay:false,date};
 }
+function getTomorrowStr(){const t=new Date();t.setDate(t.getDate()+1);return t.getFullYear()+'-'+String(t.getMonth()+1).padStart(2,'0')+'-'+String(t.getDate()).padStart(2,'0')}
+function getTomorrowEvents(events){
+  const tmStr=getTomorrowStr(),tmD=tmStr.replace(/-/g,'');
+  const result=[];
+  for(const ev of events){
+    const sum=unescIcal(ev['SUMMARY']?.value||'（タイトルなし）');
+    const dtS=icalToDate(ev['DTSTART']);if(!dtS)continue;
+    if(dtS.allDay){
+      const dtE=icalToDate(ev['DTEND']);
+      const eStr=(dtE?.str||dtS.str).replace(/-/g,'');
+      if(tmD>=dtS.str.replace(/-/g,'')&&tmD<eStr)result.push({title:sum,allDay:true,sort:-1});
+    }else{
+      const d=dtS.date;
+      const ds=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+      if(ds===tmStr){const h=d.getHours(),m=d.getMinutes();result.push({title:sum,allDay:false,time:`${h}:${String(m).padStart(2,'0')}`,sort:h*60+m})}
+    }
+  }
+  return result.sort((a,b)=>a.sort-b.sort);
+}
 function getTodayEvents(events){
   const todayStr=gt(),todayD=todayStr.replace(/-/g,'');
   const result=[];
@@ -1523,11 +1577,25 @@ async function loadCalendar(force=false){
   if(!url){card.style.display='none';return}
   card.style.display='block';
   document.getElementById('calEvents').innerHTML='<div class="cal-empty" style="color:var(--text-faint)">読み込み中…</div>';
+  const tmSec=document.getElementById('calTomorrowSection');if(tmSec)tmSec.style.display='none';
   console.log('loadCalendar start, force='+force);
   try{
     const text=await fetchIcalText(url,force);
     console.log('loadCalendar: got ical, length='+text.length);
-    renderCalEvents(getTodayEvents(parseIcal(text)));
+    const parsed=parseIcal(text);
+    renderCalEvents(getTodayEvents(parsed));
+    const tmEvs=getTomorrowEvents(parsed);
+    const tmEl=document.getElementById('calTomorrowEvents');
+    if(tmSec&&tmEl){
+      if(tmEvs.length){
+        tmSec.style.display='block';
+        tmEl.innerHTML=tmEvs.map(ev=>
+          ev.allDay
+            ?`<div class="cal-event"><span class="cal-allday-badge">終日</span><div class="cal-event-title" style="font-size:12px">${esc(ev.title)}</div></div>`
+            :`<div class="cal-event"><div class="cal-event-time" style="font-size:11px">${ev.time}</div><div class="cal-event-dot" style="background:var(--text-faint)"></div><div class="cal-event-title" style="font-size:12px">${esc(ev.title)}</div></div>`
+        ).join('');
+      }else{tmSec.style.display='none'}
+    }
     const now=new Date();
     const ts=`${now.getHours()}:${String(now.getMinutes()).padStart(2,'0')}`;
     const el=document.getElementById('calUpdatedAt');if(el)el.textContent='最終更新 '+ts;
