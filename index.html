@@ -13,10 +13,10 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 :root{
-  --bg:#FAFAF7;--bg-card:#FFFFFF;--bg-warm:#F5EFE6;
-  --text:#3C3C3C;--text-light:#8A8279;--text-faint:#B8AFA6;
-  --accent:#D4A76A;--accent-light:#F5E6C8;--border:#E8E2DA;
-  --shadow:rgba(58,53,48,0.07);--radius:14px;--radius-sm:10px;
+  --bg:#f5f0e8;--bg-card:#faf7f2;--bg-warm:#ede8df;
+  --text:#3a3530;--text-light:#7a7268;--text-faint:#b0a898;
+  --accent:#8b7355;--accent-light:#f0ece4;--border:#ddd8ce;
+  --shadow:rgba(80,60,40,0.10);--radius:14px;--radius-sm:10px;
   --font-body:'Zen Kaku Gothic New',sans-serif;--font-accent:'Shippori Mincho',serif;
   /* 聖域カラー */
   --routine-done:#A8C4A0;--routine-done-bg:#EDF5EB;--routine-bar:linear-gradient(90deg,#C8DDBF,#A8C4A0);
@@ -178,10 +178,10 @@ body{font-family:var(--font-body);background:var(--bg);color:var(--text);min-hei
 .sage-reaction-btn.reacted{background:var(--accent-light);border-color:var(--accent);color:var(--accent)}
 
 /* ─── ホームカード ─── */
-.home-summary-card{background:var(--bg-card);border-radius:var(--radius);box-shadow:0 1px 4px var(--shadow),0 0 0 1px rgba(0,0,0,.02);padding:11px 14px;margin-bottom:8px;cursor:pointer;display:flex;justify-content:space-between;align-items:center}
+.home-summary-card{background:var(--bg-card);border-radius:var(--radius);box-shadow:0 1px 4px var(--shadow),0 0 0 1px rgba(0,0,0,.02);padding:11px 14px;margin-bottom:8px;cursor:pointer;display:flex;justify-content:space-between;align-items:flex-start}
 .home-card-label{font-family:var(--font-accent);font-size:13px;color:var(--text-light);margin-bottom:3px}
 .home-card-value{font-size:14px;color:var(--text)}
-.home-card-arrow{color:var(--text-faint);font-size:16px}
+.home-card-arrow{color:var(--text-faint);font-size:16px;padding-top:2px;flex-shrink:0}
 
 /* ─── ウィッシュリスト ─── */
 .wish-filter-row{display:flex;gap:8px;padding:0 2px;margin-bottom:10px}
@@ -190,19 +190,19 @@ body{font-family:var(--font-body);background:var(--bg);color:var(--text);min-hei
 .wish-catfilter-row .wish-filter-btn{flex-shrink:0;padding:5px 12px;font-size:11px}
 .wish-filter-btn{padding:6px 14px;border-radius:20px;border:1px solid var(--border);background:var(--bg);font-size:12px;font-family:var(--font-body);cursor:pointer;color:var(--text-light);transition:all .2s}
 .wish-filter-btn.active{background:var(--accent);border-color:var(--accent);color:#fff}
-.wish-card{background:var(--bg-card);border-radius:var(--radius);box-shadow:0 1px 4px var(--shadow),0 0 0 1px rgba(0,0,0,.02);margin-bottom:10px;display:flex;overflow:hidden}
-.wish-stripe{width:4px;flex-shrink:0}
-.wish-body{flex:1;padding:12px 14px}
-.wish-cat{font-size:10px;color:var(--text-faint);margin-bottom:3px;letter-spacing:.3px}
-.wish-title{font-family:var(--font-accent);font-size:15px;color:var(--text);line-height:1.4}
-.wish-memo{font-size:12px;color:var(--text-light);margin-top:4px;line-height:1.4}
+.wish-card{background:var(--bg-card);border-radius:var(--radius-sm);box-shadow:0 1px 3px var(--shadow),0 0 0 1px rgba(0,0,0,.02);margin-bottom:5px;display:flex;overflow:hidden}
+.wish-stripe{width:3px;flex-shrink:0}
+.wish-body{flex:1;padding:7px 10px}
+.wish-cat{font-size:9px;color:var(--text-faint);margin-bottom:2px;letter-spacing:.3px}
+.wish-title{font-family:var(--font-accent);font-size:13px;color:var(--text);line-height:1.4}
+.wish-memo{font-size:11px;color:var(--text-light);margin-top:2px;line-height:1.3}
 .wish-done-title{text-decoration:line-through;color:var(--text-faint)}
-.wish-actions{display:flex;flex-direction:column;justify-content:center;gap:4px;padding:8px 10px 8px 4px}
-.wish-done-btn{width:28px;height:28px;border-radius:50%;border:1.5px solid var(--routine-done);background:none;color:var(--routine-done);font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.wish-actions{display:flex;flex-direction:column;justify-content:center;gap:3px;padding:5px 8px 5px 2px}
+.wish-done-btn{width:24px;height:24px;border-radius:50%;border:1.5px solid var(--routine-done);background:none;color:var(--routine-done);font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:center}
 .wish-done-btn.completed{background:var(--routine-done);color:#fff;border-color:var(--routine-done)}
-.wish-del-btn{width:28px;height:28px;border-radius:50%;border:none;background:none;color:var(--text-faint);font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.wish-del-btn{width:24px;height:24px;border-radius:50%;border:none;background:none;color:var(--text-faint);font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:center}
 .wish-empty{text-align:center;padding:36px 20px;color:var(--text-faint);font-family:var(--font-accent);font-size:14px;line-height:2}
-.wish-fab{position:fixed;bottom:calc(var(--tabbar-h) + env(safe-area-inset-bottom,0) + 16px);right:20px;width:52px;height:52px;border-radius:50%;background:var(--accent);color:#fff;border:none;font-size:26px;cursor:pointer;box-shadow:0 3px 10px rgba(212,167,106,.4);display:none;align-items:center;justify-content:center;z-index:150}
+.wish-fab{position:fixed;bottom:calc(var(--tabbar-h) + env(safe-area-inset-bottom,0) + 16px);right:20px;width:52px;height:52px;border-radius:50%;background:var(--accent);color:#fff;border:none;font-size:26px;cursor:pointer;box-shadow:0 3px 10px rgba(139,115,85,.35);display:none;align-items:center;justify-content:center;z-index:150}
 .wish-fab.show{display:flex}
 
 /* ─── 買い物リスト ─── */
@@ -786,12 +786,28 @@ function updateHomeSummary(){
   const rTot=D.routines.length,rDone=D.routineChecks.filter(id=>D.routines.some(r=>r.id===id)).length;
   const tTot=D.todayTasks.length,tDone=D.todayTasks.filter(x=>x.done).length;
   const allDone=rTot>0&&rDone===rTot&&(tTot===0||tDone===tTot);
-  const tPart=tTot?`　タスク ${mkDots(tDone,tTot)}`:'';
-  document.getElementById('homeSeiikiSummary').textContent=
-    allDone?'完了 ✨':`${mkDots(rDone,rTot)}${tPart}`;
-  const unchecked=D.shopItems.filter(x=>!x.checked).length;
-  document.getElementById('homeShopSummary').textContent=
-    unchecked===0?'買い物リストは空です':`${unchecked} 件未購入`;
+  let sHtml;
+  if(allDone){
+    sHtml='<span style="color:var(--accent)">完了 ✨</span>';
+  }else{
+    sHtml=`<div style="font-size:13px;letter-spacing:.5px">ルーティン ${mkDots(rDone,rTot)}</div>`;
+    const undone=D.todayTasks.filter(x=>!x.done);
+    if(undone.length){
+      undone.slice(0,3).forEach(t=>{sHtml+=`<div style="font-size:12px;color:var(--text-light);margin-top:2px;line-height:1.3">・${esc(t.text)}</div>`});
+      if(undone.length>3)sHtml+=`<div style="font-size:11px;color:var(--text-faint);margin-top:1px">…他${undone.length-3}件</div>`;
+    }
+  }
+  document.getElementById('homeSeiikiSummary').innerHTML=sHtml;
+  const unchecked=D.shopItems.filter(x=>!x.checked);
+  let shopHtml;
+  if(!unchecked.length){
+    shopHtml='<span style="color:var(--text-faint)">空です</span>';
+  }else{
+    const shown=unchecked.slice(0,5);
+    shopHtml=`<div style="font-size:12px;color:var(--text-light);line-height:1.5">${shown.map(x=>esc(x.item)).join('・')}</div>`;
+    if(unchecked.length>5)shopHtml+=`<div style="font-size:11px;color:var(--text-faint);margin-top:1px">…他${unchecked.length-5}件</div>`;
+  }
+  document.getElementById('homeShopSummary').innerHTML=shopHtml;
 }
 
 // ═══════════════════════════════════════════════
