@@ -1723,7 +1723,7 @@ const DEFAULT_FEEDS=[
   {id:'f6',name:'柏市',url:'https://www.city.kashiwa.lg.jp/rss.xml',cat:'地域'},
 ];
 const NEWS_CATS=['すべて','美術','AI','地域'];
-const RSS2JSON='https://api.rss2json.com/v1/api.json?count=15&rss_url=';
+const CORS_PROXY='https://corsproxy.io/?';
 let _newsLoaded=false;
 let _newsCat='すべて';
 let _newsItems=[];
@@ -1749,24 +1749,52 @@ function setNewsCache(id,items){
   try{localStorage.setItem(newsCache(id),JSON.stringify({ts:Date.now(),items}));}catch(e){}
 }
 
+function parseRssXml(doc,feed){
+  const items=[];
+  // RSS 2.0
+  doc.querySelectorAll('channel > item').forEach(el=>{
+    const link=el.querySelector('link');
+    // <link> in RSS can be a text node sibling (not a child with textContent)
+    let url=link?.textContent?.trim()||'';
+    if(!url){
+      // try guid as fallback
+      url=el.querySelector('guid')?.textContent?.trim()||'';
+    }
+    items.push({
+      title:(el.querySelector('title')?.textContent||'').trim(),
+      url,
+      pubDate:(el.querySelector('pubDate')?.textContent||'').trim(),
+      source:feed.name,cat:feed.cat,
+    });
+  });
+  // Atom
+  if(items.length===0){
+    doc.querySelectorAll('feed > entry').forEach(el=>{
+      const linkEl=el.querySelector('link[rel="alternate"],link:not([rel])');
+      items.push({
+        title:(el.querySelector('title')?.textContent||'').trim(),
+        url:linkEl?.getAttribute('href')||linkEl?.textContent?.trim()||'',
+        pubDate:(el.querySelector('updated,published')?.textContent||'').trim(),
+        source:feed.name,cat:feed.cat,
+      });
+    });
+  }
+  return items.slice(0,15);
+}
+
 async function fetchFeed(feed){
   const cached=getNewsCache(feed.id);
   if(cached)return{feed,items:cached,ok:true};
   try{
-    const r=await fetch(RSS2JSON+encodeURIComponent(feed.url));
-    const j=await r.json();
-    if(j.status==='ok'&&j.items){
-      const items=j.items.slice(0,15).map(i=>({
-        title:i.title||'',
-        url:i.link||'',
-        pubDate:i.pubDate||'',
-        source:feed.name,
-        cat:feed.cat,
-      }));
-      setNewsCache(feed.id,items);
-      return{feed,items,ok:true};
-    }
-    return{feed,items:[],ok:false};
+    const r=await fetch(CORS_PROXY+encodeURIComponent(feed.url));
+    if(!r.ok)return{feed,items:[],ok:false};
+    const text=await r.text();
+    const doc=new DOMParser().parseFromString(text,'application/xml');
+    const parseErr=doc.querySelector('parsererror');
+    if(parseErr)return{feed,items:[],ok:false};
+    const items=parseRssXml(doc,feed);
+    setNewsCache(feed.id,items);
+    return{feed,items,ok:items.length>0};
   }catch(e){
     return{feed,items:[],ok:false};
   }
