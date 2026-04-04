@@ -192,15 +192,14 @@ body{font-family:var(--font-body);background:var(--bg);color:var(--text);min-hei
 .wish-filter-btn.active{background:var(--accent);border-color:var(--accent);color:#fff}
 .wish-card{background:var(--bg-card);border-radius:var(--radius-sm);box-shadow:0 1px 3px var(--shadow),0 0 0 1px rgba(0,0,0,.02);margin-bottom:5px;display:flex;overflow:hidden}
 .wish-stripe{width:3px;flex-shrink:0}
-.wish-body{flex:1;padding:7px 10px}
-.wish-cat{font-size:9px;color:var(--text-faint);margin-bottom:2px;letter-spacing:.3px}
-.wish-title{font-family:var(--font-accent);font-size:13px;color:var(--text);line-height:1.4}
-.wish-memo{font-size:11px;color:var(--text-light);margin-top:2px;line-height:1.3}
+.wish-body{flex:1;padding:5px 8px;min-width:0}
+.wish-cat{font-size:9px;color:var(--text-faint);margin-bottom:1px;letter-spacing:.3px}
+.wish-title{font-family:var(--font-accent);font-size:13px;color:var(--text);line-height:1.35}
 .wish-done-title{text-decoration:line-through;color:var(--text-faint)}
-.wish-actions{display:flex;flex-direction:column;justify-content:center;gap:3px;padding:5px 8px 5px 2px}
-.wish-done-btn{width:24px;height:24px;border-radius:50%;border:1.5px solid var(--routine-done);background:none;color:var(--routine-done);font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.wish-actions{display:flex;flex-direction:row;align-items:center;gap:3px;padding:0 8px 0 0;flex-shrink:0}
+.wish-done-btn{width:22px;height:22px;border-radius:50%;border:1.5px solid var(--routine-done);background:none;color:var(--routine-done);font-size:11px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0}
 .wish-done-btn.completed{background:var(--routine-done);color:#fff;border-color:var(--routine-done)}
-.wish-del-btn{width:24px;height:24px;border-radius:50%;border:none;background:none;color:var(--text-faint);font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.wish-del-btn{width:22px;height:22px;border-radius:50%;border:none;background:none;color:var(--text-faint);font-size:11px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0}
 .wish-empty{text-align:center;padding:36px 20px;color:var(--text-faint);font-family:var(--font-accent);font-size:14px;line-height:2}
 .wish-fab{position:fixed;bottom:calc(var(--tabbar-h) + env(safe-area-inset-bottom,0) + 16px);right:20px;width:52px;height:52px;border-radius:50%;background:var(--accent);color:#fff;border:none;font-size:26px;cursor:pointer;box-shadow:0 3px 10px rgba(139,115,85,.35);display:none;align-items:center;justify-content:center;z-index:150}
 .wish-fab.show{display:flex}
@@ -282,16 +281,16 @@ body{font-family:var(--font-body);background:var(--bg);color:var(--text);min-hei
 .pin-error-msg{font-family:var(--font-accent);font-size:13px;color:var(--danger);margin-top:16px;min-height:18px;text-align:center}
 
 /* ─── カレンダー ─── */
-.cal-card{background:var(--bg-card);border-radius:var(--radius);box-shadow:0 1px 4px var(--shadow),0 0 0 1px rgba(0,0,0,.02);padding:12px 14px;margin-bottom:8px}
-.cal-card-header{display:flex;align-items:center;gap:8px;margin-bottom:10px}
-.cal-card-title{font-family:var(--font-accent);font-size:14px;font-weight:600;color:var(--text);flex:1}
-.cal-event{display:flex;gap:10px;padding:8px 0;border-bottom:1px solid var(--border);align-items:flex-start}
+.cal-card{background:var(--bg-card);border-radius:var(--radius);box-shadow:0 1px 4px var(--shadow),0 0 0 1px rgba(0,0,0,.02);padding:10px 12px;margin-bottom:8px}
+.cal-card-header{display:flex;align-items:center;gap:6px;margin-bottom:5px}
+.cal-card-title{font-family:var(--font-accent);font-size:12px;font-weight:600;color:var(--text-light);flex:1;letter-spacing:.3px}
+.cal-event{display:flex;gap:8px;padding:4px 0;border-bottom:1px solid var(--border);align-items:center}
 .cal-event:last-child{border-bottom:none}
-.cal-event-time{font-size:12px;color:var(--text-light);min-width:44px;padding-top:2px;font-weight:600;flex-shrink:0}
-.cal-event-dot{width:7px;height:7px;border-radius:50%;background:var(--accent);flex-shrink:0;margin-top:5px}
-.cal-event-title{font-size:14px;color:var(--text);line-height:1.4;flex:1}
-.cal-allday-badge{font-size:10px;color:var(--text-faint);background:var(--accent-light);border-radius:4px;padding:2px 6px;flex-shrink:0;margin-top:2px}
-.cal-empty{font-family:var(--font-accent);font-size:13px;color:var(--text-faint);text-align:center;padding:10px 0}
+.cal-event-time{font-size:11px;color:var(--text-light);min-width:38px;font-weight:600;flex-shrink:0}
+.cal-event-dot{width:5px;height:5px;border-radius:50%;background:var(--accent);flex-shrink:0}
+.cal-event-title{font-size:13px;color:var(--text);line-height:1.3;flex:1}
+.cal-allday-badge{font-size:9px;color:var(--text-faint);background:var(--accent-light);border-radius:3px;padding:1px 5px;flex-shrink:0}
+.cal-empty{font-family:var(--font-accent);font-size:12px;color:var(--text-faint);text-align:center;padding:6px 0}
 .cal-err{font-size:12px;color:var(--danger);text-align:center;padding:10px 0}
 
 /* ─── ローディング ─── */
@@ -335,10 +334,10 @@ body{font-family:var(--font-body);background:var(--bg);color:var(--text);min-hei
         </div>
         <div id="calEvents"></div>
         <div id="calTomorrowSection" style="display:none">
-          <div style="font-size:11px;color:var(--text-faint);padding:7px 0 4px;border-top:1px dashed var(--border);margin-top:4px;font-family:var(--font-accent);letter-spacing:.3px">明日</div>
+          <div style="font-size:10px;color:var(--text-faint);padding:3px 0 2px;border-top:1px dashed var(--border);margin-top:3px;font-family:var(--font-accent);letter-spacing:.3px">明日</div>
           <div id="calTomorrowEvents"></div>
         </div>
-        <div id="calUpdatedAt" style="font-size:10px;color:var(--text-faint);text-align:right;margin-top:6px;padding-top:4px;border-top:1px solid var(--border)"></div>
+        <div id="calUpdatedAt" style="font-size:9px;color:var(--text-faint);text-align:right;margin-top:3px;padding-top:3px;border-top:1px solid var(--border)"></div>
       </div>
       <div class="home-summary-card" onclick="switchTab('seiiki')">
         <div>
@@ -734,14 +733,23 @@ function renderWeatherHourly(){
   }).join('');
 }
 function switchWeatherDay(day){
-  _weatherDay=day;
+  const row=document.getElementById('weatherHourlyRow');
   const tc=document.getElementById('weatherTodayCol'),mc=document.getElementById('weatherTmrwCol');
-  if(tc)tc.classList.toggle('weather-active-day',day==='today');
-  if(mc)mc.classList.toggle('weather-active-day',day==='tomorrow');
-  renderWeatherHourly();
+  if(_weatherDay===day){
+    _weatherDay=null;
+    if(row)row.style.display='none';
+    if(tc)tc.classList.remove('weather-active-day');
+    if(mc)mc.classList.remove('weather-active-day');
+  }else{
+    _weatherDay=day;
+    if(row)row.style.display='flex';
+    if(tc)tc.classList.toggle('weather-active-day',day==='today');
+    if(mc)mc.classList.toggle('weather-active-day',day==='tomorrow');
+    renderWeatherHourly();
+  }
 }
 function renderWeather(data){
-  _weatherData=data;_weatherDay='today';
+  _weatherData=data;_weatherDay=null;
   const el=document.getElementById('weatherCard');
   el.className='weather-card '+getTimeClass();
   if(!data){
@@ -751,7 +759,7 @@ function renderWeather(data){
   const w=WMO[data.code]||{l:'--',i:'🌡'};
   const umbrella=data.precip>=40;
   let h=`<div class="weather-top-row">
-    <div class="weather-today-col weather-active-day" id="weatherTodayCol" onclick="switchWeatherDay('today')">
+    <div class="weather-today-col" id="weatherTodayCol" onclick="switchWeatherDay('today')">
       <div class="weather-day-label">今日</div>
       <div class="weather-main">
         <div class="weather-icon-large">${w.i}</div>
@@ -773,9 +781,8 @@ function renderWeather(data){
       <div class="weather-tmrw-col-precip">${data.tomorrow.precip}%${tumb?' ☂️':''}</div>
     </div>`;
   }
-  h+=`</div><div class="weather-hourly-row" id="weatherHourlyRow"></div>`;
+  h+=`</div><div class="weather-hourly-row" id="weatherHourlyRow" style="display:none"></div>`;
   el.innerHTML=h;
-  renderWeatherHourly();
 }
 
 // ═══════════════════════════════════════════════
@@ -796,6 +803,12 @@ function updateHomeSummary(){
       undone.slice(0,3).forEach(t=>{sHtml+=`<div style="font-size:12px;color:var(--text-light);margin-top:2px;line-height:1.3">・${esc(t.text)}</div>`});
       if(undone.length>3)sHtml+=`<div style="font-size:11px;color:var(--text-faint);margin-top:1px">…他${undone.length-3}件</div>`;
     }
+  }
+  const discardDone=D.todayDiscards.filter(x=>x.done);
+  if(discardDone.length){
+    sHtml+=`<div style="font-size:12px;color:var(--text-light);margin-top:2px">🗑 ${esc(discardDone[0].text)}${discardDone.length>1?` (+${discardDone.length-1})`:''}</div>`;
+  }else{
+    sHtml+=`<div style="font-size:11px;color:var(--text-faint);margin-top:2px">🗑 まだです</div>`;
   }
   document.getElementById('homeSeiikiSummary').innerHTML=sHtml;
   const unchecked=D.shopItems.filter(x=>!x.checked);
@@ -1048,20 +1061,27 @@ function renderWish(){
   items.forEach(w=>{
     const color=WISH_CAT_COLORS[w.category]||WISH_CAT_COLORS['その他'];
     const isDone=w.status==='done';
-    h+=`<div class="wish-card">
+    const isUrl=w.memo&&(w.memo.startsWith('http://')||w.memo.startsWith('https://'));
+    const cardStyle=isUrl?'cursor:pointer':'';
+    const cardData=isUrl?`data-url="${esc(w.memo)}"`:'';
+    const cardClick=isUrl?`onclick="openWishUrl(event,this)"`:'';
+    h+=`<div class="wish-card" style="${cardStyle}" ${cardData} ${cardClick}>
       <div class="wish-stripe" style="background:${color}"></div>
       <div class="wish-body">
         <div class="wish-cat">${esc(w.category)}</div>
-        <div class="wish-title ${isDone?'wish-done-title':''}">${esc(w.title)}</div>
-        ${w.memo?`<div class="wish-memo">${esc(w.memo)}</div>`:''}
+        <div class="wish-title ${isDone?'wish-done-title':''}">${esc(w.title)}${isUrl?' <span style="font-size:10px;color:var(--text-faint)">🔗</span>':''}</div>
       </div>
       <div class="wish-actions">
-        <button class="wish-done-btn ${isDone?'completed':''}" onclick="togWish('${w.id}')" title="${isDone?'戻す':'やった！'}">${isDone?'✓':'○'}</button>
-        <button class="wish-del-btn" onclick="delWish('${w.id}')">×</button>
+        <button class="wish-done-btn ${isDone?'completed':''}" onclick="event.stopPropagation();togWish('${w.id}')" title="${isDone?'戻す':'やった！'}">${isDone?'✓':'○'}</button>
+        <button class="wish-del-btn" onclick="event.stopPropagation();delWish('${w.id}')">×</button>
       </div>
     </div>`;
   });
   el.innerHTML=h;
+}
+function openWishUrl(e,el){
+  const url=el.dataset.url;
+  if(url&&(url.startsWith('http://')||url.startsWith('https://')))window.open(url,'_blank');
 }
 function togWish(id){
   const idx=D.wishItems.findIndex(x=>x.id===id);if(idx<0)return;
