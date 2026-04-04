@@ -43,7 +43,7 @@ body{font-family:var(--font-body);background:var(--bg);color:var(--text);min-hei
 .tab-panel{display:none;animation:fadeIn .22s ease}
 .tab-panel.active{display:block}
 @keyframes fadeIn{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
-.panel-body{padding:16px 16px 8px}
+.panel-body{padding:12px 12px 6px}
 
 /* ─── ボトムタブバー ─── */
 .bottom-tabs{position:fixed;bottom:0;left:0;right:0;background:var(--bg-card);border-top:1px solid var(--border);display:flex;z-index:200;padding-bottom:env(safe-area-inset-bottom,0)}
@@ -53,7 +53,7 @@ body{font-family:var(--font-body);background:var(--bg);color:var(--text);min-hei
 .btab-label{font-size:10px;font-family:var(--font-body)}
 
 /* ─── 共通カード・セクション ─── */
-.section{margin-bottom:20px}
+.section{margin-bottom:14px}
 .section-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;padding:0 2px}
 .section-title{font-family:var(--font-accent);font-size:15px;font-weight:600}
 .section-count{font-size:12px;color:var(--text-faint)}
@@ -156,16 +156,19 @@ body{font-family:var(--font-body);background:var(--bg);color:var(--text);min-hei
 .sage-weather-msg.loading .sage-weather-text{color:var(--text-faint)}
 /* ─── 天気カード 追加レイアウト ─── */
 .weather-top-row{display:flex;align-items:center;gap:12px}
-.weather-today-col{flex:1;min-width:0}
-.weather-tmrw-col{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;border-left:1px solid var(--border);padding-left:12px;flex-shrink:0;min-width:70px}
+.weather-today-col{flex:1;min-width:0;cursor:pointer;border-radius:8px;padding:4px;margin:-4px;transition:background .15s}
+.weather-tmrw-col{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;border-left:1px solid var(--border);padding-left:12px;padding-right:4px;flex-shrink:0;min-width:70px;cursor:pointer;border-radius:0 8px 8px 0;transition:background .15s}
 .weather-tmrw-col-label{font-family:var(--font-accent);font-size:10px;color:var(--text-faint);letter-spacing:.5px}
 .weather-tmrw-col-icon{font-size:22px;line-height:1}
 .weather-tmrw-col-desc{font-family:var(--font-accent);font-size:11px;color:var(--text);text-align:center}
 .weather-tmrw-col-temp{font-size:11px;font-weight:600;text-align:center}
 .weather-tmrw-col-precip{font-size:10px;color:var(--text-faint)}
+.weather-day-label{font-family:var(--font-accent);font-size:10px;color:var(--text-faint);letter-spacing:.5px;margin-bottom:4px}
+.weather-active-day{background:rgba(212,167,106,.1)}
+.weather-active-day .weather-day-label,.weather-active-day .weather-tmrw-col-label{color:var(--accent);font-weight:600}
 
 /* ─── セージのおすすめカード ─── */
-.sage-home-card{background:var(--bg-warm);border-radius:var(--radius);padding:14px 16px;margin-bottom:12px}
+.sage-home-card{background:var(--bg-warm);border-radius:var(--radius);padding:12px 14px;margin-bottom:8px}
 .sage-home-header{display:flex;align-items:center;gap:8px;margin-bottom:9px}
 .sage-home-icon{width:18px;height:18px;border-radius:4px;flex-shrink:0}
 .sage-home-label{font-size:11px;color:var(--text-faint);letter-spacing:.5px;font-family:var(--font-body)}
@@ -175,7 +178,7 @@ body{font-family:var(--font-body);background:var(--bg);color:var(--text);min-hei
 .sage-reaction-btn.reacted{background:var(--accent-light);border-color:var(--accent);color:var(--accent)}
 
 /* ─── ホームカード ─── */
-.home-summary-card{background:var(--bg-card);border-radius:var(--radius);box-shadow:0 1px 4px var(--shadow),0 0 0 1px rgba(0,0,0,.02);padding:14px 16px;margin-bottom:12px;cursor:pointer;display:flex;justify-content:space-between;align-items:center}
+.home-summary-card{background:var(--bg-card);border-radius:var(--radius);box-shadow:0 1px 4px var(--shadow),0 0 0 1px rgba(0,0,0,.02);padding:11px 14px;margin-bottom:8px;cursor:pointer;display:flex;justify-content:space-between;align-items:center}
 .home-card-label{font-family:var(--font-accent);font-size:13px;color:var(--text-light);margin-bottom:3px}
 .home-card-value{font-size:14px;color:var(--text)}
 .home-card-arrow{color:var(--text-faint);font-size:16px}
@@ -279,7 +282,7 @@ body{font-family:var(--font-body);background:var(--bg);color:var(--text);min-hei
 .pin-error-msg{font-family:var(--font-accent);font-size:13px;color:var(--danger);margin-top:16px;min-height:18px;text-align:center}
 
 /* ─── カレンダー ─── */
-.cal-card{background:var(--bg-card);border-radius:var(--radius);box-shadow:0 1px 4px var(--shadow),0 0 0 1px rgba(0,0,0,.02);padding:14px 16px;margin-bottom:12px}
+.cal-card{background:var(--bg-card);border-radius:var(--radius);box-shadow:0 1px 4px var(--shadow),0 0 0 1px rgba(0,0,0,.02);padding:12px 14px;margin-bottom:8px}
 .cal-card-header{display:flex;align-items:center;gap:8px;margin-bottom:10px}
 .cal-card-title{font-family:var(--font-accent);font-size:14px;font-weight:600;color:var(--text);flex:1}
 .cal-event{display:flex;gap:10px;padding:8px 0;border-bottom:1px solid var(--border);align-items:flex-start}
@@ -672,7 +675,7 @@ function updateDate(){
 // 天気
 // ═══════════════════════════════════════════════
 const W_LAT=35.8969,W_LON=139.9401;
-const W_CACHE='hidamari_weather';
+const W_CACHE='hidamari_weather_v2';
 const WMO={0:{l:'快晴',i:'☀️'},1:{l:'晴れ',i:'🌤'},2:{l:'一部曇り',i:'⛅'},3:{l:'曇り',i:'☁️'},
   45:{l:'霧',i:'🌫'},48:{l:'霧',i:'🌫'},51:{l:'霧雨',i:'🌦'},53:{l:'霧雨',i:'🌦'},55:{l:'霧雨',i:'🌦'},
   61:{l:'小雨',i:'🌧'},63:{l:'雨',i:'🌧'},65:{l:'大雨',i:'🌧'},
@@ -697,17 +700,17 @@ async function fetchWeather(){
     const todayStr=gt();
     const tm=new Date(todayStr+'T12:00:00');tm.setDate(tm.getDate()+1);
     const tomorrowStr=tm.getFullYear()+'-'+String(tm.getMonth()+1).padStart(2,'0')+'-'+String(tm.getDate()).padStart(2,'0');
-    const hourly=[];
+    const hourly_today=[],hourly_tomorrow=[];
     j.hourly.time.forEach((t,i)=>{
       const dateStr=t.slice(0,10),hour=parseInt(t.slice(11,13));
       if(hour%3===0){
         if(dateStr===todayStr&&hour>nowH)
-          hourly.push({hour,temp:Math.round(j.hourly.temperature_2m[i]),precip:j.hourly.precipitation_probability[i],code:j.hourly.weathercode[i],day:'today'});
+          hourly_today.push({hour,temp:Math.round(j.hourly.temperature_2m[i]),precip:j.hourly.precipitation_probability[i],code:j.hourly.weathercode[i]});
         else if(dateStr===tomorrowStr)
-          hourly.push({hour,temp:Math.round(j.hourly.temperature_2m[i]),precip:j.hourly.precipitation_probability[i],code:j.hourly.weathercode[i],day:'tomorrow'});
+          hourly_tomorrow.push({hour,temp:Math.round(j.hourly.temperature_2m[i]),precip:j.hourly.precipitation_probability[i],code:j.hourly.weathercode[i]});
       }
     });
-    const data={...today,hourly,tomorrow};
+    const data={...today,hourly_today,hourly_tomorrow,tomorrow};
     localStorage.setItem(W_CACHE,JSON.stringify({ts:Date.now(),date:gt(),data}));
     return data;
   }catch(e){return null}
@@ -719,7 +722,26 @@ function getTimeClass(){
   if(h>=16&&h<19)return 'evening';
   return 'night';
 }
+let _weatherData=null,_weatherDay='today';
+function renderWeatherHourly(){
+  const row=document.getElementById('weatherHourlyRow');
+  if(!row||!_weatherData)return;
+  const items=_weatherDay==='today'?(_weatherData.hourly_today||[]):(_weatherData.hourly_tomorrow||[]);
+  if(!items.length){row.innerHTML='<div style="padding:10px 4px;color:var(--text-faint);font-size:12px;font-family:var(--font-accent)">推移データなし</div>';return}
+  row.innerHTML=items.map(hh=>{
+    const hw=WMO[hh.code]||{i:'🌡'};
+    return `<div class="weather-hour-item"><div class="weather-hour-label">${hh.hour}時</div><div class="weather-hour-icon">${hw.i}</div><div class="weather-hour-temp">${hh.temp}°</div><div class="weather-hour-precip">${hh.precip}%</div></div>`;
+  }).join('');
+}
+function switchWeatherDay(day){
+  _weatherDay=day;
+  const tc=document.getElementById('weatherTodayCol'),mc=document.getElementById('weatherTmrwCol');
+  if(tc)tc.classList.toggle('weather-active-day',day==='today');
+  if(mc)mc.classList.toggle('weather-active-day',day==='tomorrow');
+  renderWeatherHourly();
+}
 function renderWeather(data){
+  _weatherData=data;_weatherDay='today';
   const el=document.getElementById('weatherCard');
   el.className='weather-card '+getTimeClass();
   if(!data){
@@ -728,18 +750,22 @@ function renderWeather(data){
   }
   const w=WMO[data.code]||{l:'--',i:'🌡'};
   const umbrella=data.precip>=40;
-  let h=`<div class="weather-top-row"><div class="weather-today-col"><div class="weather-main">
-    <div class="weather-icon-large">${w.i}</div>
-    <div class="weather-info">
-      <div class="weather-desc">${w.l}</div>
-      <div class="weather-temp"><span class="temp-max">${data.max}°</span> / <span class="temp-min">${data.min}°</span></div>
-      <div class="weather-precip">降水確率 ${data.precip}%${umbrella?' ☂️':''}</div>
-    </div>
-  </div></div>`;
+  let h=`<div class="weather-top-row">
+    <div class="weather-today-col weather-active-day" id="weatherTodayCol" onclick="switchWeatherDay('today')">
+      <div class="weather-day-label">今日</div>
+      <div class="weather-main">
+        <div class="weather-icon-large">${w.i}</div>
+        <div class="weather-info">
+          <div class="weather-desc">${w.l}</div>
+          <div class="weather-temp"><span class="temp-max">${data.max}°</span> / <span class="temp-min">${data.min}°</span></div>
+          <div class="weather-precip">降水確率 ${data.precip}%${umbrella?' ☂️':''}</div>
+        </div>
+      </div>
+    </div>`;
   if(data.tomorrow){
     const tw=WMO[data.tomorrow.code]||{l:'--',i:'🌡'};
     const tumb=data.tomorrow.precip>=40;
-    h+=`<div class="weather-tmrw-col">
+    h+=`<div class="weather-tmrw-col" id="weatherTmrwCol" onclick="switchWeatherDay('tomorrow')">
       <div class="weather-tmrw-col-label">明日</div>
       <div class="weather-tmrw-col-icon">${tw.i}</div>
       <div class="weather-tmrw-col-desc">${tw.l}</div>
@@ -747,27 +773,15 @@ function renderWeather(data){
       <div class="weather-tmrw-col-precip">${data.tomorrow.precip}%${tumb?' ☂️':''}</div>
     </div>`;
   }
-  h+=`</div>`;
-  if(data.hourly&&data.hourly.length){
-    h+='<div class="weather-hourly-row">';
-    let lastDay='';
-    data.hourly.forEach(hh=>{
-      if(lastDay&&hh.day&&hh.day!==lastDay){
-        h+=`<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:0 5px;flex-shrink:0;gap:2px"><div style="width:1px;height:14px;background:var(--border)"></div><div style="font-size:9px;color:var(--text-faint);writing-mode:vertical-lr;letter-spacing:1px">明日</div><div style="width:1px;height:14px;background:var(--border)"></div></div>`;
-      }
-      if(hh.day)lastDay=hh.day;
-      const hw=WMO[hh.code]||{i:'🌡'};
-      h+=`<div class="weather-hour-item"><div class="weather-hour-label">${hh.hour}時</div><div class="weather-hour-icon">${hw.i}</div><div class="weather-hour-temp">${hh.temp}°</div><div class="weather-hour-precip">${hh.precip}%</div></div>`;
-    });
-    h+='</div>';
-  }
+  h+=`</div><div class="weather-hourly-row" id="weatherHourlyRow"></div>`;
   el.innerHTML=h;
+  renderWeatherHourly();
 }
 
 // ═══════════════════════════════════════════════
 // ホーム概要
 // ═══════════════════════════════════════════════
-function mkDots(done,tot){return '●'.repeat(Math.min(done,tot))+'○'.repeat(Math.max(0,tot-done))}
+function mkDots(done,tot){return '■'.repeat(Math.min(done,tot))+'□'.repeat(Math.max(0,tot-done))}
 function updateHomeSummary(){
   const rTot=D.routines.length,rDone=D.routineChecks.filter(id=>D.routines.some(r=>r.id===id)).length;
   const tTot=D.todayTasks.length,tDone=D.todayTasks.filter(x=>x.done).length;
