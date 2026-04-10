@@ -35,7 +35,7 @@ body{font-family:var(--font-body);background:var(--bg);color:var(--text);min-hei
 /* ─── ヘッダー ─── */
 .app-header{padding:12px 20px 10px;background:var(--bg);position:sticky;top:0;z-index:100;border-bottom:1px solid var(--border)}
 .header-title{font-family:var(--font-accent);font-size:18px;font-weight:600;color:var(--text-light);display:flex;align-items:center;gap:7px;margin-bottom:2px}
-.header-icon{width:20px;height:20px;border-radius:5px;vertical-align:middle;flex-shrink:0}
+.header-icon{width:30px;height:30px;border-radius:8px;vertical-align:middle;flex-shrink:0;box-shadow:0 1px 4px var(--shadow)}
 .header-date{font-family:var(--font-accent);font-size:22px;font-weight:600;color:var(--text);letter-spacing:.3px;line-height:1.2}
 
 /* ─── コンテンツ ─── */
@@ -325,6 +325,9 @@ body{font-family:var(--font-body);background:var(--bg);color:var(--text);min-hei
 .loading-overlay{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;z-index:999}
 .loading-overlay.hidden{display:none}
 .loading-inner{font-family:var(--font-accent);font-size:15px;color:var(--text-light);text-align:center;line-height:2.4}
+/* ─── ルーティンドット ─── */
+.rdots{display:inline-flex;gap:3px;align-items:center;vertical-align:middle}
+.rdot{width:9px;height:9px;border-radius:50%;border:1.5px solid var(--border);display:inline-block;flex-shrink:0;transition:background .3s,border-color .3s}
 /* ─── カレンダーチェック ─── */
 .cal-event-check{width:16px;height:16px;border-radius:4px;border:1.5px solid var(--border);flex-shrink:0;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s}
 .cal-event-check.checked{background:var(--accent);border-color:var(--accent)}
@@ -375,12 +378,12 @@ body{font-family:var(--font-body);background:var(--bg);color:var(--text);min-hei
         </div>
         <div id="calUpdatedAt" style="font-size:9px;color:var(--text-faint);text-align:right;margin-top:3px;padding-top:3px;border-top:1px solid var(--border)"></div>
       </div>
-      <div class="home-summary-card" onclick="switchTab('seiiki')">
-        <div>
+      <div class="home-summary-card" style="cursor:default">
+        <div style="flex:1;min-width:0">
           <div class="home-card-label">☑ 聖域メンテナンス</div>
           <div class="home-card-value" id="homeSeiikiSummary">読み込み中…</div>
         </div>
-        <div class="home-card-arrow">›</div>
+        <div class="home-card-arrow" onclick="gotoSeiiki('today')" style="cursor:pointer;padding-left:8px;align-self:stretch;display:flex;align-items:center">›</div>
       </div>
       <div class="home-summary-card" onclick="switchTab('shop')">
         <div>
@@ -389,6 +392,7 @@ body{font-family:var(--font-body);background:var(--bg);color:var(--text);min-hei
         </div>
         <div class="home-card-arrow">›</div>
       </div>
+      <div style="text-align:center;padding:14px 0 4px;color:var(--text-faint);font-size:11px;font-family:var(--font-accent);letter-spacing:.5px">🕯 灯だまり工房</div>
     </div>
   </div>
 
@@ -488,6 +492,7 @@ body{font-family:var(--font-body);background:var(--bg);color:var(--text);min-hei
           <div class="settings-item"><span>全データを消去</span><button class="reset-btn" onclick="resetAll()">消去</button></div>
         </div>
       </div>
+      <div style="text-align:center;padding:20px 0 8px;color:var(--text-faint);font-size:11px;font-family:var(--font-accent);letter-spacing:.5px">🕯 灯だまり工房</div>
     </div>
   </div>
 
@@ -841,6 +846,31 @@ function renderWeather(data){
 // ホーム概要
 // ═══════════════════════════════════════════════
 function mkDots(done,tot){return '■'.repeat(Math.min(done,tot))+'□'.repeat(Math.max(0,tot-done))}
+function mkDotHtml(done,tot){
+  if(!tot)return'';
+  const pal=['#ddd0be','#cebb9e','#bba07c','#a68060','#8b7355'];
+  let h='<span class="rdots">';
+  for(let i=0;i<tot;i++){
+    if(i<done){const ci=Math.round(i*(pal.length-1)/Math.max(tot-1,1));h+=`<span class="rdot" style="background:${pal[ci]};border-color:${pal[ci]}"></span>`}
+    else h+='<span class="rdot"></span>';
+  }
+  h+='</span>';
+  return h;
+}
+function switchStab(stab){
+  document.querySelectorAll('.stab').forEach(x=>x.classList.remove('active'));
+  document.querySelectorAll('.stab-panel').forEach(x=>x.classList.remove('active'));
+  const t=document.querySelector(`.stab[data-stab="${stab}"]`);if(t)t.classList.add('active');
+  const p=document.getElementById('stab-'+stab);if(p)p.classList.add('active');
+}
+function gotoSeiiki(section){
+  switchTab('seiiki');switchStab('today');
+  if(section&&section!=='today'){
+    const idMap={routine:'routineList',task:'taskList',discard:'discardList'};
+    const tid=idMap[section];
+    if(tid)setTimeout(()=>{const el=document.getElementById(tid);if(el)el.scrollIntoView({behavior:'smooth',block:'start'})},80);
+  }
+}
 function updateHomeSummary(){
   const rTot=D.routines.length,rDone=D.routineChecks.filter(id=>D.routines.some(r=>r.id===id)).length;
   const tTot=D.todayTasks.length,tDone=D.todayTasks.filter(x=>x.done).length;
@@ -848,23 +878,26 @@ function updateHomeSummary(){
   const _div='<div style="border-top:1px dashed var(--border);margin:5px 0"></div>';
   let sHtml;
   if(allDone){
-    sHtml='<span style="color:var(--accent)">完了 ✨</span>';
+    sHtml=`<div onclick="gotoSeiiki('today')" style="cursor:pointer;display:flex;align-items:center;gap:6px"><span style="font-size:16px">👑</span><span style="color:var(--accent);font-family:var(--font-accent);font-size:13px">すべて完了！</span></div>`;
   }else{
-    sHtml=`<div style="font-size:13px;letter-spacing:.5px">ルーティン ${mkDots(rDone,rTot)}</div>`;
+    sHtml=`<div onclick="gotoSeiiki('routine')" style="cursor:pointer;padding:2px 0"><div style="font-size:13px;letter-spacing:.5px">ルーティン ${mkDotHtml(rDone,rTot)}</div></div>`;
     const undone=D.todayTasks.filter(x=>!x.done);
     if(undone.length){
       sHtml+=_div;
-      undone.slice(0,3).forEach(t=>{sHtml+=`<div style="font-size:12px;color:var(--text-light);margin-top:2px;line-height:1.3">・${esc(t.text)}</div>`});
-      if(undone.length>3)sHtml+=`<div style="font-size:11px;color:var(--text-faint);margin-top:1px">…他${undone.length-3}件</div>`;
+      sHtml+=`<div onclick="gotoSeiiki('task')" style="cursor:pointer;padding:2px 0">`;
+      undone.forEach(t=>{sHtml+=`<div style="font-size:12px;color:var(--text-light);margin-top:2px;line-height:1.3">・${esc(t.text)}</div>`});
+      sHtml+=`</div>`;
     }
   }
   sHtml+=_div;
+  sHtml+=`<div onclick="gotoSeiiki('discard')" style="cursor:pointer;padding:2px 0">`;
   const discardDone=D.todayDiscards.filter(x=>x.done);
   if(discardDone.length){
     sHtml+=`<div style="font-size:12px;color:var(--text-light);margin-top:2px">🗑 ${esc(discardDone[0].text)}${discardDone.length>1?` (+${discardDone.length-1})`:''}</div>`;
   }else{
     sHtml+=`<div style="font-size:11px;color:var(--text-faint);margin-top:2px">🗑 まだです</div>`;
   }
+  sHtml+=`</div>`;
   document.getElementById('homeSeiikiSummary').innerHTML=sHtml;
   const unchecked=D.shopItems.filter(x=>!x.checked);
   let shopHtml;
