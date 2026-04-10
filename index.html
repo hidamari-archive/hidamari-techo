@@ -677,7 +677,7 @@ async function loadData(){
     db.from('hk_long_tasks').select('*').order('created_at'),
     db.from('wishlist').select('*').order('created_at',{ascending:false}),
     db.from('shopping_list').select('*').order('created_at'),
-    db.from('techo_rss_feeds').select('*').order('sort_order').order('created_at'),
+    db.from('techo_rss_feeds').select('*').order('created_at'),
   ]);
   let routines=rR.data||[];
   if(!routines.length){
@@ -697,8 +697,8 @@ async function loadData(){
   D.shopItems=sR.data||[];
   let feeds=fR.data||[];
   if(!feeds.length){
-    const seeds=DEFAULT_FEEDS.map((f,i)=>({name:f.name,url:f.url,cat:f.cat,sort_order:i}));
-    const {data}=await db.from('techo_rss_feeds').insert(seeds).select().order('sort_order');
+    const seeds=DEFAULT_FEEDS.map(f=>({name:f.name,url:f.url,cat:f.cat}));
+    const {data}=await db.from('techo_rss_feeds').insert(seeds).select().order('created_at');
     feeds=data||DEFAULT_FEEDS;
   }
   D.rssFeeds=feeds;
@@ -1994,9 +1994,9 @@ async function addFeed(){
   const url=(document.getElementById('feedAddUrl').value||'').trim();
   const cat=(document.getElementById('feedAddCat').value||'').trim()||'その他';
   if(!name||!url)return;
-  const sort_order=D.rssFeeds.length;
-  const {data,error}=await db.from('techo_rss_feeds').insert({name,url,cat,sort_order}).select().single();
-  if(error||!data)return;
+  const {data,error}=await db.from('techo_rss_feeds').insert({name,url,cat}).select().single();
+  if(error){console.error('addFeed:',error);alert('追加に失敗しました（'+error.message+'）');return;}
+  if(!data)return;
   D.rssFeeds.push(data);
   renderFeedManage();renderNewsCats();
   _newsLoaded=false;loadNews();
