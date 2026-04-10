@@ -7,7 +7,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
-<title>灯だまり手帳</title>
+<title>灯だまり手帖</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@400;600&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -341,7 +341,7 @@ body{font-family:var(--font-body);background:var(--bg);color:var(--text);min-hei
 <body>
 
 <div class="app-header">
-  <div class="header-title"><img src="apple-touch-icon.png" class="header-icon" alt=""> 灯だまり手帳</div>
+  <div class="header-title"><img src="apple-touch-icon.png" class="header-icon" alt=""> 灯だまり手帖</div>
   <div class="header-date" id="dateDisplay"></div>
 </div>
 
@@ -596,7 +596,7 @@ body{font-family:var(--font-body);background:var(--bg);color:var(--text);min-hei
 <!-- PINロック -->
 <div class="pin-overlay" id="pinOverlay" style="display:none">
   <img src="apple-touch-icon.png" class="pin-logo" alt="">
-  <div class="pin-app-name">灯だまり手帳</div>
+  <div class="pin-app-name">灯だまり手帖</div>
   <div class="pin-prompt" id="pinPrompt">PINを入力してください</div>
   <div class="pin-dots" id="pinDots">
     <div class="pin-dot" id="pd0"></div><div class="pin-dot" id="pd1"></div>
@@ -656,7 +656,7 @@ function dbw(p,label){p.then(({error})=>{if(error)console.error('DB write error 
 let D={
   routines:[],routineChecks:[],todayTasks:[],todayDiscards:[],
   discardLog:[],longTasks:[],
-  wishItems:[],shopItems:[],
+  wishItems:[],shopItems:[],rssFeeds:[],
   routineMessageDate:'',routineRarity:'',
   _loadedDate:'',
 };
@@ -667,7 +667,7 @@ let curModal=null,curTaskType='once',curWishCat='その他',curShopCat='食品�
 // ═══════════════════════════════════════════════
 async function loadData(){
   const today=gt();
-  const [rR,cR,tR,dR,lR,mR,ltR,wR,sR]=await Promise.all([
+  const [rR,cR,tR,dR,lR,mR,ltR,wR,sR,fR]=await Promise.all([
     db.from('hk_routines').select('*').order('sort_order').order('created_at'),
     db.from('hk_routine_checks').select('*').eq('date',today),
     db.from('hk_tasks').select('*').order('created_at'),
@@ -677,6 +677,7 @@ async function loadData(){
     db.from('hk_long_tasks').select('*').order('created_at'),
     db.from('wishlist').select('*').order('created_at',{ascending:false}),
     db.from('shopping_list').select('*').order('created_at'),
+    db.from('techo_rss_feeds').select('*').order('sort_order').order('created_at'),
   ]);
   let routines=rR.data||[];
   if(!routines.length){
@@ -694,6 +695,13 @@ async function loadData(){
   D.longTasks=ltR.data||[];
   D.wishItems=wR.data||[];
   D.shopItems=sR.data||[];
+  let feeds=fR.data||[];
+  if(!feeds.length){
+    const seeds=DEFAULT_FEEDS.map((f,i)=>({name:f.name,url:f.url,cat:f.cat,sort_order:i}));
+    const {data}=await db.from('techo_rss_feeds').insert(seeds).select().order('sort_order');
+    feeds=data||DEFAULT_FEEDS;
+  }
+  D.rssFeeds=feeds;
   const meta=mR.data;
   D.routineMessageDate=meta?.routine_message_shown?today:'';
   D.routineRarity=meta?.routine_rarity||'';
@@ -1086,7 +1094,7 @@ async function resetToday(){
 }
 async function resetAll(){
   if(!confirm('全データを消去しますか？\nこの操作は取り消せません。'))return;
-  D={routines:[],routineChecks:[],todayTasks:[],todayDiscards:[],discardLog:[],longTasks:[],wishItems:[],shopItems:[],routineMessageDate:'',routineRarity:'',_loadedDate:gt()};
+  D={routines:[],routineChecks:[],todayTasks:[],todayDiscards:[],discardLog:[],longTasks:[],wishItems:[],shopItems:[],rssFeeds:D.rssFeeds||[],routineMessageDate:'',routineRarity:'',_loadedDate:gt()};
   renderAll();
   await Promise.all([
     db.from('hk_routines').delete().not('id','is',null),
@@ -1803,11 +1811,7 @@ let _newsCat='すべて';
 let _newsItems=[];
 let _feedManageOpen=false;
 
-function getFeeds(){
-  try{const s=localStorage.getItem('hidamari_feeds');return s?JSON.parse(s):DEFAULT_FEEDS;}
-  catch(e){return DEFAULT_FEEDS;}
-}
-function saveFeeds(feeds){localStorage.setItem('hidamari_feeds',JSON.stringify(feeds));}
+function getFeeds(){return D.rssFeeds.length?D.rssFeeds:DEFAULT_FEEDS;}
 
 function newsCache(id){return'hidamari_news_'+id;}
 function getNewsCache(id){
@@ -1985,28 +1989,25 @@ function renderFeedManage(){
     </div>`;
 }
 
-function addFeed(){
+async function addFeed(){
   const name=(document.getElementById('feedAddName').value||'').trim();
   const url=(document.getElementById('feedAddUrl').value||'').trim();
   const cat=(document.getElementById('feedAddCat').value||'').trim()||'その他';
   if(!name||!url)return;
-  const feeds=getFeeds();
-  const id='f'+Date.now();
-  feeds.push({id,name,url,cat});
-  saveFeeds(feeds);
-  renderFeedManage();
-  renderNewsCats();
-  _newsLoaded=false;
-  loadNews();
+  const sort_order=D.rssFeeds.length;
+  const {data,error}=await db.from('techo_rss_feeds').insert({name,url,cat,sort_order}).select().single();
+  if(error||!data)return;
+  D.rssFeeds.push(data);
+  renderFeedManage();renderNewsCats();
+  _newsLoaded=false;loadNews();
 }
 
 function deleteFeed(id){
-  const feeds=getFeeds().filter(f=>f.id!==id);
-  saveFeeds(feeds);
+  D.rssFeeds=D.rssFeeds.filter(f=>f.id!==id);
   try{localStorage.removeItem(newsCache(id));}catch(e){}
   renderFeedManage();
-  _newsLoaded=false;
-  loadNews();
+  _newsLoaded=false;loadNews();
+  dbw(db.from('techo_rss_feeds').delete().eq('id',id),'rf.del');
 }
 
 function timeAgo(dateStr){
