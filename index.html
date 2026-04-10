@@ -868,7 +868,13 @@ function gotoSeiiki(section){
   if(section&&section!=='today'){
     const idMap={routine:'routineList',task:'taskList',discard:'discardList'};
     const tid=idMap[section];
-    if(tid)setTimeout(()=>{const el=document.getElementById(tid);if(el)el.scrollIntoView({behavior:'smooth',block:'start'})},80);
+    if(tid)setTimeout(()=>{
+      const el=document.getElementById(tid);if(!el)return;
+      const sec=el.closest('.section')||el;
+      const headerH=(document.querySelector('.app-header')?.offsetHeight||57)+6;
+      const y=sec.getBoundingClientRect().top+window.scrollY-headerH;
+      window.scrollTo({top:Math.max(0,y),behavior:'smooth'});
+    },80);
   }
 }
 function updateHomeSummary(){
