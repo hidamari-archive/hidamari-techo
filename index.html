@@ -461,6 +461,7 @@ body{font-family:var(--font-body);background:var(--bg);color:var(--text);min-hei
         </div>
         <div class="home-card-arrow" onclick="gotoSeiiki('today')" style="cursor:pointer;padding-left:8px;align-self:stretch;display:flex;align-items:center">›</div>
       </div>
+      <div id="homeStampMini" class="home-stamp-mini" onclick="gotoSeiiki('disclog')"></div>
       <div class="home-summary-card" onclick="switchTab('shop')">
         <div>
           <div class="home-card-label">🛒 買い物リスト</div>
@@ -990,14 +991,15 @@ function renderWeather(data){
       <div class="weather-tmrw-col-precip">${data.tomorrow.precip}%${tumb?' ☂️':''}</div>
     </div>`;
   }
-  // 気圧リスク表示
+  h+=`</div>`;
+  // 気圧リスク表示（weather-top-rowの外）
   if(data.pressureCur!=null){
     const riskMap={low:{label:'気圧 安定',icon:'🟢'},mid:{label:'気圧 注意',icon:'🟡'},high:{label:'気圧 警戒',icon:'🔴'}};
     const rm=riskMap[data.pressureRisk]||riskMap.low;
     const changeStr=data.pressureChange>0?` (▼${data.pressureChange}hPa/6h)`:'';
     h+=`<div class="pressure-row"><span class="pressure-badge ${data.pressureRisk}">${rm.icon} ${rm.label}</span><span class="pressure-val">${data.pressureCur} hPa${changeStr}</span></div>`;
   }
-  h+=`</div><div class="weather-hourly-row" id="weatherHourlyRow" style="display:none"></div>`;
+  h+=`<div class="weather-hourly-row" id="weatherHourlyRow" style="display:none"></div>`;
   el.innerHTML=h;
 }
 
@@ -1065,15 +1067,6 @@ function updateHomeSummary(){
       sHtml+=`</div>`;
     }
   }
-  sHtml+=_div;
-  sHtml+=`<div onclick="gotoSeiiki('disclog')" style="cursor:pointer;padding:2px 0">`;
-  const discardDone=D.todayDiscards.filter(x=>x.done);
-  if(discardDone.length){
-    sHtml+=`<div style="font-size:12px;color:var(--text-light);margin-top:2px">🗑 ${esc(discardDone[0].text)}${discardDone.length>1?` (+${discardDone.length-1})`:''}</div>`;
-  }else{
-    sHtml+=`<div style="font-size:11px;color:var(--text-faint);margin-top:2px">🗑 まだです</div>`;
-  }
-  sHtml+=`</div>`;
   document.getElementById('homeSeiikiSummary').innerHTML=sHtml;
   const unchecked=D.shopItems.filter(x=>!x.checked);
   let shopHtml;
