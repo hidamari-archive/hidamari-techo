@@ -425,7 +425,7 @@ body{font-family:var(--font-body);background:var(--bg);color:var(--text);min-hei
         <div class="sage-chat-input-row">
           <textarea class="sage-chat-input" id="sageChatInput" placeholder="メッセージを入力…" rows="1"
             oninput="this.style.height='auto';this.style.height=Math.min(this.scrollHeight,80)+'px'"
-            onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sageChatSend()}"></textarea>
+            onkeydown="if(event.key==='Enter'&&(event.ctrlKey||event.metaKey)){event.preventDefault();sageChatSend()}"></textarea>
           <button class="sage-chat-send" id="sageChatSendBtn" onclick="sageChatSend()" title="送信">↑</button>
         </div>
       </div>
@@ -1519,7 +1519,8 @@ function getPin(){return localStorage.getItem(PIN_STORE)||''}
 function setPin(p){localStorage.setItem(PIN_STORE,p)}
 function initPin(){
   if(!getPin()){document.getElementById('pinOverlay').style.display='none';return}
-  if(sessionStorage.getItem('hidamari_unlocked')==='1'){document.getElementById('pinOverlay').style.display='none';return}
+  const _unlockedAt=parseInt(sessionStorage.getItem('hidamari_unlocked')||'0');
+  if(_unlockedAt&&Date.now()-_unlockedAt<60*60*1000){document.getElementById('pinOverlay').style.display='none';return}
   pinMode='unlock';
   document.getElementById('pinPrompt').textContent='PINを入力してください';
   document.getElementById('pinOverlay').style.display='flex';
@@ -1549,7 +1550,7 @@ function _pinError(msg){
 function _pinProcess(){
   if(pinMode==='unlock'){
     if(pinBuf===getPin()){
-      sessionStorage.setItem('hidamari_unlocked','1');
+      sessionStorage.setItem('hidamari_unlocked',Date.now().toString());
       document.getElementById('pinOverlay').style.display='none';pinBuf='';
     }else{_pinError('PINが違います')}
   }else if(pinMode==='setup1'){
@@ -1559,7 +1560,7 @@ function _pinProcess(){
   }else if(pinMode==='setup2'){
     if(pinBuf===pinStep1){
       setPin(pinBuf);pinBuf='';pinStep1='';
-      sessionStorage.setItem('hidamari_unlocked','1');
+      sessionStorage.setItem('hidamari_unlocked',Date.now().toString());
       document.getElementById('pinOverlay').style.display='none';
       updatePinSettingUI();
     }else{
@@ -2387,6 +2388,21 @@ function timeAgo(dateStr){
   initSageChat();
   document.getElementById('loadingOverlay').classList.add('hidden');
 })();
+
+// バックグラウンド時の再ロック（15分で再PIN要求）
+document.addEventListener('visibilitychange',()=>{
+  if(!getPin())return;
+  if(document.hidden){
+    sessionStorage.setItem('hidamari_bg_at',Date.now().toString());
+  }else{
+    const bgAt=parseInt(sessionStorage.getItem('hidamari_bg_at')||'0');
+    if(bgAt&&Date.now()-bgAt>15*60*1000){
+      sessionStorage.removeItem('hidamari_unlocked');
+      initPin();
+    }
+    sessionStorage.removeItem('hidamari_bg_at');
+  }
+});
 
 // 日付変わりの自動リロード
 setInterval(async()=>{
