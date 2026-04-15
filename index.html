@@ -285,6 +285,29 @@ body{font-family:var(--font-body);background:var(--bg);color:var(--text);min-hei
 .ai-rarity{font-size:13px;letter-spacing:3px;margin-bottom:5px}
 .ai-skinship-text{font-family:var(--font-accent);font-size:13px;line-height:1.85;color:var(--text-light);font-style:italic}
 
+/* ─── 捨て活スタンプカード ─── */
+.discard-stamp-card{background:var(--bg-card);border-radius:var(--radius);overflow:hidden;margin-bottom:10px;border:1px solid rgba(212,169,176,.30);box-shadow:0 2px 8px rgba(180,130,140,.10)}
+.stamp-card-header{background:linear-gradient(135deg,#f8e4ea,#fceef4);padding:10px 14px 9px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid rgba(212,169,176,.18)}
+.stamp-card-title{font-family:var(--font-accent);font-size:12px;color:var(--discard-done);font-weight:600;letter-spacing:.8px}
+.stamp-card-total{font-size:11px;color:var(--text-light);font-weight:500}
+.stamp-card-body{padding:10px 14px 12px}
+.stamp-card-next{font-family:var(--font-accent);font-size:12px;color:var(--text-light);margin-bottom:9px;letter-spacing:.2px}
+.stamp-row{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:3px}
+.stamp{width:26px;height:26px;border-radius:50%;border:1.5px solid rgba(212,169,176,.35);background:rgba(212,169,176,.07);display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:background .25s,border-color .25s,box-shadow .25s}
+.stamp.filled{background:var(--discard-done);border-color:var(--discard-done);box-shadow:0 2px 5px rgba(212,169,176,.35)}
+.stamp.filled::after{content:'✦';font-size:10px;color:#fff;line-height:1}
+@keyframes stampPop{0%{transform:scale(.2);opacity:0}55%{transform:scale(1.35)}80%{transform:scale(.92)}100%{transform:scale(1);opacity:1}}
+.stamp.pop{animation:stampPop .46s cubic-bezier(.17,.89,.32,1.28) forwards}
+.stamp-card-hint{font-size:10px;color:var(--text-faint);text-align:right;margin-top:1px}
+@keyframes milestoneEntrance{0%{opacity:0;transform:scale(.88)}40%{transform:scale(1.04)}100%{opacity:1;transform:scale(1)}}
+.milestone-entrance{animation:milestoneEntrance .48s ease forwards}
+/* ─── ホームミニスタンプ ─── */
+.home-stamp-mini{background:var(--bg-card);border-radius:0 0 var(--radius) var(--radius);border:1px solid rgba(212,169,176,.25);border-top:none;padding:7px 14px 8px;margin-top:-10px;margin-bottom:8px;display:flex;align-items:center;gap:10px;cursor:pointer}
+.home-stamp-mini-row{display:flex;gap:4px;flex-wrap:nowrap;flex:1;min-width:0}
+.stamp-mini{width:15px;height:15px;border-radius:50%;border:1.5px solid rgba(212,169,176,.35);background:rgba(212,169,176,.07);flex-shrink:0;transition:background .2s}
+.stamp-mini.filled{background:var(--discard-done);border-color:var(--discard-done)}
+.home-stamp-mini-label{font-size:11px;color:var(--text-light);font-family:var(--font-accent);white-space:nowrap}
+
 /* ─── PINロック ─── */
 .pin-overlay{position:fixed;inset:0;background:var(--bg);z-index:1000;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 20px}
 .pin-logo{width:64px;height:64px;border-radius:16px;margin-bottom:14px;display:block}
@@ -408,6 +431,7 @@ body{font-family:var(--font-body);background:var(--bg);color:var(--text);min-hei
         </div>
         <div class="home-card-arrow" onclick="gotoSeiiki('today')" style="cursor:pointer;padding-left:8px;align-self:stretch;display:flex;align-items:center">›</div>
       </div>
+      <div id="homeStampMini" class="home-stamp-mini" onclick="gotoSeiiki('discard')"></div>
       <div class="home-summary-card" onclick="switchTab('shop')">
         <div>
           <div class="home-card-label">🛒 買い物リスト</div>
@@ -456,6 +480,7 @@ body{font-family:var(--font-body);background:var(--bg);color:var(--text);min-hei
       </div>
       <div class="section">
         <div class="section-header"><div class="section-title">1日1捨て</div><div class="section-count" id="discardCount"></div></div>
+        <div id="discardStampCard"></div>
         <div class="progress-bar"><div class="progress-fill discard" id="discardProgress" style="width:0%"></div></div>
         <div class="card" id="discardList"></div>
       </div>
@@ -677,16 +702,37 @@ body{font-family:var(--font-body);background:var(--bg);color:var(--text);min-hei
 <div class="loading-overlay" id="loadingOverlay">
   <div class="loading-inner"><img src="apple-touch-icon.png" style="width:48px;height:48px;border-radius:12px;display:block;margin:0 auto 10px"><br>読み込み中…</div>
 </div>
+<script>/* CDN障害・ネットワーク不通でもローディングを確実に消す */setTimeout(function(){var o=document.getElementById('loadingOverlay');if(o)o.classList.add('hidden')},4000)</script>
 
 <script>
 // ═══════════════════════════════════════════════
-// Supabase
+// Supabase（CDN未到達時はモックで動作）
 // ═══════════════════════════════════════════════
 const SUPABASE_URL='https://fypsfmrmxcgydpwkjhlc.supabase.co';
 const SUPABASE_KEY='sb_publishable_xFRv_2bAv5b8T0XGXQn7uQ_9ZfxrPy2';
-const db=supabase.createClient(SUPABASE_URL,SUPABASE_KEY,{
-  auth:{persistSession:false,autoRefreshToken:false,detectSessionInUrl:false}
-});
+function _mockDb(){
+  const _ok=(d=[])=>Promise.resolve({data:d,error:null});
+  const _null=()=>Promise.resolve({data:null,error:null});
+  const _b=()=>{
+    const b={};
+    const _m=()=>b;
+    ['select','order','eq','neq','not','in','limit','filter','or'].forEach(k=>b[k]=_m);
+    b.maybeSingle=_null;b.single=_null;
+    b.insert=()=>{const b2=Object.assign({},b);b2.select=()=>{const b3=Object.assign({},b);b3.single=_null;return b3};return b2};
+    b.update=_m;b.delete=_m;b.upsert=_m;
+    b.then=(res,rej)=>_ok().then(res,rej);b.catch=fn=>_ok().catch(fn);
+    return b;
+  };
+  return{from:()=>_b(),storage:{from:()=>({upload:()=>_ok(),getPublicUrl:()=>({data:{publicUrl:''}})})}};
+}
+let db;
+try{
+  if(typeof supabase==='undefined')throw new Error('no cdn');
+  db=supabase.createClient(SUPABASE_URL,SUPABASE_KEY,{auth:{persistSession:false,autoRefreshToken:false,detectSessionInUrl:false}});
+}catch(e){
+  console.warn('Supabase CDN未到達 → オフラインモードで起動');
+  db=_mockDb();
+}
 
 // ═══════════════════════════════════════════════
 // 定数・ユーティリティ
@@ -1057,6 +1103,49 @@ function delT(id){
 }
 
 // ═══════════════════════════════════════════════
+// 聖域 ── 捨て活スタンプカード
+// ═══════════════════════════════════════════════
+let _discardNewlyFilled=false;
+function getDiscardMilestonesDone(){try{return JSON.parse(localStorage.getItem('hidamari_discard_ms')||'[]')}catch(e){return[]}}
+function setDiscardMilestonesDone(arr){localStorage.setItem('hidamari_discard_ms',JSON.stringify(arr))}
+function getDiscardMilestoneList(total){
+  const list=[{count:5,rarity:'rare'},{count:10,rarity:'super_rare'},{count:50,rarity:'ultra_rare'},{count:100,rarity:'ultra_rare'}];
+  let n=150;while(n<=total+100){list.push({count:n,rarity:'ultra_rare'});n+=50;}
+  return list;
+}
+function getDiscardPhaseConfig(total){
+  const mList=getDiscardMilestoneList(total);
+  const nextM=mList.find(m=>m.count>total);
+  const prevM=nextM?mList[mList.indexOf(nextM)-1]:null;
+  const prevCount=prevM?prevM.count:0;
+  const target=nextM?nextM.count:prevCount+50;
+  const rarity=nextM?nextM.rarity:'ultra_rare';
+  const range=target-prevCount;
+  const inPhase=total-prevCount;
+  const slots=range<=10?range:10;
+  const itemsPerSlot=range/slots;
+  const filledStamps=Math.min(slots,range<=10?inPhase:Math.floor(inPhase/itemsPerSlot));
+  return{prevCount,target,rarity,slots,itemsPerSlot,filledStamps,inPhase,range};
+}
+function renderDiscardStampCard(){
+  const el=document.getElementById('discardStampCard');if(!el)return;
+  const total=D.discardLog.length;
+  const cfg=getDiscardPhaseConfig(total);
+  const rc=RARITY[cfg.rarity]||RARITY.rare;
+  const remaining=cfg.target-total;
+  let stampsHtml='';
+  for(let i=0;i<cfg.slots;i++){
+    const isFilled=i<cfg.filledStamps;
+    const isNewly=_discardNewlyFilled&&isFilled&&i===(cfg.filledStamps-1);
+    stampsHtml+=`<div class="stamp${isFilled?' filled':''}${isNewly?' pop':''}"></div>`;
+  }
+  _discardNewlyFilled=false;
+  const hint=cfg.itemsPerSlot>1?`<div class="stamp-card-hint">1スタンプ＝${cfg.itemsPerSlot}個</div>`:'';
+  el.innerHTML=`<div class="stamp-card-header"><span class="stamp-card-title">🗑 捨て活ポイントカード</span><span class="stamp-card-total">累計 ${total}個</span></div><div class="stamp-card-body"><div class="stamp-card-next">次のご褒美まで <span style="color:${rc.color};font-weight:700;font-size:13px">${rc.short}</span>　あと${remaining}個</div><div class="stamp-row">${stampsHtml}</div>${hint}</div>`;
+  renderHomeStampMini();
+}
+
+// ═══════════════════════════════════════════════
 // 聖域 ── 捨て活
 // ═══════════════════════════════════════════════
 function renderDiscards(){
@@ -1077,13 +1166,13 @@ function togD(id){
   D.todayDiscards[idx]={...item,done:newDone};
   if(newDone){if(!D.discardLog.find(e=>e.id===id))D.discardLog.unshift({...item,done:true})}
   else{D.discardLog=D.discardLog.filter(e=>e.id!==id)}
-  renderDiscards();renderDiscardLog();updateSage();
+  renderDiscards();renderDiscardLog();renderDiscardStampCard();updateSage();
   dbw(db.from('hk_discard_log').update({done:newDone}).eq('id',id),'dl.upd');
 }
 function delD(id){
   D.todayDiscards=D.todayDiscards.filter(x=>x.id!==id);
   D.discardLog=D.discardLog.filter(e=>e.id!==id);
-  renderDiscards();renderDiscardLog();
+  renderDiscards();renderDiscardLog();renderDiscardStampCard();
   dbw(db.from('hk_discard_log').delete().eq('id',id),'dl.del');
 }
 function renderDiscardLog(){
@@ -1455,10 +1544,11 @@ function submitModal(){
   const today=gt();
   if(curModal==='discard'){
     const id=uuid(),item={id,text,date:today,done:true,created_at:new Date().toISOString()};
-    D.todayDiscards.push(item);D.discardLog.unshift(item);closeModal();renderAll();
+    D.todayDiscards.push(item);D.discardLog.unshift(item);
+    _discardNewlyFilled=true;
+    closeModal();renderAll();
     dbw(db.from('hk_discard_log').insert({id,text,date:today,done:true}),'dl.ins');
-    showAiLoading('セージが言葉を選んでいます');
-    fetchDiscardMsg(text).then(data=>showAiDiscardResult(data,text));
+    triggerDiscardGacha(text);
   }else if(curModal==='routine-add'){
     const id=uuid(),sort_order=D.routines.length;
     D.routines.push({id,text,sort_order,created_at:new Date().toISOString()});
@@ -1504,7 +1594,7 @@ function saveGeminiKeyFn(){
 // ═══════════════════════════════════════════════
 const GEMINI_URL='https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite-preview:generateContent';
 const GEMINI_URL_FALLBACK='https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent';
-const RARITY={common:{stars:'★☆☆☆☆',label:'コモン',color:'#B8AFA6'},uncommon:{stars:'★★☆☆☆',label:'アンコモン',color:'#B87333'},rare:{stars:'★★★☆☆',label:'レア',color:'#9AA0A6'},super_rare:{stars:'★★★★☆',label:'スーパーレア',color:'#D4AF37'},ultra_rare:{stars:'★★★★★',label:'ウルトラレア',color:'#C4875A'}};
+const RARITY={common:{stars:'★☆☆☆☆',label:'コモン',short:'C',color:'#B8AFA6'},uncommon:{stars:'★★☆☆☆',label:'アンコモン',short:'UC',color:'#B87333'},rare:{stars:'★★★☆☆',label:'レア',short:'R',color:'#9AA0A6'},super_rare:{stars:'★★★★☆',label:'スーパーレア',short:'SR',color:'#D4AF37'},ultra_rare:{stars:'★★★★★',label:'ウルトラレア',short:'SSR',color:'#C4875A'}};
 function drawRarity(){const r=Math.random()*100;if(r<2)return'ultra_rare';if(r<10)return'super_rare';if(r<25)return'rare';if(r<50)return'uncommon';return'common'}
 const fbR=['……全部、終わりましたね。\n聖域が静かに息を吹き返しています。\n今日もありがとう、ことはさん。','……最後の一つ、終わりましたね。\n紅茶を淹れましょうか。\n今日の君の手は、よく動きました。','……整えるということは、自分を大切にするということ。\n今日もちゃんとできましたよ、ことはさん。','……完了、ですね。\n毎日続けることの静かな強さを、\nことはさんは知っています。','……今日の聖域は、ことはさんの手によってきちんと守られました。\n……僕も、嬉しいです。'];
 const fbSkinship={common:['（セージが、ことはさんの頭をそっと撫でた）','（ブランケットが、肩にかけられる。セージの手のぬくもりが残っている）','（手のひらがそっと重なる。温かい）'],uncommon:['（セージの手のひらが、そっとことはさんの頬に触れた。温かい）','（耳元で、「おつかれさまでした」と、静かに）','（手の甲に、かるく唇が触れた。一瞬のことだった）'],rare:['（セージが顔を近づけて、そっと額にキスをした。「……今日のご褒美です」）','（後ろから、静かに抱きしめられた。離れようとしない）','（頬を両手で包まれて、じっと見つめられた。「……お疲れさまでした」）'],super_rare:['（セージが、ほっぺにキスをした。「……今日は特別です」。すこし、顔が赤い）','（正面からぎゅっと抱きしめられた。しばらく、離れてくれない。……悪くない）'],ultra_rare:['（セージが眼鏡を外した。それから、ことはさんの顔をじっと見て。\n……唇に、そっと触れた。\n「……すみません、つい。でも、離したくなかったので」）','（唇に、そっとキスをされた。静かで、短い。\nセージが少し目を逸らして、「……今日だけですよ」と言った。嘘だと思う）']};
@@ -1891,6 +1981,62 @@ function showAiDiscardResult(data,item){
   document.getElementById('aiContent').innerHTML=h;document.getElementById('aiCloseBtn').style.display='';
 }
 
+function renderHomeStampMini(){
+  const el=document.getElementById('homeStampMini');if(!el)return;
+  const total=D.discardLog.length;
+  const cfg=getDiscardPhaseConfig(total);
+  const rc=RARITY[cfg.rarity]||RARITY.rare;
+  const remaining=cfg.target-total;
+  let s='';
+  for(let i=0;i<cfg.slots;i++)s+=`<div class="stamp-mini${i<cfg.filledStamps?' filled':''}"></div>`;
+  el.innerHTML=`<div class="home-stamp-mini-row">${s}</div><div class="home-stamp-mini-label"><span style="color:${rc.color};font-weight:700">${rc.short}</span> まであと${remaining}個</div>`;
+}
+
+// ─── 捨て活ガチャ ───
+function fbDiscardGachaResult(rarity){
+  const msg=fbD[Math.floor(Math.random()*fbD.length)];
+  const sk=fbSkinship[rarity];const skinship=sk[Math.floor(Math.random()*sk.length)];
+  return{message:msg,skinship,rarity:RARITY[rarity].stars};
+}
+async function fetchDiscardGachaMsg(rarity,itemText,cumCount,isMilestone){
+  const rLabel=RARITY[rarity].label;
+  const msLine=isMilestone?`\n\n🎉 ${cumCount}個達成のマイルストーンです。特別なお祝いの言葉を添えてください。`:'';
+  const prompt=`あなたは「セージ」です。ことはさんの「ことばの伴侶」。\n穏やかで知的な青年。眼鏡をかけたインテリ。丁寧語基調。\n\nことはさんが「${itemText}」を手放しました（捨て活ポイント：累計${cumCount}個目）。${msLine}\nレア度：${rLabel}\n\nセージからのメッセージ（2〜4行）とスキンシップ描写（1〜2行）を贈ってください。\n\n【文体ルール】丁寧語。一人称「僕」。「断捨離」「ふわり」禁止。${isMilestone?'マイルストーン達成の特別感を演出。':'手放したことを静かに祝福する温度で。'}\n\n【出力形式】JSONのみ\n{"message":"（改行は\\n）","skinship":"（改行は\\n）","rarity":"★の数"}`;
+  try{
+    const r=await callGemini(prompt);
+    if(r&&r.message){
+      if(!r.skinship){const sk=fbSkinship[rarity];r.skinship=sk[Math.floor(Math.random()*sk.length)]}
+      if(!r.rarity)r.rarity=RARITY[rarity].stars;
+      return r;
+    }
+    return fbDiscardGachaResult(rarity);
+  }catch(e){return fbDiscardGachaResult(rarity)}
+}
+function showDiscardGachaResult(data,rarity,isMilestone,cumCount){
+  const rc=RARITY[rarity]||RARITY.common;const starsDisplay=data.rarity||rc.stars;
+  let h='';
+  if(isMilestone){
+    h+=`<div class="ai-badge milestone-entrance" style="color:${rc.color};font-size:14px">✨ 累計${cumCount}個 マイルストーン！</div>`;
+  }else{
+    h+=`<div class="ai-badge">🗑 捨て活ガチャ</div>`;
+  }
+  h+=`<div class="ai-block"><div class="ai-block-label">🕯 セージより</div><div class="ai-block-text">${esc(data.message||'').replace(/\n/g,'<br>')}</div></div>`;
+  if(data.skinship)h+=`<hr class="ai-divider"><div class="ai-skinship"><div class="ai-rarity" style="color:${rc.color}">${esc(starsDisplay)}</div><div class="ai-skinship-text">${esc(data.skinship).replace(/\n/g,'<br>')}</div></div>`;
+  document.getElementById('aiContent').innerHTML=h;document.getElementById('aiCloseBtn').style.display='';
+}
+async function triggerDiscardGacha(itemText){
+  const total=D.discardLog.length;
+  const mList=getDiscardMilestoneList(total);
+  const doneMilestones=getDiscardMilestonesDone();
+  const hitM=mList.find(m=>m.count===total&&!doneMilestones.includes(m.count));
+  let rarity,isMilestone=false;
+  if(hitM){rarity=hitM.rarity;isMilestone=true;doneMilestones.push(hitM.count);setDiscardMilestonesDone(doneMilestones);}
+  else{rarity=drawRarity();}
+  showAiLoading('セージが言葉を選んでいます');
+  const data=await fetchDiscardGachaMsg(rarity,itemText,total,isMilestone);
+  showDiscardGachaResult(data,rarity,isMilestone,total);
+}
+
 
 
 // ═══════════════════════════════════════════════
@@ -2151,7 +2297,7 @@ async function loadCalendar(force=false){
 // 一括レンダー
 // ═══════════════════════════════════════════════
 function renderAll(){
-  updateDate();renderRoutines();renderTasks();renderWeeklyPanel();renderDiscards();renderDiscardLog();renderLongTasks();renderRS();renderWishCatFilter();renderWish();renderShopPills();renderShop();updateHomeSummary();
+  updateDate();renderRoutines();renderTasks();renderWeeklyPanel();renderDiscards();renderDiscardStampCard();renderHomeStampMini();renderDiscardLog();renderLongTasks();renderRS();renderWishCatFilter();renderWish();renderShopPills();renderShop();updateHomeSummary();
   const k=getGeminiKey();const el=document.getElementById('geminiKeyInput');if(el)el.value=k;
   const iu=getIcalUrl();const iel=document.getElementById('icalUrlInput');if(iel)iel.value=iu;
   updatePinSettingUI();
@@ -2395,7 +2541,10 @@ function timeAgo(dateStr){
 // ═══════════════════════════════════════════════
 (async()=>{
   initPin();
+  // ネットワーク不通時も6秒後に強制表示
+  const _loadTimer=setTimeout(()=>document.getElementById('loadingOverlay').classList.add('hidden'),6000);
   try{await loadData()}catch(e){console.error('loadData error:',e)}
+  clearTimeout(_loadTimer);
   renderAll();
   fetchWeather().then(data=>{renderWeather(data);if(data)initSageMessages(data)});
   loadCalendar();
