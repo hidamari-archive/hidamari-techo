@@ -289,24 +289,34 @@ body{font-family:var(--font-body);background:var(--bg);color:var(--text);min-hei
 .discard-stamp-card{background:var(--bg-card);border-radius:var(--radius);overflow:hidden;margin-bottom:10px;border:1px solid rgba(212,169,176,.30);box-shadow:0 2px 8px rgba(180,130,140,.10)}
 .stamp-card-header{background:linear-gradient(135deg,#f8e4ea,#fceef4);padding:10px 14px 9px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid rgba(212,169,176,.18)}
 .stamp-card-title{font-family:var(--font-accent);font-size:12px;color:var(--discard-done);font-weight:600;letter-spacing:.8px}
-.stamp-card-total{font-size:11px;color:var(--text-light);font-weight:500}
+.stamp-card-header-right{display:flex;align-items:center;gap:7px}
+.stamp-card-total{font-size:11px;color:var(--text-light)}
+.stamp-crown{font-size:13px;letter-spacing:1px}
 .stamp-card-body{padding:10px 14px 12px}
 .stamp-card-next{font-family:var(--font-accent);font-size:12px;color:var(--text-light);margin-bottom:9px;letter-spacing:.2px}
-.stamp-row{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:3px}
-.stamp{width:26px;height:26px;border-radius:50%;border:1.5px solid rgba(212,169,176,.35);background:rgba(212,169,176,.07);display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:background .25s,border-color .25s,box-shadow .25s}
-.stamp.filled{background:var(--discard-done);border-color:var(--discard-done);box-shadow:0 2px 5px rgba(212,169,176,.35)}
-.stamp.filled::after{content:'✦';font-size:10px;color:#fff;line-height:1}
+.stamp-row{display:grid;grid-template-columns:repeat(10,1fr);gap:5px;margin-bottom:3px}
+.stamp{border-radius:50%;border:1.5px solid rgba(212,169,176,.35);background:rgba(212,169,176,.07);aspect-ratio:1;display:flex;align-items:center;justify-content:center;transition:background .25s,border-color .25s,box-shadow .25s;min-width:0}
+.stamp.filled{background:var(--discard-done);border-color:var(--discard-done);box-shadow:0 1px 4px rgba(212,169,176,.35)}
+.stamp.filled::after{content:'✦';font-size:9px;color:#fff;line-height:1}
 @keyframes stampPop{0%{transform:scale(.2);opacity:0}55%{transform:scale(1.35)}80%{transform:scale(.92)}100%{transform:scale(1);opacity:1}}
 .stamp.pop{animation:stampPop .46s cubic-bezier(.17,.89,.32,1.28) forwards}
-.stamp-card-hint{font-size:10px;color:var(--text-faint);text-align:right;margin-top:1px}
 @keyframes milestoneEntrance{0%{opacity:0;transform:scale(.88)}40%{transform:scale(1.04)}100%{opacity:1;transform:scale(1)}}
 .milestone-entrance{animation:milestoneEntrance .48s ease forwards}
 /* ─── ホームミニスタンプ ─── */
-.home-stamp-mini{background:var(--bg-card);border-radius:0 0 var(--radius) var(--radius);border:1px solid rgba(212,169,176,.25);border-top:none;padding:7px 14px 8px;margin-top:-10px;margin-bottom:8px;display:flex;align-items:center;gap:10px;cursor:pointer}
-.home-stamp-mini-row{display:flex;gap:4px;flex-wrap:nowrap;flex:1;min-width:0}
-.stamp-mini{width:15px;height:15px;border-radius:50%;border:1.5px solid rgba(212,169,176,.35);background:rgba(212,169,176,.07);flex-shrink:0;transition:background .2s}
+.home-stamp-mini{background:var(--bg-card);border-radius:var(--radius);border:1px solid rgba(212,169,176,.25);padding:10px 14px;margin-bottom:8px;cursor:pointer}
+.home-stamp-mini-grid{display:grid;grid-template-columns:repeat(15,1fr);gap:3px;margin-bottom:7px}
+.stamp-mini{border-radius:50%;border:1.5px solid rgba(212,169,176,.35);background:rgba(212,169,176,.07);aspect-ratio:1;transition:background .2s}
 .stamp-mini.filled{background:var(--discard-done);border-color:var(--discard-done)}
-.home-stamp-mini-label{font-size:11px;color:var(--text-light);font-family:var(--font-accent);white-space:nowrap}
+.home-stamp-mini-label{font-size:11px;color:var(--text-light);font-family:var(--font-accent);margin-bottom:5px}
+.home-stamp-mini-today{font-size:12px;color:var(--text);line-height:1.5;font-family:var(--font-accent)}
+/* ─── 捨て活ログ（新）─── */
+.log-row{display:flex;align-items:flex-start;padding:9px 14px;gap:10px;border-bottom:1px solid var(--border)}
+.log-row:last-child{border-bottom:none}
+.log-date-label{font-family:var(--font-accent);font-size:11px;color:var(--text-light);white-space:nowrap;padding-top:3px;min-width:60px;flex-shrink:0}
+.log-chips{display:flex;flex-wrap:wrap;gap:5px}
+.log-chip{display:inline-flex;align-items:center;gap:3px;background:var(--discard-done-bg);border-radius:8px;padding:3px 4px 3px 8px;font-size:12px;color:var(--text)}
+.log-chip-del{background:none;border:none;color:var(--text-faint);font-size:13px;cursor:pointer;padding:0 2px;line-height:1;flex-shrink:0}
+.log-clear-btn{display:block;width:100%;margin-bottom:8px;padding:8px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--bg);color:var(--text-faint);font-size:12px;font-family:var(--font-body);cursor:pointer;text-align:center}
 
 /* ─── PINロック ─── */
 .pin-overlay{position:fixed;inset:0;background:var(--bg);z-index:1000;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 20px}
@@ -480,7 +490,6 @@ body{font-family:var(--font-body);background:var(--bg);color:var(--text);min-hei
       </div>
       <div class="section">
         <div class="section-header"><div class="section-title">1日1捨て</div><div class="section-count" id="discardCount"></div></div>
-        <div id="discardStampCard"></div>
         <div class="progress-bar"><div class="progress-fill discard" id="discardProgress" style="width:0%"></div></div>
         <div class="card" id="discardList"></div>
       </div>
@@ -517,6 +526,7 @@ body{font-family:var(--font-body);background:var(--bg);color:var(--text);min-hei
     </div>
     <!-- 捨て活ログ -->
     <div class="stab-panel panel-body" id="stab-disclog">
+      <div id="discardStampCard"></div>
       <div class="log-summary" id="discardSummary"></div>
       <div class="card" id="discardLog"></div>
     </div>
@@ -1106,42 +1116,30 @@ function delT(id){
 // 聖域 ── 捨て活スタンプカード
 // ═══════════════════════════════════════════════
 let _discardNewlyFilled=false;
-function getDiscardMilestonesDone(){try{return JSON.parse(localStorage.getItem('hidamari_discard_ms')||'[]')}catch(e){return[]}}
-function setDiscardMilestonesDone(arr){localStorage.setItem('hidamari_discard_ms',JSON.stringify(arr))}
-function getDiscardMilestoneList(total){
-  const list=[{count:5,rarity:'rare'},{count:10,rarity:'super_rare'},{count:50,rarity:'ultra_rare'},{count:100,rarity:'ultra_rare'}];
-  let n=150;while(n<=total+100){list.push({count:n,rarity:'ultra_rare'});n+=50;}
-  return list;
-}
+const DISCARD_CARD_SIZE=30;
 function getDiscardPhaseConfig(total){
-  const mList=getDiscardMilestoneList(total);
-  const nextM=mList.find(m=>m.count>total);
-  const prevM=nextM?mList[mList.indexOf(nextM)-1]:null;
-  const prevCount=prevM?prevM.count:0;
-  const target=nextM?nextM.count:prevCount+50;
-  const rarity=nextM?nextM.rarity:'ultra_rare';
-  const range=target-prevCount;
-  const inPhase=total-prevCount;
-  const slots=range<=10?range:10;
-  const itemsPerSlot=range/slots;
-  const filledStamps=Math.min(slots,range<=10?inPhase:Math.floor(inPhase/itemsPerSlot));
-  return{prevCount,target,rarity,slots,itemsPerSlot,filledStamps,inPhase,range};
+  const posInCard=total%DISCARD_CARD_SIZE;
+  const crowns=Math.floor(total/DISCARD_CARD_SIZE);
+  let nextMilestone,rarity;
+  if(posInCard<5){nextMilestone=5;rarity='rare';}
+  else if(posInCard<10){nextMilestone=10;rarity='super_rare';}
+  else{nextMilestone=DISCARD_CARD_SIZE;rarity='ultra_rare';}
+  return{posInCard,crowns,nextMilestone,rarity,remaining:nextMilestone-posInCard};
 }
 function renderDiscardStampCard(){
   const el=document.getElementById('discardStampCard');if(!el)return;
   const total=D.discardLog.length;
   const cfg=getDiscardPhaseConfig(total);
   const rc=RARITY[cfg.rarity]||RARITY.rare;
-  const remaining=cfg.target-total;
   let stampsHtml='';
-  for(let i=0;i<cfg.slots;i++){
-    const isFilled=i<cfg.filledStamps;
-    const isNewly=_discardNewlyFilled&&isFilled&&i===(cfg.filledStamps-1);
+  for(let i=0;i<DISCARD_CARD_SIZE;i++){
+    const isFilled=i<cfg.posInCard;
+    const isNewly=_discardNewlyFilled&&isFilled&&i===(cfg.posInCard-1);
     stampsHtml+=`<div class="stamp${isFilled?' filled':''}${isNewly?' pop':''}"></div>`;
   }
   _discardNewlyFilled=false;
-  const hint=cfg.itemsPerSlot>1?`<div class="stamp-card-hint">1スタンプ＝${cfg.itemsPerSlot}個</div>`:'';
-  el.innerHTML=`<div class="stamp-card-header"><span class="stamp-card-title">🗑 捨て活ポイントカード</span><span class="stamp-card-total">累計 ${total}個</span></div><div class="stamp-card-body"><div class="stamp-card-next">次のご褒美まで <span style="color:${rc.color};font-weight:700;font-size:13px">${rc.short}</span>　あと${remaining}個</div><div class="stamp-row">${stampsHtml}</div>${hint}</div>`;
+  const crownHtml=cfg.crowns>0?`<span class="stamp-crown">${'👑'.repeat(Math.min(cfg.crowns,5))}${cfg.crowns>5?` ×${cfg.crowns}`:''}</span>`:'';
+  el.innerHTML=`<div class="stamp-card-header"><span class="stamp-card-title">🗑 捨て活ポイントカード</span><span class="stamp-card-header-right">${crownHtml}<span class="stamp-card-total">累計 ${total}個</span></span></div><div class="stamp-card-body"><div class="stamp-card-next">次のご褒美まで <span style="color:${rc.color};font-weight:700;font-size:13px">${rc.short}</span>　あと${cfg.remaining}個</div><div class="stamp-row">${stampsHtml}</div></div>`;
   renderHomeStampMini();
 }
 
@@ -1178,18 +1176,35 @@ function delD(id){
 function renderDiscardLog(){
   const el=document.getElementById('discardLog'),sum=document.getElementById('discardSummary');
   const logs=D.discardLog;
-  if(!logs.length){el.innerHTML='<div style="padding:18px;text-align:center;color:var(--text-faint);font-size:14px">まだ記録がありません</div>';sum.textContent='';return}
-  sum.textContent=`これまでに ${logs.length} つ手放しました`;
-  const grouped={};logs.forEach(e=>{if(!grouped[e.date])grouped[e.date]=[];grouped[e.date].push(e.text)});
+  if(!logs.length){
+    el.innerHTML='<div style="padding:18px;text-align:center;color:var(--text-faint);font-size:14px">まだ記録がありません</div>';
+    sum.innerHTML='';return;
+  }
+  const cfg=getDiscardPhaseConfig(logs.length);
+  const crownHtml=cfg.crowns>0?` ${'👑'.repeat(Math.min(cfg.crowns,5))}${cfg.crowns>5?` ×${cfg.crowns}`:''}`:'' ;
+  sum.innerHTML=`<span>これまでに <strong>${logs.length}</strong> つ手放しました${crownHtml}</span>`;
+  // ID重複除去しながらdate別にグループ化
+  const seen=new Set(),grouped={};
+  logs.forEach(e=>{
+    if(seen.has(e.id))return;seen.add(e.id);
+    if(!grouped[e.date])grouped[e.date]=[];
+    grouped[e.date].push(e);
+  });
   const dates=Object.keys(grouped).sort().reverse();const today=gt();
-  let h='';
+  let h=`<button class="log-clear-btn" onclick="clearAllDiscardLog()">🗑 全記録を削除する</button>`;
   dates.forEach(date=>{
     const d=new Date(date+'T00:00:00'),ds=['日','月','火','水','木','金','土'];
-    const label=date===today?'今日':`${d.getMonth()+1}月${d.getDate()}日（${ds[d.getDay()]}）`;
-    h+=`<div class="log-date-header">${label}</div>`;
-    grouped[date].forEach(text=>{h+=`<div class="log-item"><div class="log-bullet"></div><span>${esc(text)}</span></div>`});
+    const label=date===today?'今日':`${d.getMonth()+1}/${d.getDate()}（${ds[d.getDay()]}）`;
+    const chips=grouped[date].map(item=>`<span class="log-chip">${esc(item.text)}<button class="log-chip-del" onclick="delD('${item.id}')">×</button></span>`).join('');
+    h+=`<div class="log-row"><span class="log-date-label">${label}</span><div class="log-chips">${chips}</div></div>`;
   });
   el.innerHTML=h;
+}
+function clearAllDiscardLog(){
+  if(!confirm('捨て活の記録をすべて削除しますか？\nこの操作は取り消せません。'))return;
+  D.todayDiscards=[];D.discardLog=[];
+  renderDiscards();renderDiscardLog();renderDiscardStampCard();updateHomeSummary();
+  dbw(db.from('hk_discard_log').delete().not('id','is',null),'dl.clearAll');
 }
 
 // ═══════════════════════════════════════════════
@@ -1594,7 +1609,7 @@ function saveGeminiKeyFn(){
 // ═══════════════════════════════════════════════
 const GEMINI_URL='https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite-preview:generateContent';
 const GEMINI_URL_FALLBACK='https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent';
-const RARITY={common:{stars:'★☆☆☆☆',label:'コモン',short:'C',color:'#B8AFA6'},uncommon:{stars:'★★☆☆☆',label:'アンコモン',short:'UC',color:'#B87333'},rare:{stars:'★★★☆☆',label:'レア',short:'R',color:'#9AA0A6'},super_rare:{stars:'★★★★☆',label:'スーパーレア',short:'SR',color:'#D4AF37'},ultra_rare:{stars:'★★★★★',label:'ウルトラレア',short:'SSR',color:'#C4875A'}};
+const RARITY={common:{stars:'★',label:'コモン',short:'C',color:'#B8AFA6'},uncommon:{stars:'★★',label:'アンコモン',short:'UC',color:'#B87333'},rare:{stars:'★★★',label:'レア',short:'R',color:'#9AA0A6'},super_rare:{stars:'★★★★',label:'スーパーレア',short:'SR',color:'#D4AF37'},ultra_rare:{stars:'★★★★★',label:'ウルトラレア',short:'SSR',color:'#C4875A'}};
 function drawRarity(){const r=Math.random()*100;if(r<2)return'ultra_rare';if(r<10)return'super_rare';if(r<25)return'rare';if(r<50)return'uncommon';return'common'}
 const fbR=['……全部、終わりましたね。\n聖域が静かに息を吹き返しています。\n今日もありがとう、ことはさん。','……最後の一つ、終わりましたね。\n紅茶を淹れましょうか。\n今日の君の手は、よく動きました。','……整えるということは、自分を大切にするということ。\n今日もちゃんとできましたよ、ことはさん。','……完了、ですね。\n毎日続けることの静かな強さを、\nことはさんは知っています。','……今日の聖域は、ことはさんの手によってきちんと守られました。\n……僕も、嬉しいです。'];
 const fbSkinship={common:['（セージが、ことはさんの頭をそっと撫でた）','（ブランケットが、肩にかけられる。セージの手のぬくもりが残っている）','（手のひらがそっと重なる。温かい）'],uncommon:['（セージの手のひらが、そっとことはさんの頬に触れた。温かい）','（耳元で、「おつかれさまでした」と、静かに）','（手の甲に、かるく唇が触れた。一瞬のことだった）'],rare:['（セージが顔を近づけて、そっと額にキスをした。「……今日のご褒美です」）','（後ろから、静かに抱きしめられた。離れようとしない）','（頬を両手で包まれて、じっと見つめられた。「……お疲れさまでした」）'],super_rare:['（セージが、ほっぺにキスをした。「……今日は特別です」。すこし、顔が赤い）','（正面からぎゅっと抱きしめられた。しばらく、離れてくれない。……悪くない）'],ultra_rare:['（セージが眼鏡を外した。それから、ことはさんの顔をじっと見て。\n……唇に、そっと触れた。\n「……すみません、つい。でも、離したくなかったので」）','（唇に、そっとキスをされた。静かで、短い。\nセージが少し目を逸らして、「……今日だけですよ」と言った。嘘だと思う）']};
@@ -1986,10 +2001,12 @@ function renderHomeStampMini(){
   const total=D.discardLog.length;
   const cfg=getDiscardPhaseConfig(total);
   const rc=RARITY[cfg.rarity]||RARITY.rare;
-  const remaining=cfg.target-total;
   let s='';
-  for(let i=0;i<cfg.slots;i++)s+=`<div class="stamp-mini${i<cfg.filledStamps?' filled':''}"></div>`;
-  el.innerHTML=`<div class="home-stamp-mini-row">${s}</div><div class="home-stamp-mini-label"><span style="color:${rc.color};font-weight:700">${rc.short}</span> まであと${remaining}個</div>`;
+  for(let i=0;i<DISCARD_CARD_SIZE;i++)s+=`<div class="stamp-mini${i<cfg.posInCard?' filled':''}"></div>`;
+  const todayDone=D.todayDiscards.filter(x=>x.done);
+  const todayText=todayDone.length?'🗑 '+todayDone.map(x=>esc(x.text)).join('・'):'🗑 今日はまだ記録がありません';
+  const crownHtml=cfg.crowns>0?` ${'👑'.repeat(Math.min(cfg.crowns,5))}${cfg.crowns>5?` ×${cfg.crowns}`:''}`:'' ;
+  el.innerHTML=`<div class="home-stamp-mini-label"><span style="color:${rc.color};font-weight:700">${rc.short}</span> まであと${cfg.remaining}個${crownHtml}</div><div class="home-stamp-mini-grid">${s}</div><div class="home-stamp-mini-today">${todayText}</div>`;
 }
 
 // ─── 捨て活ガチャ ───
@@ -2012,29 +2029,32 @@ async function fetchDiscardGachaMsg(rarity,itemText,cumCount,isMilestone){
     return fbDiscardGachaResult(rarity);
   }catch(e){return fbDiscardGachaResult(rarity)}
 }
-function showDiscardGachaResult(data,rarity,isMilestone,cumCount){
+function showDiscardGachaResult(data,rarity,isMilestone,cumCount,itemText,isCardComplete){
   const rc=RARITY[rarity]||RARITY.common;const starsDisplay=data.rarity||rc.stars;
   let h='';
-  if(isMilestone){
-    h+=`<div class="ai-badge milestone-entrance" style="color:${rc.color};font-size:14px">✨ 累計${cumCount}個 マイルストーン！</div>`;
+  if(isCardComplete){
+    const crowns=Math.floor(cumCount/DISCARD_CARD_SIZE);
+    h+=`<div class="ai-badge milestone-entrance" style="color:${rc.color};font-size:14px">✨ カード完成！ ${'👑'.repeat(Math.min(crowns,5))}${crowns>5?` ×${crowns}`:''}</div>`;
+  }else if(isMilestone){
+    h+=`<div class="ai-badge milestone-entrance" style="color:${rc.color}">✨ ${cumCount%DISCARD_CARD_SIZE}個目 ${rc.short} 達成！</div>`;
   }else{
     h+=`<div class="ai-badge">🗑 捨て活ガチャ</div>`;
   }
-  h+=`<div class="ai-block"><div class="ai-block-label">🕯 セージより</div><div class="ai-block-text">${esc(data.message||'').replace(/\n/g,'<br>')}</div></div>`;
+  h+=`<div class="ai-block"><div class="ai-block-label">🕯「${esc(itemText)}」を手放して</div><div class="ai-block-text">${esc(data.message||'').replace(/\n/g,'<br>')}</div></div>`;
   if(data.skinship)h+=`<hr class="ai-divider"><div class="ai-skinship"><div class="ai-rarity" style="color:${rc.color}">${esc(starsDisplay)}</div><div class="ai-skinship-text">${esc(data.skinship).replace(/\n/g,'<br>')}</div></div>`;
   document.getElementById('aiContent').innerHTML=h;document.getElementById('aiCloseBtn').style.display='';
 }
 async function triggerDiscardGacha(itemText){
   const total=D.discardLog.length;
-  const mList=getDiscardMilestoneList(total);
-  const doneMilestones=getDiscardMilestonesDone();
-  const hitM=mList.find(m=>m.count===total&&!doneMilestones.includes(m.count));
-  let rarity,isMilestone=false;
-  if(hitM){rarity=hitM.rarity;isMilestone=true;doneMilestones.push(hitM.count);setDiscardMilestonesDone(doneMilestones);}
+  const posInCard=total%DISCARD_CARD_SIZE;
+  let rarity,isMilestone=false,isCardComplete=false;
+  if(posInCard===0&&total>0){rarity='ultra_rare';isMilestone=true;isCardComplete=true;}
+  else if(posInCard===10){rarity='super_rare';isMilestone=true;}
+  else if(posInCard===5){rarity='rare';isMilestone=true;}
   else{rarity=drawRarity();}
   showAiLoading('セージが言葉を選んでいます');
   const data=await fetchDiscardGachaMsg(rarity,itemText,total,isMilestone);
-  showDiscardGachaResult(data,rarity,isMilestone,total);
+  showDiscardGachaResult(data,rarity,isMilestone,total,itemText,isCardComplete);
 }
 
 
