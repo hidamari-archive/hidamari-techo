@@ -13,6 +13,7 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 :root{
+  --header-h:74px;
   --bg:#f5f0e8;--bg-card:#faf7f2;--bg-warm:#ede8df;
   --text:#3a3530;--text-light:#7a7268;--text-faint:#b0a898;
   --accent:#8b7355;--accent-light:#f0ece4;--border:#ddd8ce;
@@ -87,7 +88,7 @@ body{font-family:var(--font-body);background:var(--bg);color:var(--text);min-hei
 .add-icon{width:22px;height:22px;border-radius:50%;border:2px dashed var(--border);display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0}
 
 /* ─── 聖域サブタブ ─── */
-.seiiki-tabs{display:flex;gap:0;padding:0 16px;border-bottom:1px solid var(--border);position:sticky;top:0;z-index:10;background:var(--bg)}
+.seiiki-tabs{display:flex;gap:0;padding:0 16px;border-bottom:1px solid var(--border);position:sticky;top:var(--header-h,74px);z-index:90;background:var(--bg)}
 .stab{padding:9px 14px;font-size:12px;font-weight:500;color:var(--text-light);border:none;background:none;cursor:pointer;position:relative;transition:color .2s;white-space:nowrap}
 .stab.active{color:var(--text)}
 .stab.active::after{content:'';position:absolute;bottom:-1px;left:14px;right:14px;height:2px;border-radius:2px;background:var(--accent)}
@@ -302,9 +303,20 @@ body{font-family:var(--font-body);background:var(--bg);color:var(--text);min-hei
 .stamp.pop{animation:stampPop .46s cubic-bezier(.17,.89,.32,1.28) forwards}
 @keyframes milestoneEntrance{0%{opacity:0;transform:scale(.88)}40%{transform:scale(1.04)}100%{opacity:1;transform:scale(1)}}
 .milestone-entrance{animation:milestoneEntrance .48s ease forwards}
+/* マイルストーンスロット（空き時に色付き枠＋ラベル） */
+.stamp.ms-r:not(.filled){border-color:rgba(154,160,166,.65);background:rgba(154,160,166,.06)}
+.stamp.ms-r:not(.filled)::before{content:'R';font-size:7px;color:rgba(154,160,166,.9);line-height:1;letter-spacing:0}
+.stamp.ms-sr:not(.filled){border-color:rgba(212,175,55,.6);background:rgba(212,175,55,.06)}
+.stamp.ms-sr:not(.filled)::before{content:'SR';font-size:6px;color:rgba(212,175,55,.95);line-height:1;letter-spacing:-.3px}
+.stamp.ms-ssr:not(.filled){border-color:rgba(196,135,90,.6);background:rgba(196,135,90,.06)}
+.stamp.ms-ssr:not(.filled)::before{content:'SSR';font-size:5px;color:rgba(196,135,90,.95);line-height:1;letter-spacing:-.5px}
+/* ホームミニ：マイルストーン枠だけ色付き（小さいのでラベルなし） */
+.stamp-mini.ms-r:not(.filled){border-color:rgba(154,160,166,.7)}
+.stamp-mini.ms-sr:not(.filled){border-color:rgba(212,175,55,.75);background:rgba(212,175,55,.07)}
+.stamp-mini.ms-ssr:not(.filled){border-color:rgba(196,135,90,.75);background:rgba(196,135,90,.07)}
 /* ─── ホームミニスタンプ ─── */
 .home-stamp-mini{background:var(--bg-card);border-radius:var(--radius);border:1px solid rgba(212,169,176,.25);padding:10px 14px;margin-bottom:8px;cursor:pointer}
-.home-stamp-mini-grid{display:grid;grid-template-columns:repeat(15,1fr);gap:3px;margin-bottom:7px}
+.home-stamp-mini-grid{display:grid;grid-template-columns:repeat(20,1fr);gap:2px;margin-bottom:7px}
 .stamp-mini{border-radius:50%;border:1.5px solid rgba(212,169,176,.35);background:rgba(212,169,176,.07);aspect-ratio:1;transition:background .2s}
 .stamp-mini.filled{background:var(--discard-done);border-color:var(--discard-done)}
 .home-stamp-mini-label{font-size:11px;color:var(--text-light);font-family:var(--font-accent);margin-bottom:5px}
@@ -1117,7 +1129,7 @@ function delT(id){
 // 聖域 ── 捨て活スタンプカード
 // ═══════════════════════════════════════════════
 let _discardNewlyFilled=false;
-const DISCARD_CARD_SIZE=30;
+const DISCARD_CARD_SIZE=20;
 function getDiscardPhaseConfig(total){
   const posInCard=total%DISCARD_CARD_SIZE;
   const crowns=Math.floor(total/DISCARD_CARD_SIZE);
@@ -1136,7 +1148,8 @@ function renderDiscardStampCard(){
   for(let i=0;i<DISCARD_CARD_SIZE;i++){
     const isFilled=i<cfg.posInCard;
     const isNewly=_discardNewlyFilled&&isFilled&&i===(cfg.posInCard-1);
-    stampsHtml+=`<div class="stamp${isFilled?' filled':''}${isNewly?' pop':''}"></div>`;
+    const ms=i===4?'ms-r':i===9?'ms-sr':i===DISCARD_CARD_SIZE-1?'ms-ssr':'';
+    stampsHtml+=`<div class="stamp${isFilled?' filled':''}${isNewly?' pop':''}${ms?' '+ms:''}"></div>`;
   }
   _discardNewlyFilled=false;
   const crownHtml=cfg.crowns>0?`<span class="stamp-crown">${'👑'.repeat(Math.min(cfg.crowns,5))}${cfg.crowns>5?` ×${cfg.crowns}`:''}</span>`:'';
@@ -1995,7 +2008,10 @@ function renderHomeStampMini(){
   const cfg=getDiscardPhaseConfig(total);
   const rc=RARITY[cfg.rarity]||RARITY.rare;
   let s='';
-  for(let i=0;i<DISCARD_CARD_SIZE;i++)s+=`<div class="stamp-mini${i<cfg.posInCard?' filled':''}"></div>`;
+  for(let i=0;i<DISCARD_CARD_SIZE;i++){
+    const ms=i===4?'ms-r':i===9?'ms-sr':i===DISCARD_CARD_SIZE-1?'ms-ssr':'';
+    s+=`<div class="stamp-mini${i<cfg.posInCard?' filled':''}${ms?' '+ms:''}"></div>`;
+  }
   const todayDone=D.todayDiscards.filter(x=>x.done);
   const todayText=todayDone.length?'🗑 '+todayDone.map(x=>esc(x.text)).join('・'):'🗑 今日はまだ記録がありません';
   const crownHtml=cfg.crowns>0?` ${'👑'.repeat(Math.min(cfg.crowns,5))}${cfg.crowns>5?` ×${cfg.crowns}`:''}`:'' ;
@@ -2559,6 +2575,7 @@ function timeAgo(dateStr){
   try{await loadData()}catch(e){console.error('loadData error:',e)}
   clearTimeout(_loadTimer);
   renderAll();
+  {const h=document.querySelector('.app-header');if(h)document.documentElement.style.setProperty('--header-h',h.offsetHeight+'px');}
   fetchWeather().then(data=>{renderWeather(data);if(data)initSageMessages(data)});
   loadCalendar();
   initSageChat();
