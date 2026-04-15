@@ -148,6 +148,12 @@ body{font-family:var(--font-body);background:var(--bg);color:var(--text);min-hei
 .weather-hour-icon{font-size:18px;line-height:1}
 .weather-hour-temp{font-size:13px;font-weight:700;color:var(--text)}
 .weather-hour-precip{font-size:10px;color:var(--text-faint)}
+.pressure-row{display:flex;align-items:center;gap:6px;margin-top:8px;padding-top:8px;border-top:1px solid var(--border)}
+.pressure-badge{display:inline-flex;align-items:center;gap:4px;border-radius:20px;padding:3px 10px;font-size:11px;font-family:var(--font-accent);font-weight:600;letter-spacing:.3px}
+.pressure-badge.low{background:rgba(100,180,120,.12);color:#4A9060}
+.pressure-badge.mid{background:rgba(210,155,60,.12);color:#A07020}
+.pressure-badge.high{background:rgba(195,80,80,.12);color:#A03030}
+.pressure-val{font-size:11px;color:var(--text-faint);font-family:var(--font-body)}
 .weather-tomorrow{display:flex;align-items:center;gap:10px;padding:10px 0 2px;margin-top:10px;border-top:1px solid var(--border)}
 .weather-tomorrow-label{font-family:var(--font-accent);font-size:12px;color:var(--text-light);min-width:28px}
 .weather-tomorrow-icon{font-size:22px;line-height:1}
@@ -285,6 +291,8 @@ body{font-family:var(--font-body);background:var(--bg);color:var(--text);min-hei
 .ai-skinship{margin-top:4px}
 .ai-rarity{font-size:13px;letter-spacing:3px;margin-bottom:5px}
 .ai-skinship-text{font-family:var(--font-accent);font-size:13px;line-height:1.85;color:var(--text-light);font-style:italic}
+.ai-model-label{font-size:9px;color:var(--text-faint);text-align:right;margin-top:8px;font-family:var(--font-body)}
+.ai-model-label.fallback{color:#C9897A}
 
 /* ─── 捨て活スタンプカード ─── */
 .discard-stamp-card{background:var(--bg-card);border-radius:var(--radius);overflow:hidden;margin-bottom:10px;border:1px solid rgba(212,169,176,.30);box-shadow:0 2px 8px rgba(180,130,140,.10)}
@@ -318,7 +326,7 @@ body{font-family:var(--font-body);background:var(--bg);color:var(--text);min-hei
 .home-stamp-mini{background:var(--bg-card);border-radius:var(--radius);border:1px solid rgba(212,169,176,.25);padding:10px 14px;margin-bottom:8px;cursor:pointer}
 .home-stamp-mini-grid{display:grid;grid-template-columns:repeat(20,1fr);gap:2px;margin-bottom:7px}
 .stamp-mini{border-radius:50%;border:1.5px solid rgba(212,169,176,.35);background:rgba(212,169,176,.07);aspect-ratio:1;transition:background .2s}
-.stamp-mini.filled{background:var(--discard-done);border-color:var(--discard-done)}
+.stamp-mini.filled{background:linear-gradient(135deg,#E8C5CB,#C4889A);border-color:#D4A9B0}
 .home-stamp-mini-label{font-size:11px;color:var(--text-light);font-family:var(--font-accent);margin-bottom:5px}
 .home-stamp-mini-today{font-size:12px;color:var(--text);line-height:1.5;font-family:var(--font-accent)}
 /* ─── 捨て活ログ（新）─── */
@@ -395,7 +403,7 @@ body{font-family:var(--font-body);background:var(--bg);color:var(--text);min-hei
 .loading-inner{font-family:var(--font-accent);font-size:15px;color:var(--text-light);text-align:center;line-height:2.4}
 /* ─── ルーティンドット ─── */
 .rdots{display:inline-flex;gap:3px;align-items:center;vertical-align:middle}
-.rdot{width:9px;height:9px;border-radius:50%;border:1.5px solid var(--border);display:inline-block;flex-shrink:0;transition:background .3s,border-color .3s}
+.rdot{width:12px;height:12px;border-radius:50%;border:1.5px solid var(--border);display:inline-block;flex-shrink:0;transition:background .3s,border-color .3s}
 /* ─── カレンダーチェック ─── */
 .cal-event-check{width:16px;height:16px;border-radius:4px;border:1.5px solid var(--border);flex-shrink:0;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s}
 .cal-event-check.checked{background:var(--accent);border-color:var(--accent)}
@@ -436,7 +444,7 @@ body{font-family:var(--font-body);background:var(--bg);color:var(--text);min-hei
       </div>
       <div class="cal-card" id="calCard" style="display:none">
         <div class="cal-card-header">
-          <div class="cal-card-title">📅 今日の予定</div>
+          <div class="cal-card-title" onclick="window.open('calshow://')" style="cursor:pointer">📅 今日の予定</div>
           <button onclick="reloadCalendar()" style="background:none;border:none;color:var(--text-faint);font-size:16px;cursor:pointer;padding:2px 6px" title="更新">↻</button>
         </div>
         <div id="calEvents"></div>
@@ -453,7 +461,6 @@ body{font-family:var(--font-body);background:var(--bg);color:var(--text);min-hei
         </div>
         <div class="home-card-arrow" onclick="gotoSeiiki('today')" style="cursor:pointer;padding-left:8px;align-self:stretch;display:flex;align-items:center">›</div>
       </div>
-      <div id="homeStampMini" class="home-stamp-mini" onclick="gotoSeiiki('disclog')"></div>
       <div class="home-summary-card" onclick="switchTab('shop')">
         <div>
           <div class="home-card-label">🛒 買い物リスト</div>
@@ -876,7 +883,7 @@ async function fetchWeather(){
     if(c&&Date.now()-c.ts<3600000&&c.date===gt())return c.data;
   }catch(e){}
   try{
-    const url=`https://api.open-meteo.com/v1/forecast?latitude=${W_LAT}&longitude=${W_LON}&daily=temperature_2m_max,temperature_2m_min,precipitation_probability_max,weathercode&hourly=temperature_2m,precipitation_probability,weathercode&timezone=Asia%2FTokyo&forecast_days=2`;
+    const url=`https://api.open-meteo.com/v1/forecast?latitude=${W_LAT}&longitude=${W_LON}&daily=temperature_2m_max,temperature_2m_min,precipitation_probability_max,weathercode&hourly=temperature_2m,precipitation_probability,weathercode,surface_pressure&timezone=Asia%2FTokyo&forecast_days=2`;
     const res=await fetch(url);
     if(!res.ok)throw new Error();
     const j=await res.json();
@@ -887,9 +894,11 @@ async function fetchWeather(){
     const todayStr=gt();
     const tm=new Date(todayStr+'T12:00:00');tm.setDate(tm.getDate()+1);
     const tomorrowStr=tm.getFullYear()+'-'+String(tm.getMonth()+1).padStart(2,'0')+'-'+String(tm.getDate()).padStart(2,'0');
-    const hourly_today=[],hourly_tomorrow=[];
+    const hourly_today=[],hourly_tomorrow=[],pressureByHour=[];
     j.hourly.time.forEach((t,i)=>{
       const dateStr=t.slice(0,10),hour=parseInt(t.slice(11,13));
+      const pres=j.hourly.surface_pressure?j.hourly.surface_pressure[i]:null;
+      if(pres!=null)pressureByHour.push({dateStr,hour,pres});
       if(hour%3===0){
         if(dateStr===todayStr&&hour>nowH)
           hourly_today.push({hour,temp:Math.round(j.hourly.temperature_2m[i]),precip:j.hourly.precipitation_probability[i],code:j.hourly.weathercode[i]});
@@ -897,7 +906,19 @@ async function fetchWeather(){
           hourly_tomorrow.push({hour,temp:Math.round(j.hourly.temperature_2m[i]),precip:j.hourly.precipitation_probability[i],code:j.hourly.weathercode[i]});
       }
     });
-    const data={...today,hourly_today,hourly_tomorrow,tomorrow};
+    // 気圧リスク計算：現在時刻から6時間先までの最大変化幅
+    let pressureRisk='low',pressureCur=null,pressureChange=0;
+    const nowIdx=pressureByHour.findIndex(p=>p.dateStr===todayStr&&p.hour>=nowH);
+    if(nowIdx>=0){
+      pressureCur=Math.round(pressureByHour[nowIdx].pres);
+      const future=pressureByHour.slice(nowIdx,nowIdx+7);
+      let minP=pressureByHour[nowIdx].pres;
+      for(let k=1;k<future.length;k++){minP=Math.min(minP,future[k].pres);}
+      pressureChange=Math.round((pressureByHour[nowIdx].pres-minP)*10)/10;
+      if(pressureChange>=10)pressureRisk='high';
+      else if(pressureChange>=6)pressureRisk='mid';
+    }
+    const data={...today,hourly_today,hourly_tomorrow,tomorrow,pressureRisk,pressureCur,pressureChange};
     localStorage.setItem(W_CACHE,JSON.stringify({ts:Date.now(),date:gt(),data}));
     return data;
   }catch(e){return null}
@@ -968,6 +989,13 @@ function renderWeather(data){
       <div class="weather-tmrw-col-temp"><span class="temp-max">${data.tomorrow.max}°</span> <span class="temp-min">${data.tomorrow.min}°</span></div>
       <div class="weather-tmrw-col-precip">${data.tomorrow.precip}%${tumb?' ☂️':''}</div>
     </div>`;
+  }
+  // 気圧リスク表示
+  if(data.pressureCur!=null){
+    const riskMap={low:{label:'気圧 安定',icon:'🟢'},mid:{label:'気圧 注意',icon:'🟡'},high:{label:'気圧 警戒',icon:'🔴'}};
+    const rm=riskMap[data.pressureRisk]||riskMap.low;
+    const changeStr=data.pressureChange>0?` (▼${data.pressureChange}hPa/6h)`:'';
+    h+=`<div class="pressure-row"><span class="pressure-badge ${data.pressureRisk}">${rm.icon} ${rm.label}</span><span class="pressure-val">${data.pressureCur} hPa${changeStr}</span></div>`;
   }
   h+=`</div><div class="weather-hourly-row" id="weatherHourlyRow" style="display:none"></div>`;
   el.innerHTML=h;
@@ -1136,6 +1164,7 @@ function getDiscardPhaseConfig(total){
   let nextMilestone,rarity;
   if(posInCard<5){nextMilestone=5;rarity='rare';}
   else if(posInCard<10){nextMilestone=10;rarity='super_rare';}
+  else if(posInCard<15){nextMilestone=15;rarity='rare';}
   else{nextMilestone=DISCARD_CARD_SIZE;rarity='ultra_rare';}
   return{posInCard,crowns,nextMilestone,rarity,remaining:nextMilestone-posInCard};
 }
@@ -1148,7 +1177,7 @@ function renderDiscardStampCard(){
   for(let i=0;i<DISCARD_CARD_SIZE;i++){
     const isFilled=i<cfg.posInCard;
     const isNewly=_discardNewlyFilled&&isFilled&&i===(cfg.posInCard-1);
-    const ms=i===4?'ms-r':i===9?'ms-sr':i===DISCARD_CARD_SIZE-1?'ms-ssr':'';
+    const ms=i===4?'ms-r':i===9?'ms-sr':i===14?'ms-r':i===DISCARD_CARD_SIZE-1?'ms-ssr':'';
     stampsHtml+=`<div class="stamp${isFilled?' filled':''}${isNewly?' pop':''}${ms?' '+ms:''}"></div>`;
   }
   _discardNewlyFilled=false;
@@ -1962,9 +1991,13 @@ function initSageChat(){
   });
 }
 
+let _lastGeminiUsedFallback=false;
 async function callGemini(prompt){
   const key=getGeminiKey();if(!key)return null;
-  const res=await fetch(`${GEMINI_URL}?key=${key}`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({contents:[{parts:[{text:prompt}]}],generationConfig:{temperature:0.95}})});
+  const body=JSON.stringify({contents:[{parts:[{text:prompt}]}],generationConfig:{temperature:0.95}});
+  let res=await fetch(`${GEMINI_URL}?key=${key}`,{method:'POST',headers:{'Content-Type':'application/json'},body});
+  _lastGeminiUsedFallback=false;
+  if(res.status===503){res=await fetch(`${GEMINI_URL_FALLBACK}?key=${key}`,{method:'POST',headers:{'Content-Type':'application/json'},body});_lastGeminiUsedFallback=true;}
   if(!res.ok)throw new Error(`${res.status}`);
   const data=await res.json();
   const parts=data.candidates?.[0]?.content?.parts||[];
@@ -1994,6 +2027,7 @@ function showAiRoutineResult(data,rarityKey){
   if(hasA)h+=`<div class="ai-block"><div class="ai-block-label">📅 今日はなんの日</div><div class="ai-block-title">${esc(data.anniversary_name)}</div><div class="ai-block-desc">${esc(data.anniversary_desc||'')}</div></div><hr class="ai-divider">`;
   h+=`<div class="ai-block"><div class="ai-block-label">🕯 セージより</div><div class="ai-block-text">${esc(data.message||'').replace(/\n/g,'<br>')}</div></div>`;
   if(data.skinship)h+=`<hr class="ai-divider"><div class="ai-skinship"><div class="ai-rarity" style="color:${rc.color}">${esc(starsDisplay)}</div><div class="ai-skinship-text">${esc(data.skinship).replace(/\n/g,'<br>')}</div></div>`;
+  h+=`<div class="ai-model-label${_lastGeminiUsedFallback?' fallback':''}">${_lastGeminiUsedFallback?'2.5-flash-lite (fallback)':'3.1-flash-lite'}</div>`;
   document.getElementById('aiContent').innerHTML=h;document.getElementById('aiCloseBtn').style.display='';
 }
 function showAiDiscardResult(data,item){
@@ -2009,7 +2043,7 @@ function renderHomeStampMini(){
   const rc=RARITY[cfg.rarity]||RARITY.rare;
   let s='';
   for(let i=0;i<DISCARD_CARD_SIZE;i++){
-    const ms=i===4?'ms-r':i===9?'ms-sr':i===DISCARD_CARD_SIZE-1?'ms-ssr':'';
+    const ms=i===4?'ms-r':i===9?'ms-sr':i===14?'ms-r':i===DISCARD_CARD_SIZE-1?'ms-ssr':'';
     s+=`<div class="stamp-mini${i<cfg.posInCard?' filled':''}${ms?' '+ms:''}"></div>`;
   }
   const todayDone=D.todayDiscards.filter(x=>x.done);
@@ -2051,6 +2085,7 @@ function showDiscardGachaResult(data,rarity,isMilestone,cumCount,itemText,isCard
   }
   h+=`<div class="ai-block"><div class="ai-block-label">🕯「${esc(itemText)}」を手放して</div><div class="ai-block-text">${esc(data.message||'').replace(/\n/g,'<br>')}</div></div>`;
   if(data.skinship)h+=`<hr class="ai-divider"><div class="ai-skinship"><div class="ai-rarity" style="color:${rc.color}">${esc(starsDisplay)}</div><div class="ai-skinship-text">${esc(data.skinship).replace(/\n/g,'<br>')}</div></div>`;
+  h+=`<div class="ai-model-label${_lastGeminiUsedFallback?' fallback':''}">${_lastGeminiUsedFallback?'2.5-flash-lite (fallback)':'3.1-flash-lite'}</div>`;
   document.getElementById('aiContent').innerHTML=h;document.getElementById('aiCloseBtn').style.display='';
 }
 async function triggerDiscardGacha(itemText){
@@ -2059,6 +2094,7 @@ async function triggerDiscardGacha(itemText){
   let rarity,isMilestone=false,isCardComplete=false;
   if(posInCard===0&&total>0){rarity='ultra_rare';isMilestone=true;isCardComplete=true;}
   else if(posInCard===10){rarity='super_rare';isMilestone=true;}
+  else if(posInCard===15){rarity='rare';isMilestone=true;}
   else if(posInCard===5){rarity='rare';isMilestone=true;}
   else{rarity=drawRarity();}
   showAiLoading('セージが言葉を選んでいます');
