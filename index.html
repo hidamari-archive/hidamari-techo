@@ -87,7 +87,7 @@ body{font-family:var(--font-body);background:var(--bg);color:var(--text);min-hei
 .add-icon{width:22px;height:22px;border-radius:50%;border:2px dashed var(--border);display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0}
 
 /* ─── 聖域サブタブ ─── */
-.seiiki-tabs{display:flex;gap:0;padding:0 16px;margin-bottom:14px;border-bottom:1px solid var(--border)}
+.seiiki-tabs{display:flex;gap:0;padding:0 16px;border-bottom:1px solid var(--border);position:sticky;top:0;z-index:10;background:var(--bg)}
 .stab{padding:9px 14px;font-size:12px;font-weight:500;color:var(--text-light);border:none;background:none;cursor:pointer;position:relative;transition:color .2s;white-space:nowrap}
 .stab.active{color:var(--text)}
 .stab.active::after{content:'';position:absolute;bottom:-1px;left:14px;right:14px;height:2px;border-radius:2px;background:var(--accent)}
@@ -441,7 +441,7 @@ body{font-family:var(--font-body);background:var(--bg);color:var(--text);min-hei
         </div>
         <div class="home-card-arrow" onclick="gotoSeiiki('today')" style="cursor:pointer;padding-left:8px;align-self:stretch;display:flex;align-items:center">›</div>
       </div>
-      <div id="homeStampMini" class="home-stamp-mini" onclick="gotoSeiiki('discard')"></div>
+      <div id="homeStampMini" class="home-stamp-mini" onclick="gotoSeiiki('disclog')"></div>
       <div class="home-summary-card" onclick="switchTab('shop')">
         <div>
           <div class="home-card-label">🛒 買い物リスト</div>
@@ -488,12 +488,6 @@ body{font-family:var(--font-body);background:var(--bg);color:var(--text);min-hei
         <div class="progress-bar"><div class="progress-fill task" id="taskProgress" style="width:0%"></div></div>
         <div class="card" id="taskList"></div>
       </div>
-      <div class="section">
-        <div class="section-header"><div class="section-title">1日1捨て</div><div class="section-count" id="discardCount"></div></div>
-        <div class="progress-bar"><div class="progress-fill discard" id="discardProgress" style="width:0%"></div></div>
-        <div class="card" id="discardList"></div>
-      </div>
-      <div class="sage-message" id="sageMessage"></div>
       <div class="reset-today-wrap"><button class="reset-today-btn" onclick="resetToday()">今日のチェックをリセット</button></div>
     </div>
     <!-- 週間タスク -->
@@ -527,6 +521,11 @@ body{font-family:var(--font-body);background:var(--bg);color:var(--text);min-hei
     <!-- 捨て活ログ -->
     <div class="stab-panel panel-body" id="stab-disclog">
       <div id="discardStampCard"></div>
+      <div style="padding:4px 2px 8px">
+        <div class="add-item" onclick="openModal('discard')" style="border:1px solid var(--border);border-radius:var(--radius-sm);padding:11px 14px">
+          <div class="add-icon">+</div><span>手放したものを記録</span>
+        </div>
+      </div>
       <div class="log-summary" id="discardSummary"></div>
       <div class="card" id="discardLog"></div>
     </div>
@@ -984,9 +983,11 @@ function switchStab(stab){
   const p=document.getElementById('stab-'+stab);if(p)p.classList.add('active');
 }
 function gotoSeiiki(section){
-  switchTab('seiiki');switchStab('today');
+  switchTab('seiiki');
+  if(section==='disclog'){switchStab('disclog');return;}
+  switchStab('today');
   if(section&&section!=='today'){
-    const idMap={routine:'routineList',task:'taskList',discard:'discardList'};
+    const idMap={routine:'routineList',task:'taskList'};
     const tid=idMap[section];
     if(tid)setTimeout(()=>{
       const el=document.getElementById(tid);if(!el)return;
@@ -1025,7 +1026,7 @@ function updateHomeSummary(){
     }
   }
   sHtml+=_div;
-  sHtml+=`<div onclick="gotoSeiiki('discard')" style="cursor:pointer;padding:2px 0">`;
+  sHtml+=`<div onclick="gotoSeiiki('disclog')" style="cursor:pointer;padding:2px 0">`;
   const discardDone=D.todayDiscards.filter(x=>x.done);
   if(discardDone.length){
     sHtml+=`<div style="font-size:12px;color:var(--text-light);margin-top:2px">🗑 ${esc(discardDone[0].text)}${discardDone.length>1?` (+${discardDone.length-1})`:''}</div>`;
@@ -1147,16 +1148,8 @@ function renderDiscardStampCard(){
 // 聖域 ── 捨て活
 // ═══════════════════════════════════════════════
 function renderDiscards(){
-  const el=document.getElementById('discardList');
-  let h='';
-  D.todayDiscards.forEach(x=>{
-    h+=`<div class="check-item ${x.done?'done-discard':''}"><div class="checkbox ${x.done?'checked-discard':''}" onclick="togD('${x.id}')"></div><div class="check-label">${esc(x.text)}</div><button class="item-delete" onclick="delD('${x.id}')">×</button></div>`;
-  });
-  h+=`<div class="add-item" onclick="openModal('discard')"><div class="add-icon">+</div><span>手放したものを記録</span></div>`;
-  el.innerHTML=h;
-  const tot=D.todayDiscards.length,done=D.todayDiscards.filter(x=>x.done).length;
-  document.getElementById('discardCount').textContent=tot?`${done} / ${tot}`:'';
-  document.getElementById('discardProgress').style.width=tot?(done/tot*100)+'%':'0%';
+  // discardList は捨て活ログタブに集約されたため、今日タブには存在しない
+  // D.todayDiscards はホームサマリー用に維持
 }
 function togD(id){
   const idx=D.todayDiscards.findIndex(x=>x.id===id);if(idx<0)return;
@@ -1351,7 +1344,7 @@ function updateSage(){
   else pool=sageM.progress;
   const seed=gt()+pool.length+aD;let h=0;
   for(let i=0;i<seed.length;i++)h=((h<<5)-h)+seed.charCodeAt(i);
-  document.getElementById('sageMessage').innerHTML=pool[Math.abs(h)%pool.length].replace(/\n/g,'<br>');
+  const sm=document.getElementById('sageMessage');if(sm)sm.innerHTML=pool[Math.abs(h)%pool.length].replace(/\n/g,'<br>');
 }
 
 // ═══════════════════════════════════════════════
