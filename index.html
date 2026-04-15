@@ -425,7 +425,7 @@ body{font-family:var(--font-body);background:var(--bg);color:var(--text);min-hei
         <div class="sage-chat-input-row">
           <textarea class="sage-chat-input" id="sageChatInput" placeholder="メッセージを入力…" rows="1"
             oninput="this.style.height='auto';this.style.height=Math.min(this.scrollHeight,80)+'px'"
-            onkeydown="if(event.key==='Enter'&&(event.ctrlKey||event.metaKey)){event.preventDefault();sageChatSend()}"></textarea>
+"></textarea>
           <button class="sage-chat-send" id="sageChatSendBtn" onclick="sageChatSend()" title="送信">↑</button>
         </div>
       </div>
@@ -1835,6 +1835,20 @@ function initSageChat(){
   const card=document.getElementById('sageChatCard');
   if(!card)return;
   card.style.display=getGeminiKey()?'block':'none';
+  const input=document.getElementById('sageChatInput');
+  if(!input)return;
+  input.addEventListener('keydown',e=>{
+    if(e.key==='Enter'&&!e.ctrlKey&&!e.metaKey){
+      e.preventDefault();
+      const s=input.selectionStart,en=input.selectionEnd;
+      input.value=input.value.slice(0,s)+'\n'+input.value.slice(en);
+      input.selectionStart=input.selectionEnd=s+1;
+      input.style.height='auto';
+      input.style.height=Math.min(input.scrollHeight,80)+'px';
+    }else if(e.key==='Enter'&&(e.ctrlKey||e.metaKey)){
+      e.preventDefault();sageChatSend();
+    }
+  });
 }
 
 async function callGemini(prompt){
