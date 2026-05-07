@@ -297,8 +297,8 @@ body{font-family:var(--font-body);background:var(--bg);color:var(--text);min-hei
 .ai-model-label.fallback{color:#C9897A}
 
 /* ─── 捨て活スタンプカード ─── */
-.discard-stamp-card{background:var(--bg-card);border-radius:var(--radius);overflow:hidden;margin-bottom:10px;border:1px solid rgba(212,169,176,.30);box-shadow:0 2px 8px rgba(180,130,140,.10)}
-.stamp-card-header{background:linear-gradient(135deg,#f8e4ea,#fceef4);padding:10px 14px 9px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid rgba(212,169,176,.18)}
+.discard-stamp-card{background:var(--bg-card);border-radius:var(--radius);overflow:hidden;margin-bottom:10px;border:1px solid rgba(126,196,192,.28);box-shadow:0 2px 8px rgba(100,186,182,.10)}
+.stamp-card-header{background:linear-gradient(135deg,#ddf3f2,#eef9f8);padding:10px 14px 9px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid rgba(126,196,192,.18)}
 .stamp-card-title{font-family:var(--font-accent);font-size:12px;color:var(--discard-done);font-weight:600;letter-spacing:.8px}
 .stamp-card-header-right{display:flex;align-items:center;gap:7px}
 .stamp-card-total{font-size:11px;color:var(--text-light)}
@@ -325,9 +325,9 @@ body{font-family:var(--font-body);background:var(--bg);color:var(--text);min-hei
 .stamp-mini.ms-sr:not(.filled){border-color:rgba(212,175,55,.75);background:rgba(212,175,55,.07)}
 .stamp-mini.ms-ssr:not(.filled){border-color:rgba(196,135,90,.75);background:rgba(196,135,90,.07)}
 /* ─── ホームミニスタンプ ─── */
-.home-stamp-mini{background:var(--bg-card);border-radius:var(--radius);border:1px solid rgba(212,169,176,.25);padding:10px 14px;margin-bottom:8px;cursor:pointer}
+.home-stamp-mini{background:var(--bg-card);border-radius:var(--radius);border:1px solid rgba(126,196,192,.22);padding:10px 14px;margin-bottom:8px;cursor:pointer}
 .home-stamp-mini-grid{display:grid;grid-template-columns:repeat(20,1fr);gap:2px;margin-bottom:7px}
-.stamp-mini{border-radius:50%;border:1.5px solid rgba(212,169,176,.35);background:rgba(212,169,176,.07);aspect-ratio:1;transition:background .2s}
+.stamp-mini{border-radius:50%;border:1.5px solid rgba(126,196,192,.35);background:rgba(126,196,192,.07);aspect-ratio:1;transition:background .2s}
 .stamp-mini.filled{background:var(--discard-done);border-color:var(--discard-done)}
 .home-stamp-mini-label{font-size:11px;color:var(--text-light);font-family:var(--font-accent);margin-bottom:5px}
 .home-stamp-mini-today{font-size:12px;color:var(--text);line-height:1.5;font-family:var(--font-accent)}
@@ -566,7 +566,7 @@ body{font-family:var(--font-body);background:var(--bg);color:var(--text);min-hei
     <div class="stab-panel panel-body" id="stab-disclog">
       <div id="discardStampCard"></div>
       <div style="padding:4px 2px 12px">
-        <button onclick="openModal('discard')" style="width:100%;padding:13px 16px;background:var(--accent);color:#fff;border:none;border-radius:var(--radius-sm);font-size:14px;font-family:var(--font-accent);cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;letter-spacing:.05em;box-shadow:0 2px 8px rgba(139,115,85,.25)">
+        <button onclick="openModal('discard')" style="width:100%;padding:13px 16px;background:linear-gradient(135deg,#7EC4C0,#5BAEA9);color:#fff;border:none;border-radius:var(--radius-sm);font-size:14px;font-family:var(--font-accent);cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;letter-spacing:.05em;box-shadow:0 3px 10px rgba(91,174,169,.35)">
           <span style="font-size:16px">🗑</span> 手放したものを記録
         </button>
       </div>
