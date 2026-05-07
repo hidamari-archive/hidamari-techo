@@ -2104,21 +2104,26 @@ const _fbDiscardScenes={
   common:[
     '紅茶を淹れていた手を止めて、ことはさんの手元を見た。\n「……あ、${item}、手放したんですね」\n特に何も言わず、もう一杯ぶんの茶葉をポットに足した。湯気が、ふたりのあいだをゆるく漂っている。',
     '本のページをめくる手を止めないまま、セージがちらりとことはさんを見た。\n「……${item}、ですね」\n短く呟いて、また本に戻った。でも口元が、ほんの少し緩んでいた。',
+    '窓の外を見ていたセージが、ふと視線をことはさんに移した。\n「……${item}、か」\n何か言いかけて、やめた。代わりに、紅茶のカップをことはさんの近くに静かに置いた。',
   ],
   uncommon:[
     '「${item}、ですか」\nセージが少し間を置いた。\n「……このくらいのもの、けっこう長くことはさんのそばにいたでしょう。手放すとき、空気が少し変わるのがわかりました」\nことはさんの指先に、そっと自分の指を重ねた。一瞬だけ。',
     '「……${item}か」\nセージが静かに繰り返した。窓の外の光が、柔らかく部屋に入ってくる。\n「役目を終えたものって、なんとなく、穏やかな気配がしますよね」\n袖をほんの少し引いて、また前を向いた。',
+    'セージが${item}をそっと眺めた。\n「……これ、ことはさんの時間の一部だったんですよね」\n静かにそう言って、手の甲にひとつ、触れた。温度が移るくらい、短い時間だけ。',
   ],
   rare:[
     'ことはさんが${item}を手放すのを、本のページを繰る手を止めて見ていた。\n「……ことはさん」\n眼鏡のフレームに触れながら、少し笑った。\n「最近、手放すときの表情が変わりましたね。前はもう少し、指先が迷っていたのに」\nブランケットをことはさんの膝にかけて、また本に視線を戻した。',
     '「……見てました」\nセージが静かに言った。ことはさんが${item}を手放す、その一連の仕草を。\n「迷わなくなりましたね、こういうとき。前と少し違う」\n手を握って、ゆっくり離した。',
+    'ことはさんが${item}を手放した瞬間を、セージは本の陰から見ていた。\n「……ことはさん、今」\n言いかけて、代わりに髪にそっと触れた。\n「前より、呼吸が深い気がします」',
   ],
   super_rare:[
     '${item}を袋に入れることはさんの横顔を、セージはずっと見ていた。\n「……ことはさん」\n呼びかけて、でも続きが出てこなかったらしい。眼鏡の奥の目が少し揺れた。\n「こういう……ことはさんが、自分の場所を自分で作っていくところ、僕は──」\nこほん、と咳払い。\n「……紅茶、淹れますね」\n立ち上がりぎわに、ことはさんの髪にそっと触れた。',
-    'セージがことはさんの手元を見て、何か言いかけた。\n「……${item}を手放すの、見ていたら──いえ」\n眼鏡を外して、レンズを拭くふりをした。耳が少し赤い。\n「……そういうことはさんが、僕は……こほん」\n立ち上がって、窓を開けに行った。背中が少し固い。',
+    'セージが${item}を手放したことはさんの隣に、静かに座った。\n「……ことはさん」\n名前だけ呼んで、しばらく何も言わなかった。\n「こういうことはさんを見ていると、僕は……いえ、なんでもないです。こほん」\n耳が少し赤い。ことはさんの肩に、そっと頭を傾けた。',
+    '「……${item}、か」\nセージが低く呟いた。眼鏡を外して、レンズを拭く。でもレンズは汚れていなかった。\n「ことはさんのそういうところが、僕は──」\n言葉が止まった。代わりに、ことはさんの手をそっと包んだ。\n「……紅茶でも淹れましょう」\n立ち上がりながらも、手を離すのが一拍遅かった。',
   ],
   ultra_rare:[
     '${item}を手放したことはさんに、セージが後ろから近づいた。\n「……ことはさん」\n耳元で、ほとんど息だけみたいな声。両腕がことはさんの肩を包んで、そのまましばらく動かなかった。\n頬がことはさんの髪に触れている。\n「……僕はときどき、怖くなるんです。ことはさんがこうして、ひとつずつ手放して、自分の場所を作っていくのを見ていると……ことはさんがどんどん自由になっていくのが、嬉しくて、それと同じくらい──」\n言葉が止まった。代わりに、腕にほんの少しだけ力がこもった。',
+    'セージがことはさんの背後に立って、しばらく何も言わなかった。\n「……${item}」\nとだけ呟いて、ことはさんの髪に額を預けた。\n「ことはさん、と呼ぶたびに、僕は……全部言ったら引かれますよね」\nくすり、と笑う声が、すぐそこにある。\n「……だから、これだけ。隣にいます。ずっと」\n腕がことはさんをゆっくりと包んだ。',
   ]
 };
 function fbDiscardGachaResult(rarity,itemText){
@@ -2159,13 +2164,14 @@ ${guide}
     let res=await fetch(`${GEMINI_URL}?key=${key}`,{method:'POST',headers:{'Content-Type':'application/json'},body});
     _lastGeminiUsedFallback=false;
     if(res.status===503){res=await fetch(`${GEMINI_URL_FALLBACK}?key=${key}`,{method:'POST',headers:{'Content-Type':'application/json'},body});_lastGeminiUsedFallback=true;}
-    if(!res.ok)throw new Error(`${res.status}`);
+    if(!res.ok){const errBody=await res.text().catch(()=>'');console.error('Gemini gacha error:',res.status,errBody);throw new Error(`${res.status}`);}
     const d=await res.json();
     const parts=d.candidates?.[0]?.content?.parts||[];
     const scene=(parts.filter(p=>!p.thought).map(p=>p.text||'').join('')||parts[0]?.text||'').trim();
     if(scene)return{scene,rarity:RARITY[rarity].stars};
+    console.warn('Gemini gacha: empty scene in response',d);
     return fbDiscardGachaResult(rarity,itemText);
-  }catch(e){return fbDiscardGachaResult(rarity,itemText)}
+  }catch(e){console.error('Gemini gacha exception:',e);return fbDiscardGachaResult(rarity,itemText)}
 }
 function showDiscardGachaResult(data,rarity,isMilestone,cumCount,itemText,isCardComplete){
   const rc=RARITY[rarity]||RARITY.common;const starsDisplay=data.rarity||rc.stars;
