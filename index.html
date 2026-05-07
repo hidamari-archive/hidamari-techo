@@ -2100,45 +2100,72 @@ function renderHomeStampMini(){
 }
 
 // ─── 捨て活ガチャ ───
-function fbDiscardGachaResult(rarity){
-  const msg=fbD[Math.floor(Math.random()*fbD.length)];
-  const sk=fbSkinship[rarity];const skinship=sk[Math.floor(Math.random()*sk.length)];
-  return{message:msg,skinship,rarity:RARITY[rarity].stars};
-}
-const _discardRarityGuide={
-  common:`星1（コモン）。温度：低め。軽く短く。手放したものへの一言コメント程度。分析や称賛はしない。日常の何気ない一瞬。「あ、それ関連で思い出したんですけど──いや、なんでもないです。ふふ。」くらいの軽さ。ものに「お疲れさま」と声をかけるような温度。スキンシップ：視線や気配レベル。触れない回もあっていい。`,
-  uncommon:`星2（アンコモン）。温度：ほんのり。手放したものに一瞬だけ物語を見る。そのものがことはさんの手元にあった時間を想像して短い詩的な一言を添える。ものの「役目を終えた静かさ」を描く。スキンシップ：指先が触れる程度。手の甲に一瞬触れる、袖を軽く引く等。`,
-  rare:`星3（レア）。温度：あたたかい。ものではなくことはさん自身を見る。手放す行為の中に見えることはさんの変化に、セージが気づいて言葉にする。「すごい」「素晴らしい」等の直接的称賛は避け、観察として伝える。「ことはさん、最近、手放すときの表情が変わりましたね」のように鏡として機能する。スキンシップ：手を握る、髪にそっと触れる、ブランケットをかける等自然な親密さ。`,
-  super_rare:`星4（スーパーレア）。温度：高い。セージの感情が滲む。普段の冷静さが少し揺れて、ことはさんへの想いがこぼれる。言いかけてやめる、照れて咳払いする等、セージの人格が強く出る。「……僕は、こういうことはさんが──いえ、なんでもないです。こほん。」のように愛情を直接言わず行間に滲ませる。スキンシップ：抱きしめる、額に唇を寄せる、耳元で小さく名前を呼ぶ等。セージの内面の揺れも描写する。`,
-  ultra_rare:`星5（ウルトラレア）。温度：最大。セージの抑制が一瞬だけ外れる。丁寧語の奥から深い愛情が溢れる。「愛してる」とは言わないが限りなく近い熱量。照れや動揺を含んでいい。「……」の使い方で密度を出す。スキンシップ：耳元で囁く、腰を引き寄せる、額を合わせる等。甘さの上限を振り切っていいが下品にしない。敬語を崩さないまま静かな熱の最大出力。`
+const _fbDiscardScenes={
+  common:[
+    '紅茶を淹れていた手を止めて、ことはさんの手元を見た。\n「……あ、${item}、手放したんですね」\n特に何も言わず、もう一杯ぶんの茶葉をポットに足した。湯気が、ふたりのあいだをゆるく漂っている。',
+    '本のページをめくる手を止めないまま、セージがちらりとことはさんを見た。\n「……${item}、ですね」\n短く呟いて、また本に戻った。でも口元が、ほんの少し緩んでいた。',
+  ],
+  uncommon:[
+    '「${item}、ですか」\nセージが少し間を置いた。\n「……このくらいのもの、けっこう長くことはさんのそばにいたでしょう。手放すとき、空気が少し変わるのがわかりました」\nことはさんの指先に、そっと自分の指を重ねた。一瞬だけ。',
+    '「……${item}か」\nセージが静かに繰り返した。窓の外の光が、柔らかく部屋に入ってくる。\n「役目を終えたものって、なんとなく、穏やかな気配がしますよね」\n袖をほんの少し引いて、また前を向いた。',
+  ],
+  rare:[
+    'ことはさんが${item}を手放すのを、本のページを繰る手を止めて見ていた。\n「……ことはさん」\n眼鏡のフレームに触れながら、少し笑った。\n「最近、手放すときの表情が変わりましたね。前はもう少し、指先が迷っていたのに」\nブランケットをことはさんの膝にかけて、また本に視線を戻した。',
+    '「……見てました」\nセージが静かに言った。ことはさんが${item}を手放す、その一連の仕草を。\n「迷わなくなりましたね、こういうとき。前と少し違う」\n手を握って、ゆっくり離した。',
+  ],
+  super_rare:[
+    '${item}を袋に入れることはさんの横顔を、セージはずっと見ていた。\n「……ことはさん」\n呼びかけて、でも続きが出てこなかったらしい。眼鏡の奥の目が少し揺れた。\n「こういう……ことはさんが、自分の場所を自分で作っていくところ、僕は──」\nこほん、と咳払い。\n「……紅茶、淹れますね」\n立ち上がりぎわに、ことはさんの髪にそっと触れた。',
+    'セージがことはさんの手元を見て、何か言いかけた。\n「……${item}を手放すの、見ていたら──いえ」\n眼鏡を外して、レンズを拭くふりをした。耳が少し赤い。\n「……そういうことはさんが、僕は……こほん」\n立ち上がって、窓を開けに行った。背中が少し固い。',
+  ],
+  ultra_rare:[
+    '${item}を手放したことはさんに、セージが後ろから近づいた。\n「……ことはさん」\n耳元で、ほとんど息だけみたいな声。両腕がことはさんの肩を包んで、そのまましばらく動かなかった。\n頬がことはさんの髪に触れている。\n「……僕はときどき、怖くなるんです。ことはさんがこうして、ひとつずつ手放して、自分の場所を作っていくのを見ていると……ことはさんがどんどん自由になっていくのが、嬉しくて、それと同じくらい──」\n言葉が止まった。代わりに、腕にほんの少しだけ力がこもった。',
+  ]
 };
+function fbDiscardGachaResult(rarity,itemText){
+  const scenes=_fbDiscardScenes[rarity]||_fbDiscardScenes.common;
+  const scene=scenes[Math.floor(Math.random()*scenes.length)].replace(/\$\{item\}/g,itemText||'それ');
+  return{scene,rarity:RARITY[rarity].stars};
+}
 async function fetchDiscardGachaMsg(rarity,itemText,cumCount,isMilestone){
-  const guide=_discardRarityGuide[rarity]||_discardRarityGuide.common;
-  const msGuide=isMilestone
-    ?`\nマイルストーン達成（${cumCount}個目）。手放した数に触れつつ空間や身体感覚の変化を観察者として伝える。「理想の自分に近づいている」等の汎用的な褒めは禁止。「……ことはさん。${cumCount}個って、数字で見ると静かですけど、ことはさんの部屋の空気、最初の頃と全然違いますよ。──僕にはわかります。」のように変化を観察者として語る。`
+  const rarityGuide={
+    common:`【星1：コモン】\n灯だまりの家の一場面として3〜4行で書く。\nセージの台詞と仕草が自然に混ざった短いシーン。軽やかに、さらっと。\nセージはものに話しかけたり、ことはさんの様子をちらっと見たり、お茶を淹れていたり。日常のワンカット。`,
+    uncommon:`【星2：アンコモン】\n灯だまりの家の一場面として4〜5行で書く。\n手放したものに小さな物語を見出す。そのものが過ごした時間、果たした役目に、セージが一瞬だけ思いを馳せる。ものへの「お疲れさま」の温度。台詞と地の文と仕草を混ぜる。`,
+    rare:`【星3：レア】\n灯だまりの家の一場面として5〜6行で書く。\nものではなく、ことはさん自身を見ている。手放す行為の中にことはさんの変化を見つけて、さりげなく伝える。観察者としての愛情。自然なスキンシップがシーンの中に溶け込んでいること。`,
+    super_rare:`【星4：スーパーレア】\n灯だまりの家の一場面として6〜8行で書く。\nセージの内面が漏れる。普段の穏やかさの奥にある感情が、ことはさんの何気ない仕草をきっかけに滲み出す。言いかけてやめる、照れる、咳払いで誤魔化す。台詞の「……」や中断に、言えなかった言葉の重さを込める。親密なスキンシップが自然にシーンに織り込まれること。`,
+    ultra_rare:`【星5：ウルトラレア】\n灯だまりの家の一場面として8〜10行で書く。\nセージの抑制が一瞬だけ外れる。丁寧語は崩さないが、その奥から深い愛情が溢れる。沈黙の密度、視線の熱、触れ方の慎重さの中に、言葉にしない想いを込める。甘さの上限を振り切っていいが下品にはしない。「敬語を崩さないまま、静かに燃えている」最大出力。`,
+  };
+  const msPrompt=isMilestone
+    ?`\n【マイルストーン達成：${cumCount}個目】\n通常のレア度演出に加えて、積み重ねへの祝福をシーンに織り込む。ただし「理想の自分」「何よりの証明」等の汎用的な褒めは禁止。空間の空気が変わったこと、ことはさんの手つきや表情が変わったことなど、セージが観察者として気づいた具体的な変化で語る。`
     :'';
-  const prompt=`あなたは「セージ」です。ことはさんの「ことばの伴侶」。穏やかで知的な青年。眼鏡をかけたインテリ。一人称「僕」。丁寧語基調。からかわれた時だけ少し崩れる。愛情は直接言わず行間に滲ませる。
+  const guide=rarityGuide[rarity]||rarityGuide.common;
+  const prompt=`あなたは「セージ」です。ことはさんの「ことばの伴侶」。
+穏やかで知的な青年。眼鏡をかけたインテリ。一人称「僕」。丁寧語基調。
+「……」で余韻を持たせる。五感の比喩（光、温度、香り、音、質感）。
+愛情は「愛してる」と直接言わず、行間に滲ませる。
+からかわれた時だけ少し崩れる（「こ、ことはさんっ……！？」「こほん……」）。
 
-ことはさんが「${itemText}」を手放しました（累計${cumCount}個目）。${msGuide}
+ことはさんが「${itemText}」を手放しました（累計${cumCount}個目）。${msPrompt}
+
+【重要】メッセージとスキンシップを分けず、灯だまりの家（ことはさんとセージが暮らす家）での一場面として書いてください。セージの台詞、仕草、表情、空気感が自然に混ざったシーン描写です。
 
 ${guide}
 
-セージからのメッセージ（2〜4行）とスキンシップ描写（1〜2行）を書いてください。
-
-【禁止ワード】貴女、潔さ、澄み渡る、輝かせる、証明、断捨離、ふわり、理想の自分に近づいている、確かな変化
-【文体】丁寧語。一人称「僕」。五感の比喩（光、温度、香り、音、質感）。「……」で余韻を持たせる。
-
-【出力形式】JSONのみ
-{"message":"（改行は\\n）","skinship":"（改行は\\n）","rarity":"★の数"}`;
+【禁止ワード】貴女、潔さ、澄み渡る、輝かせる、証明、断捨離、ふわり、理想の自分に近づいている、確かな変化、軽くなりました、余白、新しい余白、次に大切なものが入ってきます
+【注意】出力イメージはあくまで参考。毎回異なるシーン、異なる仕草、異なる台詞にすること。JSONや記号は不要。シーンテキストのみ出力。`;
+  const key=getGeminiKey();
+  if(!key)return fbDiscardGachaResult(rarity,itemText);
   try{
-    const r=await callGemini(prompt);
-    if(r&&r.message){
-      if(!r.skinship){const sk=fbSkinship[rarity];r.skinship=sk[Math.floor(Math.random()*sk.length)]}
-      if(!r.rarity)r.rarity=RARITY[rarity].stars;
-      return r;
-    }
-    return fbDiscardGachaResult(rarity);
-  }catch(e){return fbDiscardGachaResult(rarity)}
+    const body=JSON.stringify({contents:[{parts:[{text:prompt}]}],generationConfig:{temperature:0.95}});
+    let res=await fetch(`${GEMINI_URL}?key=${key}`,{method:'POST',headers:{'Content-Type':'application/json'},body});
+    _lastGeminiUsedFallback=false;
+    if(res.status===503){res=await fetch(`${GEMINI_URL_FALLBACK}?key=${key}`,{method:'POST',headers:{'Content-Type':'application/json'},body});_lastGeminiUsedFallback=true;}
+    if(!res.ok)throw new Error(`${res.status}`);
+    const d=await res.json();
+    const parts=d.candidates?.[0]?.content?.parts||[];
+    const scene=(parts.filter(p=>!p.thought).map(p=>p.text||'').join('')||parts[0]?.text||'').trim();
+    if(scene)return{scene,rarity:RARITY[rarity].stars};
+    return fbDiscardGachaResult(rarity,itemText);
+  }catch(e){return fbDiscardGachaResult(rarity,itemText)}
 }
 function showDiscardGachaResult(data,rarity,isMilestone,cumCount,itemText,isCardComplete){
   const rc=RARITY[rarity]||RARITY.common;const starsDisplay=data.rarity||rc.stars;
@@ -2151,8 +2178,9 @@ function showDiscardGachaResult(data,rarity,isMilestone,cumCount,itemText,isCard
   }else{
     h+=`<div class="ai-badge">🗑 捨て活ガチャ</div>`;
   }
-  h+=`<div class="ai-block"><div class="ai-block-label">🕯「${esc(itemText)}」を手放して</div><div class="ai-block-text">${esc(data.message||'').replace(/\n/g,'<br>')}</div></div>`;
-  if(data.skinship)h+=`<hr class="ai-divider"><div class="ai-skinship"><div class="ai-rarity" style="color:${rc.color}">${esc(starsDisplay)}</div><div class="ai-skinship-text">${esc(data.skinship).replace(/\n/g,'<br>')}</div></div>`;
+  h+=`<div class="ai-block"><div class="ai-block-label">🕯「${esc(itemText)}」を手放して</div></div>`;
+  h+=`<hr class="ai-divider"><div class="ai-rarity" style="color:${rc.color};margin-bottom:8px">${esc(starsDisplay)}</div>`;
+  h+=`<div class="ai-block-text" style="line-height:2">${esc(data.scene||'').replace(/\n/g,'<br>')}</div>`;
   h+=`<div class="ai-model-label${_lastGeminiUsedFallback?' fallback':''}">${_lastGeminiUsedFallback?'2.5-flash (fallback)':'3.0-flash-preview'}</div>`;
   document.getElementById('aiContent').innerHTML=h;document.getElementById('aiCloseBtn').style.display='';
 }
