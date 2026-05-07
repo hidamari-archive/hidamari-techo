@@ -21,7 +21,7 @@
   --font-body:'Zen Kaku Gothic New',sans-serif;--font-accent:'Shippori Mincho',serif;
   /* 聖域カラー */
   --routine-done:#A8C4A0;--routine-done-bg:#EDF5EB;--routine-bar:linear-gradient(90deg,#C8DDBF,#A8C4A0);
-  --discard-done:#D4A9B0;--discard-done-bg:#F6ECEE;--discard-bar:linear-gradient(90deg,#E4C5CB,#D4A9B0);
+  --discard-done:#7EC4C0;--discard-done-bg:#EAF5F4;--discard-bar:linear-gradient(90deg,#B0DDD9,#7EC4C0);
   --task-done:#7BAFD4;--task-done-bg:#EBF3FA;--task-bar:linear-gradient(90deg,#A8C9E8,#7BAFD4);
   --weekly-done:#B8A0C8;--weekly-done-bg:#F3EEF8;--weekly-bar:linear-gradient(90deg,#D4C0E4,#B8A0C8);
   --danger:#C9897A;--danger-bg:#F8EDEA;
@@ -306,8 +306,8 @@ body{font-family:var(--font-body);background:var(--bg);color:var(--text);min-hei
 .stamp-card-body{padding:10px 14px 12px}
 .stamp-card-next{font-family:var(--font-accent);font-size:12px;color:var(--text-light);margin-bottom:9px;letter-spacing:.2px}
 .stamp-row{display:grid;grid-template-columns:repeat(10,1fr);gap:5px;margin-bottom:3px}
-.stamp{border-radius:50%;border:1.5px solid rgba(212,169,176,.35);background:rgba(212,169,176,.07);aspect-ratio:1;display:flex;align-items:center;justify-content:center;transition:background .25s,border-color .25s,box-shadow .25s;min-width:0}
-.stamp.filled{background:var(--discard-done);border-color:var(--discard-done);box-shadow:0 1px 4px rgba(212,169,176,.35)}
+.stamp{border-radius:50%;border:1.5px solid rgba(126,196,192,.35);background:rgba(126,196,192,.07);aspect-ratio:1;display:flex;align-items:center;justify-content:center;transition:background .25s,border-color .25s,box-shadow .25s;min-width:0}
+.stamp.filled{background:var(--discard-done);border-color:var(--discard-done);box-shadow:0 1px 4px rgba(126,196,192,.35)}
 .stamp.filled::after{content:'✦';font-size:9px;color:#fff;line-height:1}
 @keyframes stampPop{0%{transform:scale(.2);opacity:0}55%{transform:scale(1.35)}80%{transform:scale(.92)}100%{transform:scale(1);opacity:1}}
 .stamp.pop{animation:stampPop .46s cubic-bezier(.17,.89,.32,1.28) forwards}
@@ -1994,7 +1994,7 @@ async function sageChatSend(){
       {role:'model',parts:[{text:'……はい、理解しました。ことはさんとの会話を始めましょう。'}]}
     ];
     const contents=[...systemPrefix,..._sageChatHistory,{role:'user',parts:[{text}]}];
-    const chatBody=JSON.stringify({contents,generationConfig:{temperature:0.9,maxOutputTokens:400}});
+    const chatBody=JSON.stringify({contents,generationConfig:{temperature:0.9,maxOutputTokens:1200}});
     let res=await fetch(`${GEMINI_URL}?key=${key}`,{method:'POST',headers:{'Content-Type':'application/json'},body:chatBody});
     let usedFallback=false;
     if(res.status===503){
@@ -2017,7 +2017,7 @@ async function sageChatSend(){
     // モデルラベルを追加
     const label=document.createElement('div');
     label.className='sage-chat-model'+(usedFallback?' fallback':'');
-    label.textContent=usedFallback?'2.5-flash-lite (fallback)':'3.1-flash-lite';
+    label.textContent=usedFallback?'2.5-flash (fallback)':'gemini-3-flash-preview';
     thinking.insertAdjacentElement('afterend',label);
     _sageChatHistory.push({role:'user',parts:[{text}]},{role:'model',parts:[{text:reply.trim()}]});
     if(_sageChatHistory.length>20)_sageChatHistory=_sageChatHistory.slice(-20);
@@ -2058,7 +2058,7 @@ function initSageChat(){
 let _lastGeminiUsedFallback=false;
 async function callGemini(prompt){
   const key=getGeminiKey();if(!key)return null;
-  const body=JSON.stringify({contents:[{parts:[{text:prompt}]}],generationConfig:{temperature:0.95}});
+  const body=JSON.stringify({contents:[{parts:[{text:prompt}]}],generationConfig:{temperature:0.95,responseMimeType:'application/json'}});
   let res=await fetch(`${GEMINI_URL}?key=${key}`,{method:'POST',headers:{'Content-Type':'application/json'},body});
   _lastGeminiUsedFallback=false;
   if(res.status===503){res=await fetch(`${GEMINI_URL_FALLBACK}?key=${key}`,{method:'POST',headers:{'Content-Type':'application/json'},body});_lastGeminiUsedFallback=true;}
@@ -2133,7 +2133,7 @@ function renderHomeStampMini(){
   const total=D.discardLog.length;
   const cfg=getDiscardPhaseConfig(total);
   const rc=RARITY[cfg.rarity]||RARITY.rare;
-  const discPal=['#F0CACE','#E8B5BC','#DC9EA7','#CF8690','#C27079'];
+  const discPal=['#C0E8E4','#A8D8D4','#8CC8C4','#72B8B4','#5AA8A4'];
   let s='';
   for(let i=0;i<DISCARD_CARD_SIZE;i++){
     const ms=i===4?'ms-r':i===9?'ms-sr':i===14?'ms-r':i===DISCARD_CARD_SIZE-1?'ms-ssr':'';
