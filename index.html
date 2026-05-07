@@ -35,10 +35,12 @@
 body{font-family:var(--font-body);background:var(--bg);color:var(--text);min-height:100dvh;-webkit-font-smoothing:antialiased}
 
 /* ─── ヘッダー ─── */
-.app-header{padding:12px 20px 10px;background:var(--bg);position:sticky;top:0;z-index:100;border-bottom:1px solid var(--border)}
-.header-title{font-family:var(--font-accent);font-size:18px;font-weight:600;color:var(--text-light);display:flex;align-items:center;gap:7px;margin-bottom:2px}
-.header-icon{width:30px;height:30px;border-radius:8px;vertical-align:middle;flex-shrink:0;box-shadow:0 1px 4px var(--shadow)}
-.header-date{font-family:var(--font-accent);font-size:22px;font-weight:600;color:var(--text);letter-spacing:.3px;line-height:1.2}
+.app-header{padding:10px 20px;background:var(--bg);position:sticky;top:0;z-index:100;border-bottom:1px solid var(--border)}
+.header-row{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.header-brand{font-family:var(--font-accent);font-size:13px;color:var(--text-faint);display:flex;align-items:center;gap:5px;letter-spacing:.05em;flex-shrink:0}
+.header-brand-flame{font-size:15px;line-height:1}
+.header-date{font-family:var(--font-accent);font-size:18px;font-weight:600;color:var(--text);letter-spacing:.2px;line-height:1;display:flex;align-items:center;gap:6px}
+.header-holiday{font-size:10px;font-weight:600;color:#C9897A;background:rgba(201,137,122,.13);border-radius:9px;padding:2px 7px;letter-spacing:.3px;white-space:nowrap}
 
 /* ─── コンテンツ ─── */
 .app-content{padding-bottom:calc(var(--tabbar-h) + env(safe-area-inset-bottom,16px))}
@@ -437,8 +439,10 @@ body{font-family:var(--font-body);background:var(--bg);color:var(--text);min-hei
 </div>
 
 <div class="app-header">
-  <div class="header-title"><img src="apple-touch-icon.png" class="header-icon" alt=""> 灯だまり手帖</div>
-  <div class="header-date" id="dateDisplay"></div>
+  <div class="header-row">
+    <div class="header-brand"><span class="header-brand-flame">🕯</span> 灯だまり手帖</div>
+    <div class="header-date" id="dateDisplay"></div>
+  </div>
 </div>
 
 <div class="app-content">
@@ -594,10 +598,17 @@ body{font-family:var(--font-body);background:var(--bg);color:var(--text);min-hei
         <div class="section-title" style="margin-bottom:10px">カレンダー連携</div>
         <div class="card">
           <div class="ai-key-wrap">
-            <div><div style="font-size:14px;margin-bottom:3px">Google カレンダー iCal URL</div>
+            <div><div style="font-size:14px;margin-bottom:3px">メイン予定カレンダー <span style="font-size:11px;font-weight:700;color:var(--text);background:var(--accent-light);border-radius:4px;padding:1px 6px">太字</span></div>
             <div class="ai-key-note">Google カレンダー → 設定 → 対象カレンダー →「iCal 形式の非公開のアドレス」をコピーして貼り付けてください。</div></div>
             <input id="icalUrlInput" class="modal-input" type="password" placeholder="https://calendar.google.com/calendar/ical/..." autocomplete="off" style="margin:0">
             <button class="modal-btn primary" onclick="saveIcalUrl()" style="flex:none" id="icalSaveBtn">保存</button>
+          </div>
+          <div style="border-top:1px solid var(--border)"></div>
+          <div class="ai-key-wrap">
+            <div><div style="font-size:14px;margin-bottom:3px">ルーティンカレンダー <span style="font-size:11px;color:var(--text-light);background:var(--bg-warm);border-radius:4px;padding:1px 6px">通常</span></div>
+            <div class="ai-key-note">お散歩・絵を描くなど繰り返し予定のカレンダー。設定すると細字で表示されます。</div></div>
+            <input id="icalUrlInput2" class="modal-input" type="password" placeholder="https://calendar.google.com/calendar/ical/..." autocomplete="off" style="margin:0">
+            <button class="modal-btn primary" onclick="saveIcalUrl2()" style="flex:none" id="icalSaveBtn2">保存</button>
           </div>
         </div>
       </div>
@@ -881,9 +892,22 @@ document.querySelectorAll('.stab').forEach(t=>{
 // ═══════════════════════════════════════════════
 // 日付表示
 // ═══════════════════════════════════════════════
+const HOLIDAYS={
+  '2025-01-01':'元日','2025-01-13':'成人の日','2025-02-11':'建国記念の日','2025-02-23':'天皇誕生日','2025-02-24':'天皇誕生日振替',
+  '2025-03-20':'春分の日','2025-04-29':'昭和の日','2025-05-03':'憲法記念日','2025-05-04':'みどりの日','2025-05-05':'こどもの日','2025-05-06':'振替休日',
+  '2025-07-21':'海の日','2025-08-11':'山の日','2025-09-15':'敬老の日','2025-09-23':'秋分の日','2025-10-13':'スポーツの日',
+  '2025-11-03':'文化の日','2025-11-23':'勤労感謝の日','2025-11-24':'勤労感謝振替',
+  '2026-01-01':'元日','2026-01-12':'成人の日','2026-02-11':'建国記念の日','2026-02-23':'天皇誕生日',
+  '2026-03-20':'春分の日','2026-04-29':'昭和の日','2026-05-03':'憲法記念日','2026-05-04':'みどりの日','2026-05-05':'こどもの日','2026-05-06':'振替休日',
+  '2026-07-20':'海の日','2026-08-11':'山の日','2026-09-21':'敬老の日','2026-09-22':'国民の休日','2026-09-23':'秋分の日','2026-10-12':'スポーツの日',
+  '2026-11-03':'文化の日','2026-11-23':'勤労感謝の日',
+};
 function updateDate(){
   const n=new Date(),ds=['日','月','火','水','木','金','土'];
-  document.getElementById('dateDisplay').textContent=`${n.getFullYear()}年${n.getMonth()+1}月${n.getDate()}日（${ds[n.getDay()]}）`;
+  const y=n.getFullYear(),mo=String(n.getMonth()+1).padStart(2,'0'),d=String(n.getDate()).padStart(2,'0');
+  const holiday=HOLIDAYS[`${y}-${mo}-${d}`];
+  const el=document.getElementById('dateDisplay');
+  el.innerHTML=`${n.getMonth()+1}月${n.getDate()}日（${ds[n.getDay()]}）${holiday?`<span class="header-holiday">${holiday}</span>`:''}`;
 }
 
 // ═══════════════════════════════════════════════
@@ -2131,7 +2155,9 @@ async function triggerDiscardGacha(itemText){
 // Google カレンダー
 // ═══════════════════════════════════════════════
 const ICAL_CACHE='hidamari_ical';
+const ICAL_CACHE2='hidamari_ical2';
 function getIcalUrl(){return localStorage.getItem('hidamari_ical_url')||''}
+function getIcalUrl2(){return localStorage.getItem('hidamari_ical_url2')||''}
 function saveIcalUrl(){
   const val=document.getElementById('icalUrlInput').value.trim();
   localStorage.setItem('hidamari_ical_url',val);
@@ -2140,10 +2166,18 @@ function saveIcalUrl(){
   btn.textContent='保存しました';setTimeout(()=>btn.textContent='保存',1500);
   loadCalendar();
 }
-async function fetchIcalText(url,force=false){
+function saveIcalUrl2(){
+  const val=document.getElementById('icalUrlInput2').value.trim();
+  localStorage.setItem('hidamari_ical_url2',val);
+  localStorage.removeItem(ICAL_CACHE2);
+  const btn=document.getElementById('icalSaveBtn2');
+  btn.textContent='保存しました';setTimeout(()=>btn.textContent='保存',1500);
+  loadCalendar();
+}
+async function fetchIcalText(url,cacheKey,force=false){
   if(!force){
     try{
-      const c=JSON.parse(localStorage.getItem(ICAL_CACHE)||'null');
+      const c=JSON.parse(localStorage.getItem(cacheKey)||'null');
       if(c&&Date.now()-c.ts<1800000)return c.text;
     }catch(e){}
   }
@@ -2159,7 +2193,7 @@ async function fetchIcalText(url,force=false){
       if(!res.ok){console.warn('cal proxy not ok:',res.status,proxyUrl);continue}
       const text=await res.text();
       if(text.includes('BEGIN:VCALENDAR')){
-        localStorage.setItem(ICAL_CACHE,JSON.stringify({ts:Date.now(),text}));
+        localStorage.setItem(cacheKey,JSON.stringify({ts:Date.now(),text}));
         return text;
       }
       console.warn('cal: response does not contain VCALENDAR',text.slice(0,200));
@@ -2336,40 +2370,55 @@ function renderCalEvents(items){
   el.innerHTML=items.map(ev=>{
     const eKey=encodeURIComponent(ev.title+'|'+(ev.time||'allday'));
     const isDone=checks.includes(eKey);
+    const isMain=ev.source!=='routine';
+    const titleStyle=isMain?'font-weight:600':'font-weight:400;color:var(--text-light)';
+    const dotStyle=isMain?'':'background:var(--text-faint)';
     return ev.allDay
-      ?`<div class="cal-event${isDone?' cal-done':''}"><div class="cal-event-check${isDone?' checked':''}" onclick="toggleCalCheck('${eKey}')"></div><span class="cal-allday-badge">終日</span><div class="cal-event-title">${esc(ev.title)}</div></div>`
-      :`<div class="cal-event${isDone?' cal-done':''}"><div class="cal-event-check${isDone?' checked':''}" onclick="toggleCalCheck('${eKey}')"></div><div class="cal-event-time">${ev.time}</div><div class="cal-event-dot"></div><div class="cal-event-title">${esc(ev.title)}</div></div>`;
+      ?`<div class="cal-event${isDone?' cal-done':''}"><div class="cal-event-check${isDone?' checked':''}" onclick="toggleCalCheck('${eKey}')"></div><span class="cal-allday-badge">終日</span><div class="cal-event-title" style="${titleStyle}">${esc(ev.title)}</div></div>`
+      :`<div class="cal-event${isDone?' cal-done':''}"><div class="cal-event-check${isDone?' checked':''}" onclick="toggleCalCheck('${eKey}')"></div><div class="cal-event-time">${ev.time}</div><div class="cal-event-dot" style="${dotStyle}"></div><div class="cal-event-title" style="${titleStyle}">${esc(ev.title)}</div></div>`;
   }).join('');
 }
 function reloadCalendar(){
   const btn=document.querySelector('#calCard button');
   if(btn){btn.textContent='…';btn.disabled=true;}
   localStorage.removeItem(ICAL_CACHE);
+  localStorage.removeItem(ICAL_CACHE2);
   loadCalendar(true).finally(()=>{if(btn){btn.textContent='↻';btn.disabled=false;}});
 }
 async function loadCalendar(force=false){
   const url=getIcalUrl();
+  const url2=getIcalUrl2();
   const card=document.getElementById('calCard');if(!card)return;
-  if(!url){card.style.display='none';return}
+  if(!url&&!url2){card.style.display='none';return}
   card.style.display='block';
   document.getElementById('calEvents').innerHTML='<div class="cal-empty" style="color:var(--text-faint)">読み込み中…</div>';
   const tmSec=document.getElementById('calTomorrowSection');if(tmSec)tmSec.style.display='none';
-  console.log('loadCalendar start, force='+force);
   try{
-    const text=await fetchIcalText(url,force);
-    console.log('loadCalendar: got ical, length='+text.length);
-    const parsed=parseIcal(text);
-    renderCalEvents(getTodayEvents(parsed));
-    const tmEvs=getTomorrowEvents(parsed);
+    const fetches=[];
+    if(url)fetches.push(fetchIcalText(url,ICAL_CACHE,force).then(t=>({text:t,source:'main'})).catch(()=>null));
+    if(url2)fetches.push(fetchIcalText(url2,ICAL_CACHE2,force).then(t=>({text:t,source:'routine'})).catch(()=>null));
+    const results=(await Promise.all(fetches)).filter(Boolean);
+    if(!results.length)throw new Error('all fetches failed');
+    // 今日の予定：全カレンダーをマージしてソート
+    const todayEvs=results.flatMap(({text,source})=>
+      getTodayEvents(parseIcal(text)).map(ev=>({...ev,source}))
+    ).sort((a,b)=>a.sort-b.sort);
+    renderCalEvents(todayEvs);
+    // 明日の予定
+    const tmEvs=results.flatMap(({text,source})=>
+      getTomorrowEvents(parseIcal(text)).map(ev=>({...ev,source}))
+    ).sort((a,b)=>a.sort-b.sort);
     const tmEl=document.getElementById('calTomorrowEvents');
     if(tmSec&&tmEl){
       if(tmEvs.length){
         tmSec.style.display='block';
-        tmEl.innerHTML=tmEvs.map(ev=>
-          ev.allDay
-            ?`<div class="cal-event"><span class="cal-allday-badge">終日</span><div class="cal-event-title" style="font-size:12px">${esc(ev.title)}</div></div>`
-            :`<div class="cal-event"><div class="cal-event-time" style="font-size:11px">${ev.time}</div><div class="cal-event-dot" style="background:var(--text-faint)"></div><div class="cal-event-title" style="font-size:12px">${esc(ev.title)}</div></div>`
-        ).join('');
+        tmEl.innerHTML=tmEvs.map(ev=>{
+          const isMain=ev.source!=='routine';
+          const ts=isMain?'font-size:12px;font-weight:600':'font-size:12px;color:var(--text-light)';
+          return ev.allDay
+            ?`<div class="cal-event"><span class="cal-allday-badge">終日</span><div class="cal-event-title" style="${ts}">${esc(ev.title)}</div></div>`
+            :`<div class="cal-event"><div class="cal-event-time" style="font-size:11px">${ev.time}</div><div class="cal-event-dot" style="background:var(--text-faint)"></div><div class="cal-event-title" style="${ts}">${esc(ev.title)}</div></div>`;
+        }).join('');
       }else{tmSec.style.display='none'}
     }
     const now=new Date();
@@ -2388,6 +2437,7 @@ function renderAll(){
   updateDate();renderRoutines();renderTasks();renderWeeklyPanel();renderDiscards();renderDiscardStampCard();renderHomeStampMini();renderDiscardLog();renderLongTasks();renderRS();renderWishCatFilter();renderWish();renderShopPills();renderShop();updateHomeSummary();
   const k=getGeminiKey();const el=document.getElementById('geminiKeyInput');if(el)el.value=k;
   const iu=getIcalUrl();const iel=document.getElementById('icalUrlInput');if(iel)iel.value=iu;
+  const iu2=getIcalUrl2();const iel2=document.getElementById('icalUrlInput2');if(iel2)iel2.value=iu2;
   updatePinSettingUI();
 }
 
