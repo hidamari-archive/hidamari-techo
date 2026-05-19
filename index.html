@@ -3127,6 +3127,7 @@ async function startApp(){
   try{await loadData()}catch(e){console.error('loadData error:',e)}
   clearTimeout(_loadTimer);
   renderAll();
+  saveTechoDaily();
   {const h=document.querySelector('.app-header');if(h)document.documentElement.style.setProperty('--header-h',h.offsetHeight+'px');}
   fetchWeather().then(data=>{renderWeather(data);if(data)initSageMessages(data)});
   loadCalendar();
