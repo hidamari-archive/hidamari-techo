@@ -1481,6 +1481,38 @@ function updateSage(){
   const seed=gt()+pool.length+aD;let h=0;
   for(let i=0;i<seed.length;i++)h=((h<<5)-h)+seed.charCodeAt(i);
   const sm=document.getElementById('sageMessage');if(sm)sm.innerHTML=pool[Math.abs(h)%pool.length].replace(/\n/g,'<br>');
+  saveTechoDaily();
+}
+
+// ═══════════════════════════════════════════════
+// 手帳コンテキスト → localStorage共有（灯だまりの家と連携）
+// ═══════════════════════════════════════════════
+function saveTechoDaily(){
+  if(typeof D==='undefined')return;
+  const today=gt();
+  const dow=['日','月','火','水','木','金','土'][new Date().getDay()];
+  const calLines=(_lastCalEvents&&_lastCalEvents.length)
+    ?_lastCalEvents.map(e=>e.allDay?`・${e.title}（終日）`:`・${e.time} ${e.title}`).join('\n')
+    :'なし';
+  const routineDone=D.routineChecks.filter(id=>D.routines.some(r=>r.id===id)).length;
+  const routineLines=D.routines.length
+    ?D.routines.map(r=>`・${r.text}（${D.routineChecks.includes(r.id)?'✅':'…'}）`).join('\n')
+    :'なし';
+  const taskLines=D.todayTasks.length
+    ?D.todayTasks.map(t=>`・${t.text}（${t.done?'✅':'…'}）`).join('\n')
+    :'なし';
+  const todayDiscards=D.discardLog.filter(e=>e.date===today);
+  const ctx=
+    `■ 手帖コンテキスト（${today} ${dow}曜日）\n`
+    +`---\n`
+    +`予定：\n${calLines}\n\n`
+    +`ルーティン（${routineDone}/${D.routines.length}完了）：\n${routineLines}\n\n`
+    +`今日のタスク：\n${taskLines}\n\n`
+    +`捨て活：今日${todayDiscards.length}個（累計${D.discardLog.length}個）`
+    +(todayDiscards.length?'\n'+todayDiscards.map(e=>`・${e.text}`).join('\n'):'')
+    +'\n---';
+  try{localStorage.setItem('hidamari_techo_daily',JSON.stringify({date:today,context:ctx}));}
+  catch(e){}
 }
 
 // ═══════════════════════════════════════════════
@@ -2631,6 +2663,7 @@ function toggleCalCheck(eKey){
 }
 function renderCalEvents(items){
   _lastCalEvents=items;
+  saveTechoDaily();
   const el=document.getElementById('calEvents');if(!el)return;
   if(!items.length){el.innerHTML='<div class="cal-empty">今日の予定はありません</div>';return}
   const checks=getCalChecks();
