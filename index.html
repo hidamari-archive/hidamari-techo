@@ -129,19 +129,19 @@ body{font-family:var(--font-body);background:var(--bg);color:var(--text);min-hei
 .log-summary{font-family:var(--font-accent);font-size:12px;color:var(--text-light);padding:6px 2px 12px;text-align:center}
 
 /* ─── 天気カード ─── */
-.weather-card{background:var(--bg-card);border-radius:var(--radius);box-shadow:0 1px 4px var(--shadow),0 0 0 1px rgba(0,0,0,.02);padding:12px 14px;margin-bottom:12px;transition:background .5s}
+.weather-card{background:var(--bg-card);border-radius:var(--radius);box-shadow:0 1px 4px var(--shadow),0 0 0 1px rgba(0,0,0,.02);padding:10px 12px;margin-bottom:12px;transition:background .5s}
 .weather-card.morning{background:linear-gradient(135deg,#FFF3E4,#FFF8F0)}
 .weather-card.noon{background:var(--bg-card)}
 .weather-card.evening{background:linear-gradient(135deg,#FFF0E0,#FDF6EC)}
 .weather-card.night{background:linear-gradient(135deg,#EEF0F8,#F2F4FB)}
-.weather-main{display:flex;align-items:center;gap:12px}
-.weather-icon-large{font-size:42px;line-height:1}
+.weather-main{display:flex;align-items:center;gap:9px}
+.weather-icon-large{font-size:30px;line-height:1}
 .weather-info{flex:1}
-.weather-desc{font-family:var(--font-accent);font-size:16px;font-weight:600;color:var(--text);margin-bottom:4px}
-.weather-temp{font-size:22px;font-weight:700;color:var(--text);margin-bottom:3px}
+.weather-desc{font-family:var(--font-accent);font-size:13px;font-weight:600;color:var(--text);margin-bottom:2px}
+.weather-temp{font-size:18px;font-weight:700;color:var(--text);margin-bottom:1px}
 .temp-max{color:#D4876A}
-.temp-min{color:#7BAFD4;font-size:18px}
-.weather-precip{font-size:12px;color:var(--text-light)}
+.temp-min{color:#7BAFD4;font-size:14px}
+.weather-precip{font-size:11px;color:var(--text-light)}
 .weather-umbrella{margin-top:12px;padding-top:10px;border-top:1px solid var(--border);font-family:var(--font-accent);font-size:13px;color:var(--text-light)}
 .weather-hourly-row{display:flex;gap:4px;overflow-x:auto;padding:12px 0 2px;margin-top:10px;border-top:1px solid var(--border);-webkit-overflow-scrolling:touch}
 .weather-hourly-row::-webkit-scrollbar{display:none}
@@ -150,7 +150,7 @@ body{font-family:var(--font-body);background:var(--bg);color:var(--text);min-hei
 .weather-hour-icon{font-size:18px;line-height:1}
 .weather-hour-temp{font-size:13px;font-weight:700;color:var(--text)}
 .weather-hour-precip{font-size:10px;color:var(--text-faint)}
-.pressure-row{display:flex;align-items:center;gap:6px;margin-top:8px;padding-top:8px;border-top:1px solid var(--border)}
+.pressure-row{display:flex;align-items:center;gap:6px;margin-top:6px;padding-top:6px;border-top:1px solid var(--border)}
 .pressure-badge{display:inline-flex;align-items:center;gap:4px;border-radius:20px;padding:3px 10px;font-size:11px;font-family:var(--font-accent);font-weight:600;letter-spacing:.3px}
 .pressure-badge.low{background:rgba(100,180,120,.12);color:#4A9060}
 .pressure-badge.mid{background:rgba(210,155,60,.12);color:#A07020}
@@ -370,6 +370,39 @@ body{font-family:var(--font-body);background:var(--bg);color:var(--text);min-hei
 .cal-allday-badge{font-size:9px;color:var(--text-faint);background:var(--accent-light);border-radius:3px;padding:1px 5px;flex-shrink:0}
 .cal-empty{font-family:var(--font-accent);font-size:12px;color:var(--text-faint);text-align:center;padding:6px 0}
 .cal-err{font-size:12px;color:var(--danger);text-align:center;padding:10px 0}
+/* ─── カレンダービュータブ ─── */
+.cal-view-tabs{display:flex;border-bottom:1px solid var(--border);margin:4px -12px 8px;padding:0 12px}
+.cal-vtab{flex:1;padding:6px 4px;font-size:11px;text-align:center;border:none;background:none;cursor:pointer;color:var(--text-light);border-bottom:2px solid transparent;transition:all .2s;font-family:var(--font-body);letter-spacing:.3px}
+.cal-vtab.active{color:var(--accent);border-bottom-color:var(--accent)}
+/* ─── 週間ビュー ─── */
+.cal-week-day{padding:7px 0;border-bottom:1px solid var(--border)}
+.cal-week-day:last-child{border-bottom:none}
+.cal-week-day-label{font-family:var(--font-accent);font-size:11px;color:var(--text-light);margin-bottom:4px;letter-spacing:.3px}
+.cal-week-day-label.is-sun{color:var(--danger)}
+.cal-week-day-label.is-sat{color:#7BAFD4}
+.cal-week-empty{font-size:11px;color:var(--text-faint);padding:2px 0 2px 2px;font-family:var(--font-accent)}
+/* ─── 月間グリッド ─── */
+.cal-grid-nav{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}
+.cal-grid-nav-btn{border:none;background:none;font-size:20px;color:var(--text-light);cursor:pointer;padding:2px 8px;border-radius:6px;line-height:1;transition:background .15s}
+.cal-grid-nav-btn:active{background:var(--bg-warm)}
+.cal-grid-month-label{font-family:var(--font-accent);font-size:14px;font-weight:600;color:var(--text)}
+.cal-grid-header{display:grid;grid-template-columns:repeat(7,1fr);margin-bottom:2px}
+.cal-grid-header span{text-align:center;font-size:10px;color:var(--text-faint);padding:2px 0;font-family:var(--font-body)}
+.cal-grid-header span:first-child{color:var(--danger)}
+.cal-grid-header span:last-child{color:#7BAFD4}
+.cal-grid-body{display:grid;grid-template-columns:repeat(7,1fr);gap:1px}
+.cal-grid-cell{display:flex;flex-direction:column;align-items:center;padding:3px 0 4px;cursor:pointer;border-radius:6px;transition:background .15s;-webkit-tap-highlight-color:transparent}
+.cal-grid-cell.other-month .cal-grid-date{opacity:.25}
+.cal-grid-cell.other-month .cal-grid-dots{opacity:.15}
+.cal-grid-cell.selected{background:var(--accent-light)}
+.cal-grid-date{font-size:13px;line-height:1;width:24px;height:24px;display:flex;align-items:center;justify-content:center;border-radius:50%}
+.cal-grid-cell.is-today .cal-grid-date{background:var(--accent);color:#fff;font-weight:700}
+.cal-grid-cell.is-sun:not(.is-today) .cal-grid-date{color:var(--danger)}
+.cal-grid-cell.is-sat:not(.is-today) .cal-grid-date{color:#7BAFD4}
+.cal-grid-dots{display:flex;gap:2px;justify-content:center;margin-top:2px;min-height:6px}
+.cal-grid-dot{width:5px;height:5px;border-radius:50%;background:var(--accent);flex-shrink:0}
+.cal-month-detail{margin-top:8px;padding-top:8px;border-top:1px solid var(--border)}
+.cal-month-detail-label{font-family:var(--font-accent);font-size:11px;color:var(--text-light);margin-bottom:4px;letter-spacing:.3px}
 
 /* ─── ニュースタブ ─── */
 .news-header{display:flex;align-items:center;padding:8px 12px;border-bottom:1px solid var(--border);background:var(--bg)}
@@ -468,13 +501,35 @@ body{font-family:var(--font-body);background:var(--bg);color:var(--text);min-hei
       </div>
       <div class="cal-card" id="calCard" style="display:none">
         <div class="cal-card-header">
-          <div class="cal-card-title" onclick="window.open('calshow://')" style="cursor:pointer">📅 今日の予定</div>
+          <div class="cal-card-title" id="calCardTitle" onclick="window.open('calshow://')" style="cursor:pointer">📅 今日の予定</div>
           <button onclick="reloadCalendar()" style="background:none;border:none;color:var(--text-faint);font-size:16px;cursor:pointer;padding:2px 6px" title="更新">↻</button>
         </div>
-        <div id="calEvents"></div>
-        <div id="calTomorrowSection" style="display:none">
-          <div style="font-size:10px;color:var(--text-faint);padding:3px 0 2px;border-top:1px dashed var(--border);margin-top:3px;font-family:var(--font-accent);letter-spacing:.3px">明日</div>
-          <div id="calTomorrowEvents"></div>
+        <div class="cal-view-tabs">
+          <button class="cal-vtab active" id="calVtab-today" onclick="switchCalView('today')">今日</button>
+          <button class="cal-vtab" id="calVtab-week" onclick="switchCalView('week')">週間</button>
+          <button class="cal-vtab" id="calVtab-month" onclick="switchCalView('month')">月間</button>
+        </div>
+        <div id="calPanel-today">
+          <div id="calEvents"></div>
+          <div id="calTomorrowSection" style="display:none">
+            <div style="font-size:10px;color:var(--text-faint);padding:3px 0 2px;border-top:1px dashed var(--border);margin-top:3px;font-family:var(--font-accent);letter-spacing:.3px">明日</div>
+            <div id="calTomorrowEvents"></div>
+          </div>
+        </div>
+        <div id="calPanel-week" style="display:none">
+          <div id="calWeekBody"></div>
+        </div>
+        <div id="calPanel-month" style="display:none">
+          <div class="cal-grid-nav">
+            <button class="cal-grid-nav-btn" onclick="calMonthPrev()">‹</button>
+            <div class="cal-grid-month-label" id="calGridMonthLabel"></div>
+            <button class="cal-grid-nav-btn" onclick="calMonthNext()">›</button>
+          </div>
+          <div class="cal-grid-header">
+            <span>日</span><span>月</span><span>火</span><span>水</span><span>木</span><span>金</span><span>土</span>
+          </div>
+          <div class="cal-grid-body" id="calGridBody"></div>
+          <div class="cal-month-detail" id="calMonthDetail"></div>
         </div>
         <div id="calUpdatedAt" style="font-size:9px;color:var(--text-faint);text-align:right;margin-top:3px;padding-top:3px;border-top:1px solid var(--border)"></div>
       </div>
@@ -485,7 +540,6 @@ body{font-family:var(--font-body);background:var(--bg);color:var(--text);min-hei
         </div>
         <div class="home-card-arrow" onclick="gotoSeiiki('today')" style="cursor:pointer;padding-left:8px;align-self:stretch;display:flex;align-items:center">›</div>
       </div>
-      <div id="homeStampMini" class="home-stamp-mini" onclick="gotoSeiiki('disclog')"></div>
       <div class="home-summary-card" onclick="switchTab('shop')">
         <div>
           <div class="home-card-label">🛒 買い物リスト</div>
@@ -493,6 +547,7 @@ body{font-family:var(--font-body);background:var(--bg);color:var(--text);min-hei
         </div>
         <div class="home-card-arrow">›</div>
       </div>
+      <div id="homeStampMini" class="home-stamp-mini" onclick="gotoSeiiki('disclog')"></div>
       <div id="sageChatCard" class="sage-chat-card" style="display:none">
         <div class="sage-chat-header">
           <img src="apple-touch-icon.png" class="sage-chat-icon" alt="">
@@ -975,6 +1030,7 @@ function getTimeClass(){
   return 'night';
 }
 let _weatherData=null,_weatherDay='today',_lastCalEvents=[];
+let _mainCalParsed=null,_calView='today',_calMonthYear=new Date().getFullYear(),_calMonthMonth=new Date().getMonth(),_calSelectedDate=null;
 function renderWeatherHourly(){
   const row=document.getElementById('weatherHourlyRow');
   if(!row||!_weatherData)return;
@@ -2503,6 +2559,9 @@ async function loadCalendar(force=false){
     if(url2)fetches.push(fetchIcalText(url2,ICAL_CACHE2,force).then(t=>({text:t,source:'routine'})).catch(()=>null));
     const results=(await Promise.all(fetches)).filter(Boolean);
     if(!results.length)throw new Error('all fetches failed');
+    // mainカレンダーの解析結果を保存（週間・月間ビュー用）
+    const mainResult=results.find(r=>r.source==='main');
+    if(mainResult)_mainCalParsed=parseIcal(mainResult.text);
     // 今日の予定：全カレンダーをマージしてソート
     const todayEvs=results.flatMap(({text,source})=>
       getTodayEvents(parseIcal(text)).map(ev=>({...ev,source}))
@@ -2528,10 +2587,131 @@ async function loadCalendar(force=false){
     const now=new Date();
     const ts=`${now.getHours()}:${String(now.getMinutes()).padStart(2,'0')}`;
     const el=document.getElementById('calUpdatedAt');if(el)el.textContent='最終更新 '+ts;
+    // 現在のビューが週間・月間なら再描画
+    if(_calView==='week')renderCalWeekView();
+    if(_calView==='month')renderCalMonthView();
   }catch(e){
     console.error('loadCalendar error:',e);
     document.getElementById('calEvents').innerHTML='<div class="cal-err">予定を読み込めませんでした</div>';
   }
+}
+
+// ─── カレンダー週間・月間ビュー ───
+function getEventsForDate(events,dateStr){
+  const dD=dateStr.replace(/-/g,'');
+  const result=[];
+  for(const ev of events){
+    const sum=unescIcal(ev['SUMMARY']?.value||'（タイトルなし）');
+    const dtS=icalToDate(ev['DTSTART']);if(!dtS)continue;
+    const hasRRule=ev['RRULE']&&!ev['RECURRENCE-ID'];
+    if(dtS.allDay){
+      if(hasRRule){if(doesRRuleOccurOnDate(ev,dateStr))result.push({title:sum,allDay:true,sort:-1});}
+      else{const dtE=icalToDate(ev['DTEND']);const eStr=(dtE?.str||dtS.str).replace(/-/g,'');if(dD>=dtS.str.replace(/-/g,'')&&dD<eStr)result.push({title:sum,allDay:true,sort:-1});}
+    }else{
+      const d=dtS.date;
+      const ds=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+      if(hasRRule){if(doesRRuleOccurOnDate(ev,dateStr)){const h=d.getHours(),m=d.getMinutes();result.push({title:sum,allDay:false,time:`${h}:${String(m).padStart(2,'0')}`,sort:h*60+m});}}
+      else{if(ds===dateStr){const h=d.getHours(),m=d.getMinutes();result.push({title:sum,allDay:false,time:`${h}:${String(m).padStart(2,'0')}`,sort:h*60+m});}}
+    }
+  }
+  return result.sort((a,b)=>a.sort-b.sort);
+}
+function switchCalView(view){
+  _calView=view;
+  ['today','week','month'].forEach(v=>{
+    document.getElementById('calPanel-'+v).style.display=v===view?'block':'none';
+    document.getElementById('calVtab-'+v).classList.toggle('active',v===view);
+  });
+  const titles={today:'📅 今日の予定',week:'📅 週間の予定',month:'📅 月間の予定'};
+  const t=document.getElementById('calCardTitle');if(t)t.textContent=titles[view];
+  if(view==='week')renderCalWeekView();
+  if(view==='month')renderCalMonthView();
+}
+function renderCalWeekView(){
+  const body=document.getElementById('calWeekBody');if(!body)return;
+  if(!_mainCalParsed){body.innerHTML='<div class="cal-empty">カレンダーを読み込んでいます…</div>';return;}
+  const DOW=['日','月','火','水','木','金','土'];
+  const rows=[];
+  for(let i=1;i<=7;i++){
+    const d=new Date();d.setDate(d.getDate()+i);
+    const ds=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+    const evs=getEventsForDate(_mainCalParsed,ds);
+    const dow=d.getDay();
+    const dayClass=dow===0?'is-sun':dow===6?'is-sat':'';
+    const label=`${d.getMonth()+1}月${d.getDate()}日（${DOW[dow]}）`;
+    const evHtml=evs.length
+      ?evs.map(ev=>ev.allDay
+        ?`<div class="cal-event" style="padding:3px 0"><span class="cal-allday-badge">終日</span><div class="cal-event-title">${esc(ev.title)}</div></div>`
+        :`<div class="cal-event" style="padding:3px 0"><div class="cal-event-time">${ev.time}</div><div class="cal-event-dot"></div><div class="cal-event-title">${esc(ev.title)}</div></div>`
+      ).join('')
+      :'<div class="cal-week-empty">予定はありません</div>';
+    rows.push(`<div class="cal-week-day"><div class="cal-week-day-label ${dayClass}">${label}</div>${evHtml}</div>`);
+  }
+  body.innerHTML=rows.join('');
+}
+function renderCalMonthView(){
+  const label=document.getElementById('calGridMonthLabel');if(!label)return;
+  const body=document.getElementById('calGridBody');if(!body)return;
+  const y=_calMonthYear,m=_calMonthMonth;
+  label.textContent=`${y}年${m+1}月`;
+  const today=gt();
+  const firstDay=new Date(y,m,1);
+  const lastDay=new Date(y,m+1,0);
+  const startDow=firstDay.getDay();
+  const cells=[];
+  for(let i=0;i<startDow;i++){const pd=new Date(y,m,1-(startDow-i));cells.push({date:pd,inMonth:false});}
+  for(let d=1;d<=lastDay.getDate();d++)cells.push({date:new Date(y,m,d),inMonth:true});
+  const rem=cells.length%7;if(rem>0)for(let i=1;i<=7-rem;i++)cells.push({date:new Date(y,m+1,i),inMonth:false});
+  if(!_mainCalParsed){
+    body.innerHTML='<div style="grid-column:1/-1;text-align:center;padding:20px 0;font-size:12px;color:var(--text-faint);font-family:var(--font-accent)">カレンダーを読み込んでいます…</div>';
+    return;
+  }
+  body.innerHTML=cells.map(({date,inMonth})=>{
+    const ds=date.getFullYear()+'-'+String(date.getMonth()+1).padStart(2,'0')+'-'+String(date.getDate()).padStart(2,'0');
+    const isToday=ds===today;
+    const dow=date.getDay();
+    const evs=inMonth?getEventsForDate(_mainCalParsed,ds):[];
+    const isSelected=ds===_calSelectedDate;
+    const dots=evs.length?`<div class="cal-grid-dots">${evs.slice(0,3).map(()=>'<div class="cal-grid-dot"></div>').join('')}</div>`:'<div class="cal-grid-dots"></div>';
+    const cls=['cal-grid-cell',!inMonth?'other-month':'',isToday?'is-today':'',dow===0?'is-sun':'',dow===6?'is-sat':'',isSelected?'selected':''].filter(Boolean).join(' ');
+    return `<div class="${cls}" onclick="selectCalDay('${ds}',this)"><div class="cal-grid-date">${date.getDate()}</div>${dots}</div>`;
+  }).join('');
+  if(_calSelectedDate)renderCalMonthDetail(_calSelectedDate);
+}
+function selectCalDay(dateStr,cell){
+  _calSelectedDate=dateStr;
+  document.querySelectorAll('.cal-grid-cell').forEach(c=>c.classList.remove('selected'));
+  if(cell)cell.classList.add('selected');
+  renderCalMonthDetail(dateStr);
+  const detail=document.getElementById('calMonthDetail');
+  if(detail)setTimeout(()=>detail.scrollIntoView({behavior:'smooth',block:'nearest'}),50);
+}
+function renderCalMonthDetail(dateStr){
+  const el=document.getElementById('calMonthDetail');if(!el)return;
+  const d=new Date(dateStr+'T00:00:00');
+  const DOW=['日','月','火','水','木','金','土'];
+  const label=`${d.getMonth()+1}月${d.getDate()}日（${DOW[d.getDay()]}）`;
+  if(!_mainCalParsed){el.innerHTML='';return;}
+  const evs=getEventsForDate(_mainCalParsed,dateStr);
+  const evHtml=evs.length
+    ?evs.map(ev=>ev.allDay
+      ?`<div class="cal-event" style="padding:4px 0"><span class="cal-allday-badge">終日</span><div class="cal-event-title">${esc(ev.title)}</div></div>`
+      :`<div class="cal-event" style="padding:4px 0"><div class="cal-event-time">${ev.time}</div><div class="cal-event-dot"></div><div class="cal-event-title">${esc(ev.title)}</div></div>`
+    ).join('')
+    :'<div class="cal-week-empty">予定はありません</div>';
+  el.innerHTML=`<div class="cal-month-detail-label">${label}</div>${evHtml}`;
+}
+function calMonthPrev(){
+  _calMonthMonth--;if(_calMonthMonth<0){_calMonthMonth=11;_calMonthYear--;}
+  _calSelectedDate=null;
+  const detail=document.getElementById('calMonthDetail');if(detail)detail.innerHTML='';
+  renderCalMonthView();
+}
+function calMonthNext(){
+  _calMonthMonth++;if(_calMonthMonth>11){_calMonthMonth=0;_calMonthYear++;}
+  _calSelectedDate=null;
+  const detail=document.getElementById('calMonthDetail');if(detail)detail.innerHTML='';
+  renderCalMonthView();
 }
 
 // ═══════════════════════════════════════════════
