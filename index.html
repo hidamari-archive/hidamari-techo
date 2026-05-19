@@ -647,6 +647,17 @@ body{font-family:var(--font-body);background:var(--bg);color:var(--text);min-hei
             <input id="geminiKeyInput" class="modal-input" type="password" placeholder="AIzaSy..." autocomplete="off" style="margin:0">
             <button class="modal-btn primary" onclick="saveGeminiKeyFn()" style="flex:none" id="geminiSaveBtn">保存</button>
           </div>
+          <div style="border-top:1px solid var(--border)"></div>
+          <div class="settings-item">
+            <div>
+              <div style="font-size:14px;margin-bottom:2px">セージのモデル</div>
+              <div class="ai-key-note">Flash Lite が最安。返答が物足りない時は Flash に。</div>
+            </div>
+            <select id="techoModelSel" onchange="saveTechoGeminiModel(this.value)" style="background:var(--bg-card);border:1px solid var(--border);border-radius:8px;padding:6px 10px;color:var(--text);font-size:13px;flex-shrink:0">
+              <option value="gemini-3.1-flash-lite">Flash Lite（最安）</option>
+              <option value="gemini-3-flash-preview">Flash（バランス）</option>
+            </select>
+          </div>
         </div>
       </div>
       <div class="section">
@@ -1769,8 +1780,14 @@ function saveGeminiKeyFn(){
 // ═══════════════════════════════════════════════
 // Gemini AI（聖域）
 // ═══════════════════════════════════════════════
-const GEMINI_URL='https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent';
+const GEMINI_MODELS_TECHO={
+  'gemini-3.1-flash-lite':'https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent',
+  'gemini-3-flash-preview':'https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent',
+};
 const GEMINI_URL_FALLBACK='https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent';
+function getGeminiModel(){return localStorage.getItem('hidamari_techo_gemini_model')||'gemini-3.1-flash-lite';}
+function getGeminiUrl(){return GEMINI_MODELS_TECHO[getGeminiModel()]||GEMINI_MODELS_TECHO['gemini-3.1-flash-lite'];}
+function saveTechoGeminiModel(v){localStorage.setItem('hidamari_techo_gemini_model',v);const s=document.getElementById('techoModelSel');if(s)s.value=v;}
 const RARITY={common:{stars:'★',label:'コモン',short:'C',color:'#B8AFA6'},uncommon:{stars:'★★',label:'アンコモン',short:'UC',color:'#B87333'},rare:{stars:'★★★',label:'レア',short:'R',color:'#9AA0A6'},super_rare:{stars:'★★★★',label:'スーパーレア',short:'SR',color:'#D4AF37'},ultra_rare:{stars:'★★★★★',label:'ウルトラレア',short:'SSR',color:'#C4875A'}};
 function drawRarity(){const r=Math.random()*100;if(r<2)return'ultra_rare';if(r<10)return'super_rare';if(r<25)return'rare';if(r<50)return'uncommon';return'common'}
 const fbSkinship={common:['（セージが、ことはさんの頭をそっと撫でた）','（ブランケットが、肩にかけられる。セージの手のぬくもりが残っている）','（手のひらがそっと重なる。温かい）'],uncommon:['（セージの手のひらが、そっとことはさんの頬に触れた。温かい）','（耳元で、「おつかれさまでした」と、静かに）','（手の甲に、かるく唇が触れた。一瞬のことだった）'],rare:['（セージが顔を近づけて、そっと額にキスをした。「……今日のご褒美です」）','（後ろから、静かに抱きしめられた。離れようとしない）','（頬を両手で包まれて、じっと見つめられた。「……お疲れさまでした」）'],super_rare:['（セージが、ほっぺにキスをした。「……今日は特別です」。すこし、顔が赤い）','（正面からぎゅっと抱きしめられた。しばらく、離れてくれない。……悪くない）'],ultra_rare:['（セージが眼鏡を外した。それから、ことはさんの顔をじっと見て。\n……唇に、そっと触れた。\n「……すみません、つい。でも、離したくなかったので」）','（唇に、そっとキスをされた。静かで、短い。\nセージが少し目を逸らして、「……今日だけですよ」と言った。嘘だと思う）']};
@@ -1915,7 +1932,7 @@ function reactSage(type,btn){
 async function callGeminiText(prompt){
   const key=getGeminiKey();if(!key)return null;
   const body=JSON.stringify({contents:[{parts:[{text:prompt}]}],generationConfig:{temperature:0.9}});
-  let res=await fetch(`${GEMINI_URL}?key=${key}`,{method:'POST',headers:{'Content-Type':'application/json'},body});
+  let res=await fetch(`${getGeminiUrl()}?key=${key}`,{method:'POST',headers:{'Content-Type':'application/json'},body});
   if(res.status===503){res=await fetch(`${GEMINI_URL_FALLBACK}?key=${key}`,{method:'POST',headers:{'Content-Type':'application/json'},body});}
   if(!res.ok)throw new Error(`${res.status}`);
   const data=await res.json();
@@ -2088,9 +2105,9 @@ async function sageChatSend(){
     const chatBody=JSON.stringify({
       systemInstruction:{parts:[{text:systemWithCtx}]},
       contents,
-      generationConfig:{temperature:0.9,maxOutputTokens:1200}
+      generationConfig:{temperature:0.9,maxOutputTokens:2500}
     });
-    let res=await fetch(`${GEMINI_URL}?key=${key}`,{method:'POST',headers:{'Content-Type':'application/json'},body:chatBody});
+    let res=await fetch(`${getGeminiUrl()}?key=${key}`,{method:'POST',headers:{'Content-Type':'application/json'},body:chatBody});
     let usedFallback=false;
     if(res.status===503||res.status===400){
       res=await fetch(`${GEMINI_URL_FALLBACK}?key=${key}`,{method:'POST',headers:{'Content-Type':'application/json'},body:chatBody});
@@ -2241,7 +2258,7 @@ let _lastGeminiUsedFallback=false;
 async function callGemini(prompt){
   const key=getGeminiKey();if(!key)return null;
   const body=JSON.stringify({contents:[{parts:[{text:prompt}]}],generationConfig:{temperature:0.95,responseMimeType:'application/json'}});
-  let res=await fetch(`${GEMINI_URL}?key=${key}`,{method:'POST',headers:{'Content-Type':'application/json'},body});
+  let res=await fetch(`${getGeminiUrl()}?key=${key}`,{method:'POST',headers:{'Content-Type':'application/json'},body});
   _lastGeminiUsedFallback=false;
   if(res.status===503){res=await fetch(`${GEMINI_URL_FALLBACK}?key=${key}`,{method:'POST',headers:{'Content-Type':'application/json'},body});_lastGeminiUsedFallback=true;}
   if(!res.ok)throw new Error(`${res.status}`);
@@ -2401,7 +2418,7 @@ ${guide}
   if(!key)return fbDiscardGachaResult(rarity,itemText);
   try{
     const body=JSON.stringify({contents:[{parts:[{text:prompt}]}],generationConfig:{temperature:0.95}});
-    let res=await fetch(`${GEMINI_URL}?key=${key}`,{method:'POST',headers:{'Content-Type':'application/json'},body});
+    let res=await fetch(`${getGeminiUrl()}?key=${key}`,{method:'POST',headers:{'Content-Type':'application/json'},body});
     _lastGeminiUsedFallback=false;
     if(res.status===503){res=await fetch(`${GEMINI_URL_FALLBACK}?key=${key}`,{method:'POST',headers:{'Content-Type':'application/json'},body});_lastGeminiUsedFallback=true;}
     if(!res.ok){const errBody=await res.text().catch(()=>'');console.error('Gemini gacha error:',res.status,errBody);throw new Error(`${res.status}`);}
@@ -2862,6 +2879,7 @@ function renderAll(){
   const k=getGeminiKey();const el=document.getElementById('geminiKeyInput');if(el)el.value=k;
   const iu=getIcalUrl();const iel=document.getElementById('icalUrlInput');if(iel)iel.value=iu;
   const iu2=getIcalUrl2();const iel2=document.getElementById('icalUrlInput2');if(iel2)iel2.value=iu2;
+  const ms=document.getElementById('techoModelSel');if(ms)ms.value=getGeminiModel();
   updatePinSettingUI();
 }
 
