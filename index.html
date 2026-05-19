@@ -1737,7 +1737,7 @@ function saveGeminiKeyFn(){
 // ═══════════════════════════════════════════════
 // Gemini AI（聖域）
 // ═══════════════════════════════════════════════
-const GEMINI_URL='https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash:generateContent';
+const GEMINI_URL='https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent';
 const GEMINI_URL_FALLBACK='https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent';
 const RARITY={common:{stars:'★',label:'コモン',short:'C',color:'#B8AFA6'},uncommon:{stars:'★★',label:'アンコモン',short:'UC',color:'#B87333'},rare:{stars:'★★★',label:'レア',short:'R',color:'#9AA0A6'},super_rare:{stars:'★★★★',label:'スーパーレア',short:'SR',color:'#D4AF37'},ultra_rare:{stars:'★★★★★',label:'ウルトラレア',short:'SSR',color:'#C4875A'}};
 function drawRarity(){const r=Math.random()*100;if(r<2)return'ultra_rare';if(r<10)return'super_rare';if(r<25)return'rare';if(r<50)return'uncommon';return'common'}
@@ -2082,7 +2082,7 @@ async function sageChatSend(){
     // モデルラベルを追加
     const label=document.createElement('div');
     label.className='sage-chat-model'+(usedFallback?' fallback':'');
-    label.textContent=usedFallback?'2.5-flash (fallback)':'gemini-3-flash';
+    label.textContent=usedFallback?'2.5-flash (fallback)':'gemini-3-flash-preview';
     thinking.insertAdjacentElement('afterend',label);
     _sageChatHistory.push({role:'user',parts:[{text}]},{role:'model',parts:[{text:reply.trim()}]});
     if(_sageChatHistory.length>40)_sageChatHistory=_sageChatHistory.slice(-40);
