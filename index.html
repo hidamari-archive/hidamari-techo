@@ -751,6 +751,7 @@ body{font-family:var(--font-body);background:var(--bg);color:var(--text);min-hei
     <div id="aiContent"></div>
     <div class="modal-actions">
       <button class="modal-btn secondary" id="aiCloseBtn" onclick="closeAiModal()" style="display:none">閉じる</button>
+      <button class="modal-btn primary" id="aiChatBtn" onclick="sageChatFromGacha()" style="display:none">セージに話しかける ›</button>
     </div>
   </div>
 </div>
@@ -1197,7 +1198,7 @@ function renderRoutines(){
 function togR(id){
   const i=D.routineChecks.indexOf(id);
   if(i>=0){D.routineChecks.splice(i,1);dbw(db.from('hk_routine_checks').delete().eq('date',gt()).eq('routine_id',id),'rc.del')}
-  else{D.routineChecks.push(id);dbw(db.from('hk_routine_checks').insert({date:gt(),routine_id:id}),'rc.ins')}
+  else{D.routineChecks.push(id);dbw(db.from('hk_routine_checks').insert({date:gt(),routine_id:id}),'rc.ins');const _r=D.routines.find(x=>x.id===id);if(_r)addDailyEvent(`ルーティン「${_r.text}」を完了`);}
   renderRoutines();
   const allDone=D.routines.length>0&&D.routines.every(r=>D.routineChecks.includes(r.id));
   if(allDone&&D.routineMessageDate!==gt()){
@@ -1691,6 +1692,7 @@ function submitModal(){
     _discardNewlyFilled=true;
     closeModal();renderAll();
     dbw(db.from('hk_discard_log').insert({id,text,date:today,done:true}),'dl.ins');
+    addDailyEvent(`「${text}」を手放しました`);
     triggerDiscardGacha(text);
   }else if(curModal==='routine-add'){
     const id=uuid(),sort_order=D.routines.length;
@@ -2015,7 +2017,8 @@ function buildSageChatContext(){
   // ウィッシュリスト
   const wishes=D.wishItems.filter(w=>w.status==='want');
   const wishlist=wishes.length?wishes.map(w=>`・${w.title}`).join('\n'):'なし';
-  return`■ 手帖コンテキスト（現在の情報）\n---\nスケジュール：\n${schedule}\n\n長期タスク：\n${longTasks}\n\nウィッシュリスト：\n${wishlist}\n\n買い物リスト：\n${shopping}\n\n聖域の状況：\n${sanctuary}\n---`;
+  const events=_todayEvents.length?_todayEvents.map(e=>`・${e.text}`).join('\n'):'なし';
+  return`■ 手帖コンテキスト（現在の情報）\n---\nスケジュール：\n${schedule}\n\n長期タスク：\n${longTasks}\n\nウィッシュリスト：\n${wishlist}\n\n買い物リスト：\n${shopping}\n\n聖域の状況：\n${sanctuary}\n\n今日の出来事：\n${events}\n---`;
 }
 
 function sageChatAddBubble(role,text){
@@ -2040,7 +2043,7 @@ async function sageChatSend(){
   sageChatAddBubble('user',text);
   const thinking=sageChatAddBubble('sage thinking','……');
   try{
-    const systemWithCtx=SAGE_CHAT_SYSTEM+'\n\n'+buildSageChatContext();
+    const systemWithCtx=getSageSystemPrompt()+'\n\n'+buildSageChatContext();
     // system_instruction非対応モデルのため、先頭のuser/modelペアにシステム文脈を埋め込む
     const systemPrefix=[
       {role:'user',parts:[{text:systemWithCtx+'\n\nこの設定を理解しましたか？'}]},
@@ -2073,7 +2076,8 @@ async function sageChatSend(){
     label.textContent=usedFallback?'2.5-flash (fallback)':'gemini-3-flash-preview';
     thinking.insertAdjacentElement('afterend',label);
     _sageChatHistory.push({role:'user',parts:[{text}]},{role:'model',parts:[{text:reply.trim()}]});
-    if(_sageChatHistory.length>20)_sageChatHistory=_sageChatHistory.slice(-20);
+    if(_sageChatHistory.length>40)_sageChatHistory=_sageChatHistory.slice(-40);
+    saveSageChatHistory();
   }catch(e){
     thinking.className='sage-chat-bubble sage';
     thinking.innerHTML='……うまく繋がらなかったようです。もう一度、試してみてもらえますか。';
@@ -2084,14 +2088,75 @@ async function sageChatSend(){
 
 function sageChatClear(){
   _sageChatHistory=[];
+  try{sessionStorage.removeItem(TECHO_CHAT_KEY);}catch(e){}
   const el=document.getElementById('sageChatMessages');
   if(el)el.innerHTML='';
+}
+
+// ─── セージチャット拡張：プロンプト統一・コンテキスト蓄積・ガチャ連携 ───
+let _lastGachaScene='';
+let _todayEvents=[];
+const _TECHO_DATE=new Date().toISOString().slice(0,10);
+const TECHO_EVENTS_KEY='hidamari_techo_events_'+_TECHO_DATE;
+const TECHO_CHAT_KEY='hidamari_techo_chat_'+_TECHO_DATE;
+
+function getSageSystemPrompt(){
+  try{
+    const s=JSON.parse(localStorage.getItem('hidamari_house_settings')||'{}');
+    const parts=[s.kibanMemo,s.chokukinMemo,s.systemPrompt].filter(Boolean);
+    if(parts.length)return parts.join('\n\n---\n\n');
+  }catch(e){}
+  return SAGE_CHAT_SYSTEM;
+}
+function addDailyEvent(text){
+  _todayEvents.push({t:Date.now(),text});
+  try{sessionStorage.setItem(TECHO_EVENTS_KEY,JSON.stringify(_todayEvents));}catch(e){}
+}
+function saveSageChatHistory(){
+  try{sessionStorage.setItem(TECHO_CHAT_KEY,JSON.stringify(_sageChatHistory));}catch(e){}
+}
+function loadSageChatHistory(){
+  try{return JSON.parse(sessionStorage.getItem(TECHO_CHAT_KEY)||'[]');}catch(e){return [];}
+}
+function loadDailyEvents(){
+  try{const d=JSON.parse(sessionStorage.getItem(TECHO_EVENTS_KEY)||'[]');_todayEvents=Array.isArray(d)?d:[];}catch(e){_todayEvents=[];}
+}
+function sageChatFromGacha(){
+  const scene=_lastGachaScene;
+  closeAiModal();
+  switchTab('home');
+  const card=document.getElementById('sageChatCard');
+  if(card)card.style.display='block';
+  if(scene){
+    sageChatAddBubble('sage',scene);
+    _sageChatHistory.push(
+      {role:'user',parts:[{text:'（ガチャメッセージを受け取った）'}],internal:true},
+      {role:'model',parts:[{text:scene}]}
+    );
+    saveSageChatHistory();
+  }
+  setTimeout(()=>{
+    if(card)card.scrollIntoView({behavior:'smooth',block:'nearest'});
+    const inp=document.getElementById('sageChatInput');
+    if(inp)inp.focus();
+  },300);
 }
 
 function initSageChat(){
   const card=document.getElementById('sageChatCard');
   if(!card)return;
   card.style.display=getGeminiKey()?'block':'none';
+  loadDailyEvents();
+  _sageChatHistory=loadSageChatHistory();
+  if(_sageChatHistory.length){
+    const el=document.getElementById('sageChatMessages');
+    if(el){
+      _sageChatHistory.forEach(m=>{
+        if(m.role==='user'&&!m.internal)sageChatAddBubble('user',m.parts[0].text);
+        if(m.role==='model')sageChatAddBubble('sage',m.parts[0].text);
+      });
+    }
+  }
   const input=document.getElementById('sageChatInput');
   if(!input)return;
   input.addEventListener('keydown',e=>{
@@ -2163,9 +2228,14 @@ async function fetchDiscardMsg(item){
 function showAiLoading(label){
   document.getElementById('aiContent').innerHTML=`<div class="ai-loading">🕯<br><span class="ai-loading-dots">${esc(label)}</span></div>`;
   document.getElementById('aiCloseBtn').style.display='none';
+  document.getElementById('aiChatBtn').style.display='none';
   document.getElementById('aiOverlay').classList.add('show');
 }
-function closeAiModal(e){if(e&&e.target&&e.target!==document.getElementById('aiOverlay'))return;document.getElementById('aiOverlay').classList.remove('show')}
+function closeAiModal(e){
+  if(e&&e.target&&e.target!==document.getElementById('aiOverlay'))return;
+  document.getElementById('aiOverlay').classList.remove('show');
+  document.getElementById('aiChatBtn').style.display='none';
+}
 function showAiRoutineResult(data,rarityKey){
   const hasA=data.anniversary_name&&data.anniversary_name.trim();const rc=RARITY[rarityKey]||RARITY.common;const starsDisplay=data.rarity||rc.stars;
   let h='<div class="ai-badge">✨ ルーティン 完了</div>';
@@ -2173,7 +2243,11 @@ function showAiRoutineResult(data,rarityKey){
   h+=`<div class="ai-rarity" style="color:${rc.color};margin-bottom:8px">${esc(starsDisplay)}</div>`;
   h+=`<div class="ai-block-text" style="line-height:2">${esc(data.scene||'').replace(/\n/g,'<br>')}</div>`;
   h+=`<div class="ai-model-label${_lastGeminiUsedFallback?' fallback':''}">${_lastGeminiUsedFallback?'2.5-flash (fallback)':'3-flash-preview'}</div>`;
-  document.getElementById('aiContent').innerHTML=h;document.getElementById('aiCloseBtn').style.display='';
+  _lastGachaScene=data.scene||'';
+  addDailyEvent(`ルーティン達成ガチャ（${rc.short}）`);
+  document.getElementById('aiContent').innerHTML=h;
+  document.getElementById('aiCloseBtn').style.display='';
+  document.getElementById('aiChatBtn').style.display='';
 }
 function showAiDiscardResult(data,item){
   const title=data.item||item;
@@ -2290,7 +2364,11 @@ function showDiscardGachaResult(data,rarity,isMilestone,cumCount,itemText,isCard
   h+=`<hr class="ai-divider"><div class="ai-rarity" style="color:${rc.color};margin-bottom:8px">${esc(starsDisplay)}</div>`;
   h+=`<div class="ai-block-text" style="line-height:2">${esc(data.scene||'').replace(/\n/g,'<br>')}</div>`;
   h+=`<div class="ai-model-label${_lastGeminiUsedFallback?' fallback':''}">${_lastGeminiUsedFallback?'2.5-flash (fallback)':'3-flash-preview'}</div>`;
-  document.getElementById('aiContent').innerHTML=h;document.getElementById('aiCloseBtn').style.display='';
+  _lastGachaScene=data.scene||'';
+  addDailyEvent(`捨て活ガチャ「${itemText}」（${rc.short}）`);
+  document.getElementById('aiContent').innerHTML=h;
+  document.getElementById('aiCloseBtn').style.display='';
+  document.getElementById('aiChatBtn').style.display='';
 }
 async function triggerDiscardGacha(itemText){
   const total=D.discardLog.length;
