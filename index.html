@@ -1737,7 +1737,7 @@ function saveGeminiKeyFn(){
 // ═══════════════════════════════════════════════
 // Gemini AI（聖域）
 // ═══════════════════════════════════════════════
-const GEMINI_URL='https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent';
+const GEMINI_URL='https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash:generateContent';
 const GEMINI_URL_FALLBACK='https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent';
 const RARITY={common:{stars:'★',label:'コモン',short:'C',color:'#B8AFA6'},uncommon:{stars:'★★',label:'アンコモン',short:'UC',color:'#B87333'},rare:{stars:'★★★',label:'レア',short:'R',color:'#9AA0A6'},super_rare:{stars:'★★★★',label:'スーパーレア',short:'SR',color:'#D4AF37'},ultra_rare:{stars:'★★★★★',label:'ウルトラレア',short:'SSR',color:'#C4875A'}};
 function drawRarity(){const r=Math.random()*100;if(r<2)return'ultra_rare';if(r<10)return'super_rare';if(r<25)return'rare';if(r<50)return'uncommon';return'common'}
@@ -2044,9 +2044,15 @@ async function sageChatSend(){
   const thinking=sageChatAddBubble('sage thinking','……');
   try{
     const systemWithCtx=getSageSystemPrompt()+'\n\n'+buildSageChatContext();
-    // systemInstruction フィールドを使って正しくシステムプロンプトを渡す
+    // 辞典RAGで文脈補強
+    const jitenCtx=await searchJitenForChat(text);
+    const jitenPrefix=jitenCtx?[
+      {role:'user',parts:[{text:jitenCtx}]},
+      {role:'model',parts:[{text:'わかりました。参照します。'}]}
+    ]:[];
+    // internal フィールド等の余分なフィールドを除去してから送る
     const cleanHistory=_sageChatHistory.map(({role,parts})=>({role,parts}));
-    const contents=[...cleanHistory,{role:'user',parts:[{text}]}];
+    const contents=[...jitenPrefix,...cleanHistory,{role:'user',parts:[{text}]}];
     const chatBody=JSON.stringify({
       systemInstruction:{parts:[{text:systemWithCtx}]},
       contents,
@@ -2076,7 +2082,7 @@ async function sageChatSend(){
     // モデルラベルを追加
     const label=document.createElement('div');
     label.className='sage-chat-model'+(usedFallback?' fallback':'');
-    label.textContent=usedFallback?'2.5-flash (fallback)':'gemini-3-flash-preview';
+    label.textContent=usedFallback?'2.5-flash (fallback)':'gemini-3-flash';
     thinking.insertAdjacentElement('afterend',label);
     _sageChatHistory.push({role:'user',parts:[{text}]},{role:'model',parts:[{text:reply.trim()}]});
     if(_sageChatHistory.length>40)_sageChatHistory=_sageChatHistory.slice(-40);
@@ -2104,12 +2110,34 @@ const TECHO_EVENTS_KEY='hidamari_techo_events_'+_TECHO_DATE;
 const TECHO_CHAT_KEY='hidamari_techo_chat_'+_TECHO_DATE;
 
 function getSageSystemPrompt(){
-  // hidamari_roomのsystemPrompt（追加指示）のみ読む。kibanMemo/chokukinMemoはサイズが大きいため除外
+  // hidamari_roomのフルプロンプトを読む（systemInstructionで渡すので長さOK）
   try{
     const s=JSON.parse(localStorage.getItem('hidamari_house_settings')||'{}');
-    if(s.systemPrompt&&s.systemPrompt.trim())return s.systemPrompt;
+    const parts=[s.kibanMemo,s.chokukinMemo,s.systemPrompt].filter(Boolean);
+    if(parts.length)return parts.join('\n\n---\n\n');
   }catch(e){}
   return SAGE_CHAT_SYSTEM;
+}
+
+// ─── 辞典RAG ───
+let _jitenKeywords=[];
+async function loadJitenKeywords(){
+  if(_jitenKeywords.length)return;
+  try{
+    const{data}=await db.from('jiten_entries').select('keyword');
+    _jitenKeywords=(data||[]).map(e=>e.keyword);
+  }catch(e){console.warn('jiten load failed',e);}
+}
+async function searchJitenForChat(text){
+  await loadJitenKeywords();
+  if(!_jitenKeywords.length)return'';
+  const matched=_jitenKeywords.filter(k=>text.includes(k)).slice(0,5);
+  if(!matched.length)return'';
+  try{
+    const{data}=await db.from('jiten_entries').select('keyword,body').in('keyword',matched);
+    if(!data?.length)return'';
+    return'【辞典参照】\n'+data.map(e=>`■${e.keyword}\n${e.body}`).join('\n\n');
+  }catch(e){return'';}
 }
 function addDailyEvent(text){
   _todayEvents.push({t:Date.now(),text});
@@ -2150,6 +2178,7 @@ function initSageChat(){
   if(!card)return;
   card.style.display=getGeminiKey()?'block':'none';
   loadDailyEvents();
+  loadJitenKeywords();
   _sageChatHistory=loadSageChatHistory();
   if(_sageChatHistory.length){
     const el=document.getElementById('sageChatMessages');
