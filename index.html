@@ -2049,7 +2049,9 @@ async function sageChatSend(){
       {role:'user',parts:[{text:systemWithCtx+'\n\nこの設定を理解しましたか？'}]},
       {role:'model',parts:[{text:'……はい、理解しました。ことはさんとの会話を始めましょう。'}]}
     ];
-    const contents=[...systemPrefix,..._sageChatHistory,{role:'user',parts:[{text}]}];
+    // internal フィールド等の余分なフィールドを除去してから送る
+    const cleanHistory=_sageChatHistory.map(({role,parts})=>({role,parts}));
+    const contents=[...systemPrefix,...cleanHistory,{role:'user',parts:[{text}]}];
     const chatBody=JSON.stringify({contents,generationConfig:{temperature:0.9,maxOutputTokens:1200}});
     let res=await fetch(`${GEMINI_URL}?key=${key}`,{method:'POST',headers:{'Content-Type':'application/json'},body:chatBody});
     let usedFallback=false;
@@ -2101,10 +2103,10 @@ const TECHO_EVENTS_KEY='hidamari_techo_events_'+_TECHO_DATE;
 const TECHO_CHAT_KEY='hidamari_techo_chat_'+_TECHO_DATE;
 
 function getSageSystemPrompt(){
+  // hidamari_roomのsystemPrompt（追加指示）のみ読む。kibanMemo/chokukinMemoはサイズが大きいため除外
   try{
     const s=JSON.parse(localStorage.getItem('hidamari_house_settings')||'{}');
-    const parts=[s.kibanMemo,s.chokukinMemo,s.systemPrompt].filter(Boolean);
-    if(parts.length)return parts.join('\n\n---\n\n');
+    if(s.systemPrompt&&s.systemPrompt.trim())return s.systemPrompt;
   }catch(e){}
   return SAGE_CHAT_SYSTEM;
 }
