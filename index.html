@@ -2044,27 +2044,28 @@ async function sageChatSend(){
   const thinking=sageChatAddBubble('sage thinking','……');
   try{
     const systemWithCtx=getSageSystemPrompt()+'\n\n'+buildSageChatContext();
-    // system_instruction非対応モデルのため、先頭のuser/modelペアにシステム文脈を埋め込む
-    const systemPrefix=[
-      {role:'user',parts:[{text:systemWithCtx+'\n\nこの設定を理解しましたか？'}]},
-      {role:'model',parts:[{text:'……はい、理解しました。ことはさんとの会話を始めましょう。'}]}
-    ];
-    // internal フィールド等の余分なフィールドを除去してから送る
+    // systemInstruction フィールドを使って正しくシステムプロンプトを渡す
     const cleanHistory=_sageChatHistory.map(({role,parts})=>({role,parts}));
-    const contents=[...systemPrefix,...cleanHistory,{role:'user',parts:[{text}]}];
-    const chatBody=JSON.stringify({contents,generationConfig:{temperature:0.9,maxOutputTokens:1200}});
+    const contents=[...cleanHistory,{role:'user',parts:[{text}]}];
+    const chatBody=JSON.stringify({
+      systemInstruction:{parts:[{text:systemWithCtx}]},
+      contents,
+      generationConfig:{temperature:0.9,maxOutputTokens:1200}
+    });
     let res=await fetch(`${GEMINI_URL}?key=${key}`,{method:'POST',headers:{'Content-Type':'application/json'},body:chatBody});
     let usedFallback=false;
-    if(res.status===503){
+    if(res.status===503||res.status===400){
       res=await fetch(`${GEMINI_URL_FALLBACK}?key=${key}`,{method:'POST',headers:{'Content-Type':'application/json'},body:chatBody});
       usedFallback=true;
     }
     const data=await res.json();
     if(!res.ok){
       const code=res.status;
+      const apiMsg=data?.error?.message||'';
+      console.error('sageChatSend error',code,apiMsg);
       const msg=code===503?'……少し混み合っているようです。もう少し待ってから、また話しかけてみてください。'
                :code===429?'……少し間を置いてから、また話しかけてみてください。'
-               :'……うまく繋がらなかったようです。もう一度、試してみてもらえますか。';
+               :`……うまく繋がらなかったようです（${code}）。もう一度、試してみてもらえますか。`;
       thinking.className='sage-chat-bubble sage';thinking.innerHTML=msg;
       btn.disabled=false;return;
     }
