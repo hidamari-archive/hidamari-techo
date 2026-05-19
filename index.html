@@ -166,18 +166,18 @@ body{font-family:var(--font-body);background:var(--bg);color:var(--text);min-hei
 .sage-weather-msg{margin-top:12px;padding-top:12px;border-top:1px solid rgba(0,0,0,.06);font-family:var(--font-accent);font-size:13px;line-height:1.85;color:var(--text);display:flex;gap:9px;align-items:flex-start}
 .sage-weather-icon{width:18px;height:18px;border-radius:4px;flex-shrink:0;margin-top:2px}
 .sage-weather-msg.loading .sage-weather-text{color:var(--text-faint)}
-/* ─── 天気カード 追加レイアウト ─── */
-.weather-top-row{display:flex;align-items:center;gap:12px}
-.weather-today-col{flex:1;min-width:0;cursor:pointer;border-radius:8px;padding:4px;margin:-4px;transition:background .15s}
-.weather-tmrw-col{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;border-left:1px solid var(--border);padding-left:12px;padding-right:4px;flex-shrink:0;min-width:70px;cursor:pointer;border-radius:0 8px 8px 0;transition:background .15s}
-.weather-tmrw-col-label{font-family:var(--font-accent);font-size:10px;color:var(--text-faint);letter-spacing:.5px}
-.weather-tmrw-col-icon{font-size:22px;line-height:1}
-.weather-tmrw-col-desc{font-family:var(--font-accent);font-size:11px;color:var(--text);text-align:center}
-.weather-tmrw-col-temp{font-size:11px;font-weight:600;text-align:center}
-.weather-tmrw-col-precip{font-size:10px;color:var(--text-faint)}
-.weather-day-label{font-family:var(--font-accent);font-size:10px;color:var(--text-faint);letter-spacing:.5px;margin-bottom:4px}
-.weather-active-day{background:rgba(212,167,106,.1)}
-.weather-active-day .weather-day-label,.weather-active-day .weather-tmrw-col-label{color:var(--accent);font-weight:600}
+/* ─── 天気カード コンパクト行レイアウト ─── */
+.weather-rows{display:flex;flex-direction:column}
+.weather-row{display:flex;align-items:center;gap:9px;padding:6px 4px;cursor:pointer;border-radius:7px;transition:background .15s;-webkit-tap-highlight-color:transparent;margin:0 -4px}
+.weather-row:active{background:var(--bg-warm)}
+.weather-row-label{font-family:var(--font-accent);font-size:10px;color:var(--text-faint);letter-spacing:.5px;min-width:22px;flex-shrink:0}
+.weather-row-icon{font-size:22px;line-height:1;flex-shrink:0;width:28px;text-align:center}
+.weather-row-desc{font-family:var(--font-accent);font-size:13px;color:var(--text);flex:1}
+.weather-row-temp{font-size:14px;font-weight:700;white-space:nowrap;flex-shrink:0}
+.weather-row-precip{font-size:11px;color:var(--text-light);white-space:nowrap;flex-shrink:0;min-width:28px;text-align:right}
+.weather-row-sep{height:1px;background:var(--border);margin:0 0}
+.weather-active-day{background:rgba(212,167,106,.09)}
+.weather-active-day .weather-row-label{color:var(--accent);font-weight:600}
 
 /* ─── セージのおすすめカード ─── */
 .sage-home-card{background:var(--bg-warm);border-radius:var(--radius);padding:12px 14px;margin-bottom:8px}
@@ -1067,27 +1067,24 @@ function renderWeather(data){
   }
   const w=WMO[data.code]||{l:'--',i:'🌡'};
   const umbrella=data.precip>=40;
-  let h=`<div class="weather-top-row">
-    <div class="weather-today-col" id="weatherTodayCol" onclick="switchWeatherDay('today')">
-      <div class="weather-day-label">今日</div>
-      <div class="weather-main">
-        <div class="weather-icon-large">${w.i}</div>
-        <div class="weather-info">
-          <div class="weather-desc">${w.l}</div>
-          <div class="weather-temp"><span class="temp-max">${data.max}°</span> / <span class="temp-min">${data.min}°</span></div>
-          <div class="weather-precip">降水確率 ${data.precip}%${umbrella?' ☂️':''}</div>
-        </div>
-      </div>
+  let h=`<div class="weather-rows">
+    <div class="weather-row" id="weatherTodayCol" onclick="switchWeatherDay('today')">
+      <span class="weather-row-label">今日</span>
+      <span class="weather-row-icon">${w.i}</span>
+      <span class="weather-row-desc">${w.l}</span>
+      <span class="weather-row-temp"><span class="temp-max">${data.max}°</span><span class="temp-min"> / ${data.min}°</span></span>
+      <span class="weather-row-precip">${data.precip}%${umbrella?' ☂️':''}</span>
     </div>`;
   if(data.tomorrow){
     const tw=WMO[data.tomorrow.code]||{l:'--',i:'🌡'};
     const tumb=data.tomorrow.precip>=40;
-    h+=`<div class="weather-tmrw-col" id="weatherTmrwCol" onclick="switchWeatherDay('tomorrow')">
-      <div class="weather-tmrw-col-label">明日</div>
-      <div class="weather-tmrw-col-icon">${tw.i}</div>
-      <div class="weather-tmrw-col-desc">${tw.l}</div>
-      <div class="weather-tmrw-col-temp"><span class="temp-max">${data.tomorrow.max}°</span> <span class="temp-min">${data.tomorrow.min}°</span></div>
-      <div class="weather-tmrw-col-precip">${data.tomorrow.precip}%${tumb?' ☂️':''}</div>
+    h+=`<div class="weather-row-sep"></div>
+    <div class="weather-row" id="weatherTmrwCol" onclick="switchWeatherDay('tomorrow')">
+      <span class="weather-row-label">明日</span>
+      <span class="weather-row-icon">${tw.i}</span>
+      <span class="weather-row-desc">${tw.l}</span>
+      <span class="weather-row-temp"><span class="temp-max">${data.tomorrow.max}°</span><span class="temp-min"> / ${data.tomorrow.min}°</span></span>
+      <span class="weather-row-precip">${data.tomorrow.precip}%${tumb?' ☂️':''}</span>
     </div>`;
   }
   h+=`</div>`;
