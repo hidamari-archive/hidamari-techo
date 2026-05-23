@@ -278,6 +278,8 @@ body{font-family:var(--font-body);background:var(--bg);color:var(--text);min-hei
 .pantry-badge.needed{background:#FDE8E5;color:#C9897A;border:1px solid #EFB9B2}
 .pantry-badge.in-stock{background:#E8F3EF;color:#6B9E8A;border:1px solid #BAD9CD}
 .pantry-empty{font-size:13px;color:var(--text-faint);text-align:center;padding:20px 0}
+.pantry-cam-btn{background:none;border:none;color:var(--text-faint);font-size:16px;cursor:pointer;padding:2px 4px;flex-shrink:0;line-height:1;opacity:.6}
+.pantry-img-thumb{width:38px;height:38px;border-radius:8px;object-fit:cover;flex-shrink:0;cursor:pointer;border:1px solid var(--border)}
 
 /* ─── モーダル ─── */
 .modal-overlay{display:none;position:fixed;inset:0;background:rgba(58,53,48,.3);z-index:300;align-items:flex-end;justify-content:center;backdrop-filter:blur(2px)}
@@ -763,6 +765,7 @@ body{font-family:var(--font-body);background:var(--bg);color:var(--text);min-hei
         <button class="pantry-add-btn" onclick="addPantryItem()">追加</button>
       </div>
       <div id="pantryList"></div>
+      <input type="file" id="pantryImageInput" accept="image/*" style="display:none">
     </div>
   </div>
 
@@ -1694,7 +1697,11 @@ function renderPantry(){
   el.innerHTML=sorted.map((x,i,arr)=>{
     const cls=arr.length===1?'only':'';
     const isNeeded=x.status==='needed';
+    const imgHtml=x.image_url
+      ?`<img src="${x.image_url}" class="pantry-img-thumb" onclick="openPantryImagePicker('${x.id}')" alt="">`
+      :`<button class="pantry-cam-btn" onclick="openPantryImagePicker('${x.id}')">📷</button>`;
     return`<div class="pantry-item ${cls}">
+      ${imgHtml}
       <div class="pantry-item-name ${isNeeded?'':'in-stock'}">${esc(x.name)}</div>
       <button class="pantry-badge ${isNeeded?'needed':'in-stock'}" onclick="togPantry('${x.id}')">${isNeeded?'🔴 欠品':'🟢 在庫あり'}</button>
       <button class="item-delete" onclick="delPantryItem('${x.id}')">×</button>
@@ -1724,6 +1731,29 @@ function delPantryItem(id){
   dbw(db.from('pantry_items').delete().eq('id',id),'p.del');
 }
 document.getElementById('pantryInput').addEventListener('keydown',e=>{if(e.key==='Enter')addPantryItem()});
+let _pantryImgTarget=null;
+function openPantryImagePicker(id){
+  _pantryImgTarget=id;
+  const el=document.getElementById('pantryImageInput');
+  el.value='';el.click();
+}
+async function uploadPantryImage(input){
+  const file=input.files[0];if(!file||!_pantryImgTarget)return;
+  const id=_pantryImgTarget;
+  const ext=file.name.split('.').pop()||'jpg';
+  const path=`${id}.${ext}`;
+  const idx=D.pantryItems.findIndex(x=>x.id===id);
+  if(idx>=0)D.pantryItems[idx].image_url='loading';
+  renderPantry();
+  const{error}=await db.storage.from('pantry-images').upload(path,file,{upsert:true,contentType:file.type});
+  if(error){console.error('img upload error:',error);if(idx>=0)D.pantryItems[idx].image_url=null;renderPantry();return;}
+  const{data}=db.storage.from('pantry-images').getPublicUrl(path);
+  const url=data.publicUrl;
+  if(idx>=0)D.pantryItems[idx].image_url=url;
+  renderPantry();
+  dbw(db.from('pantry_items').update({image_url:url}).eq('id',id),'p.img');
+}
+document.getElementById('pantryImageInput').addEventListener('change',function(){uploadPantryImage(this)});
 
 // ═══════════════════════════════════════════════
 // モーダル
