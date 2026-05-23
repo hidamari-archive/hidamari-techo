@@ -259,6 +259,26 @@ body{font-family:var(--font-body);background:var(--bg);color:var(--text);min-hei
 .shop-item-label{font-size:14px;flex:1}
 .shop-clear-btn{display:block;width:100%;margin-top:12px;padding:10px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--bg);color:var(--text-light);font-size:13px;font-family:var(--font-body);cursor:pointer;text-align:center}
 
+/* ─── 台所在庫 ─── */
+.pantry-section{padding:12px 16px 24px;border-top:2px dashed var(--border)}
+.pantry-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.pantry-title{font-family:var(--font-accent);font-size:13px;color:var(--text-light);letter-spacing:.3px}
+.pantry-needed-count{font-size:12px;color:#C9897A;font-family:var(--font-body)}
+.pantry-add-row{display:flex;gap:8px;margin-bottom:10px}
+.pantry-add-input{flex:1;padding:8px 12px;border:1px solid var(--border);border-radius:var(--radius-sm);font-size:14px;font-family:var(--font-body);color:var(--text);background:var(--bg);outline:none}
+.pantry-add-input:focus{border-color:var(--accent)}
+.pantry-add-btn{padding:8px 14px;background:var(--accent);color:#fff;border:none;border-radius:var(--radius-sm);font-size:14px;font-family:var(--font-body);cursor:pointer;white-space:nowrap}
+.pantry-item{display:flex;align-items:center;padding:10px 14px;gap:10px;border-bottom:1px solid var(--border);background:var(--bg-card)}
+.pantry-item:first-child{border-radius:var(--radius) var(--radius) 0 0}
+.pantry-item:last-child{border-bottom:none;border-radius:0 0 var(--radius) var(--radius)}
+.pantry-item.only{border-radius:var(--radius)}
+.pantry-item-name{font-size:14px;flex:1;color:var(--text)}
+.pantry-item-name.in-stock{color:var(--text-light)}
+.pantry-badge{padding:3px 10px;border-radius:10px;font-size:11px;cursor:pointer;border:none;font-family:var(--font-body);transition:opacity .2s;flex-shrink:0}
+.pantry-badge.needed{background:#FDE8E5;color:#C9897A;border:1px solid #EFB9B2}
+.pantry-badge.in-stock{background:#E8F3EF;color:#6B9E8A;border:1px solid #BAD9CD}
+.pantry-empty{font-size:13px;color:var(--text-faint);text-align:center;padding:20px 0}
+
 /* ─── モーダル ─── */
 .modal-overlay{display:none;position:fixed;inset:0;background:rgba(58,53,48,.3);z-index:300;align-items:flex-end;justify-content:center;backdrop-filter:blur(2px)}
 .modal-overlay.show{display:flex}
@@ -473,7 +493,7 @@ body{font-family:var(--font-body);background:var(--bg);color:var(--text);min-hei
 
 <div class="app-header">
   <div class="header-row">
-    <div class="header-brand"><span class="header-brand-flame">🕯</span> 灯だまり手帖</div>
+    <div class="header-brand"><span class="header-brand-flame">🕯</span></div>
     <div class="header-date" id="dateDisplay"></div>
   </div>
 </div>
@@ -535,7 +555,7 @@ body{font-family:var(--font-body);background:var(--bg);color:var(--text);min-hei
       </div>
       <div class="home-summary-card" style="cursor:default">
         <div style="flex:1;min-width:0">
-          <div class="home-card-label">☑ 聖域メンテナンス</div>
+          <div class="home-card-label">☑ くらし</div>
           <div class="home-card-value" id="homeSeiikiSummary">読み込み中…</div>
         </div>
         <div class="home-card-arrow" onclick="gotoSeiiki('today')" style="cursor:pointer;padding-left:8px;align-self:stretch;display:flex;align-items:center">›</div>
@@ -551,7 +571,7 @@ body{font-family:var(--font-body);background:var(--bg);color:var(--text);min-hei
       <div id="sageChatCard" class="sage-chat-card" style="display:none">
         <div class="sage-chat-header">
           <img src="apple-touch-icon.png" class="sage-chat-icon" alt="">
-          <span class="sage-chat-label">セージに話しかける</span>
+          <span class="sage-chat-label">🕯</span>
           <button class="sage-chat-clear" onclick="sageChatClear()" title="会話をリセット">リセット</button>
         </div>
         <div class="sage-chat-messages" id="sageChatMessages"></div>
@@ -562,7 +582,7 @@ body{font-family:var(--font-body);background:var(--bg);color:var(--text);min-hei
           <button class="sage-chat-send" id="sageChatSendBtn" onclick="sageChatSend()" title="送信">↑</button>
         </div>
       </div>
-      <div style="text-align:center;padding:14px 0 4px;color:var(--text-faint);font-size:11px;font-family:var(--font-accent);letter-spacing:.5px">🕯 灯だまり工房</div>
+      <div style="text-align:center;padding:14px 0 4px;color:var(--text-faint);font-size:11px;font-family:var(--font-accent);letter-spacing:.5px">🕯</div>
     </div>
   </div>
 
@@ -691,7 +711,7 @@ body{font-family:var(--font-body);background:var(--bg);color:var(--text);min-hei
           </div>
         </div>
       </div>
-      <div style="text-align:center;padding:20px 0 4px;color:var(--text-faint);font-size:11px;font-family:var(--font-accent);letter-spacing:.5px">🕯 灯だまり工房</div>
+      <div style="text-align:center;padding:20px 0 4px;color:var(--text-faint);font-size:11px;font-family:var(--font-accent);letter-spacing:.5px">🕯</div>
       <div style="text-align:center;padding:16px 0 32px">
         <button onclick="resetAll()" style="background:none;border:none;color:var(--text-faint);font-size:11px;font-family:var(--font-body);cursor:pointer;opacity:.45;padding:6px 14px;letter-spacing:.05em">全記録を削除する</button>
       </div>
@@ -730,9 +750,20 @@ body{font-family:var(--font-body);background:var(--bg);color:var(--text);min-hei
         <input class="shop-input" id="shopInput" type="text" placeholder="品名を入力…" autocomplete="off">
         <button class="shop-add-btn" onclick="addShopItem()">追加</button>
       </div>
-      <div class="shop-cat-pills" id="shopCatPills"></div>
     </div>
     <div class="shop-content" id="shopContent"></div>
+    <!-- 台所在庫セクション -->
+    <div class="pantry-section">
+      <div class="pantry-header">
+        <span class="pantry-title">🧺 台所在庫</span>
+        <span class="pantry-needed-count" id="pantryNeededCount"></span>
+      </div>
+      <div class="pantry-add-row">
+        <input class="pantry-add-input" id="pantryInput" type="text" placeholder="アイテム名を入力…" autocomplete="off">
+        <button class="pantry-add-btn" onclick="addPantryItem()">追加</button>
+      </div>
+      <div id="pantryList"></div>
+    </div>
   </div>
 
 </div><!-- /app-content -->
@@ -743,7 +774,7 @@ body{font-family:var(--font-body);background:var(--bg);color:var(--text);min-hei
     <span class="btab-icon">🏠</span><span class="btab-label">ホーム</span>
   </button>
   <button class="btab" data-tab="seiiki" onclick="switchTab('seiiki')">
-    <span class="btab-icon">☑</span><span class="btab-label">聖域</span>
+    <span class="btab-icon">☑</span><span class="btab-label">くらし</span>
   </button>
   <button class="btab" data-tab="news" onclick="switchTab('news')">
     <span class="btab-icon">📰</span><span class="btab-label">ニュース</span>
@@ -880,7 +911,7 @@ function dbw(p,label){p.then(({error})=>{if(error)console.error('DB write error 
 let D={
   routines:[],routineChecks:[],todayTasks:[],todayDiscards:[],
   discardLog:[],longTasks:[],weeklyTasks:[],
-  wishItems:[],shopItems:[],rssFeeds:[],
+  wishItems:[],shopItems:[],pantryItems:[],rssFeeds:[],
   routineMessageDate:'',routineRarity:'',
   _loadedDate:'',
 };
@@ -891,7 +922,7 @@ let curModal=null,curTaskType='once',curWishCat='その他',curShopCat='食品�
 // ═══════════════════════════════════════════════
 async function loadData(){
   const today=gt();
-  const [rR,cR,tR,dR,lR,mR,ltR,wR,sR,fR,wtR]=await Promise.all([
+  const [rR,cR,tR,dR,lR,mR,ltR,wR,sR,fR,wtR,pR]=await Promise.all([
     db.from('hk_routines').select('*').order('sort_order').order('created_at'),
     db.from('hk_routine_checks').select('*').eq('date',today),
     db.from('hk_tasks').select('*').order('created_at'),
@@ -903,6 +934,7 @@ async function loadData(){
     db.from('shopping_list').select('*').order('created_at'),
     db.from('techo_rss_feeds').select('*').order('created_at'),
     db.from('hk_weekly_tasks').select('*').order('created_at'),
+    db.from('pantry_items').select('*').order('name'),
   ]);
   let routines=rR.data||[];
   if(!routines.length){
@@ -921,6 +953,7 @@ async function loadData(){
   D.weeklyTasks=wtR.data||[];
   D.wishItems=wR.data||[];
   D.shopItems=sR.data||[];
+  D.pantryItems=pR.data||[];
   let feeds=fR.data||[];
   if(!feeds.length){
     const seeds=DEFAULT_FEEDS.map(f=>({name:f.name,url:f.url,cat:f.cat}));
@@ -1181,12 +1214,11 @@ function updateHomeSummary(){
   }
   document.getElementById('homeSeiikiSummary').innerHTML=sHtml;
   const unchecked=D.shopItems.filter(x=>!x.checked);
-  let shopHtml;
-  if(!unchecked.length){
-    shopHtml='<span style="color:var(--text-faint)">空です</span>';
-  }else{
-    shopHtml=`<div style="font-size:12px;color:var(--text-light);line-height:1.5">${unchecked.map(x=>esc(x.item)).join('・')}</div>`;
-  }
+  const needed=D.pantryItems.filter(x=>x.status==='needed');
+  let shopHtml='';
+  if(unchecked.length) shopHtml+=`<div style="font-size:12px;color:var(--text-light);line-height:1.6">${unchecked.map(x=>esc(x.item)).join('・')}</div>`;
+  if(needed.length) shopHtml+=`<div style="font-size:12px;color:#C9897A;line-height:1.6;margin-top:${unchecked.length?3:0}px">🔴 ${needed.map(x=>esc(x.name)).join('・')}</div>`;
+  if(!shopHtml) shopHtml='<span style="color:var(--text-faint)">空です</span>';
   document.getElementById('homeShopSummary').innerHTML=shopHtml;
 }
 
@@ -1604,64 +1636,23 @@ function copyWishToTask(wishId,btn){
 // ═══════════════════════════════════════════════
 // 買い物リスト
 // ═══════════════════════════════════════════════
-function normShopCat(cat){
-  if(cat==='食品'||cat==='日用品')return '食品・日用品';
-  return SHOP_CATS.includes(cat)?cat:'その他';
-}
-function shopCatMatch(item,filter){
-  if(filter==='すべて')return true;
-  const nc=normShopCat(item.category);
-  return nc===filter;
-}
-function renderShopPills(){
-  const el=document.getElementById('shopCatPills');if(!el)return;
-  const all=['すべて',...SHOP_CATS];
-  el.innerHTML=all.map(c=>`<button class="shop-cat-pill ${c===curShopCatFilter?'active':''}" onclick="selectShopPill('${c}')">${c}</button>`).join('');
-}
-function selectShopPill(c){
-  curShopCatFilter=c;
-  if(c!=='すべて')curShopCat=c;
-  renderShopPills();renderShop();
-}
 function renderShop(){
   const el=document.getElementById('shopContent');
-  const items=D.shopItems.filter(x=>shopCatMatch(x,curShopCatFilter));
-  const unchecked=items.filter(x=>!x.checked);
-  const checked=items.filter(x=>x.checked);
+  const unchecked=D.shopItems.filter(x=>!x.checked);
+  const checked=D.shopItems.filter(x=>x.checked);
   const all=[...unchecked,...checked];
   if(!all.length){el.innerHTML='<div style="padding:24px;text-align:center;color:var(--text-faint);font-family:var(--font-accent);font-size:14px">リストは空です</div>';return}
-  // グループ表示（すべての場合はカテゴリ別）
-  const showGroups=curShopCatFilter==='すべて';
-  let h='';
-  if(showGroups){
-    const order=[...SHOP_CATS];
-    const grouped={};
-    all.forEach(x=>{const nc=normShopCat(x.category);if(!grouped[nc])grouped[nc]=[];grouped[nc].push(x)});
-    order.forEach(cat=>{
-      if(!grouped[cat]||!grouped[cat].length)return;
-      h+=`<div class="shop-cat-header">${cat}</div>`;
-      h+=renderShopGroup(grouped[cat]);
-    });
-  }else{
-    h+=renderShopGroup(all);
-  }
-  const hasChecked=D.shopItems.some(x=>x.checked);
-  if(hasChecked)h+=`<button class="shop-clear-btn" onclick="clearChecked()">チェック済みを削除</button>`;
-  el.innerHTML=h;
-}
-function renderShopGroup(items){
   let h='<div class="card" style="margin-bottom:8px">';
-  items.forEach((x,i)=>{
-    const only=items.length===1?'only':'';
-    const first=i===0&&items.length>1?'first':'';
-    const last=i===items.length-1&&items.length>1?'last':'';
-    h+=`<div class="shop-item ${only} ${x.checked?'checked':''}">
+  all.forEach(x=>{
+    h+=`<div class="shop-item ${all.length===1?'only':''} ${x.checked?'checked':''}">
       <div class="shop-checkbox ${x.checked?'checked':''}" onclick="togShop('${x.id}')"></div>
       <div class="shop-item-label">${esc(x.item)}</div>
       <button class="item-delete" onclick="delShop('${x.id}')">×</button>
     </div>`;
   });
-  return h+'</div>';
+  h+='</div>';
+  if(D.shopItems.some(x=>x.checked))h+=`<button class="shop-clear-btn" onclick="clearChecked()">チェック済みを削除</button>`;
+  el.innerHTML=h;
 }
 function togShop(id){
   const idx=D.shopItems.findIndex(x=>x.id===id);if(idx<0)return;
@@ -1683,13 +1674,56 @@ function clearChecked(){
 function addShopItem(){
   const text=document.getElementById('shopInput').value.trim();if(!text)return;
   const id=uuid();
-  D.shopItems.unshift({id,item:text,category:curShopCat,checked:false,created_at:new Date().toISOString()});
+  D.shopItems.unshift({id,item:text,checked:false,created_at:new Date().toISOString()});
   document.getElementById('shopInput').value='';
   document.getElementById('shopInput').focus();
   renderShop();updateHomeSummary();
-  dbw(db.from('shopping_list').insert({id,item:text,category:curShopCat}),'s.ins');
+  dbw(db.from('shopping_list').insert({id,item:text}),'s.ins');
 }
 document.getElementById('shopInput').addEventListener('keydown',e=>{if(e.key==='Enter')addShopItem()});
+
+// ─── 台所在庫 ───
+function renderPantry(){
+  const el=document.getElementById('pantryList');if(!el)return;
+  if(!D.pantryItems.length){el.innerHTML='<div class="pantry-empty">アイテムがありません</div>';return;}
+  const needed=D.pantryItems.filter(x=>x.status==='needed');
+  const inStock=D.pantryItems.filter(x=>x.status!=='needed');
+  const sorted=[...needed,...inStock];
+  const cnt=document.getElementById('pantryNeededCount');
+  if(cnt)cnt.textContent=needed.length?`欠品 ${needed.length}件`:'';
+  el.innerHTML=sorted.map((x,i,arr)=>{
+    const cls=arr.length===1?'only':'';
+    const isNeeded=x.status==='needed';
+    return`<div class="pantry-item ${cls}">
+      <div class="pantry-item-name ${isNeeded?'':'in-stock'}">${esc(x.name)}</div>
+      <button class="pantry-badge ${isNeeded?'needed':'in-stock'}" onclick="togPantry('${x.id}')">${isNeeded?'🔴 欠品':'🟢 在庫あり'}</button>
+      <button class="item-delete" onclick="delPantryItem('${x.id}')">×</button>
+    </div>`;
+  }).join('');
+}
+function togPantry(id){
+  const idx=D.pantryItems.findIndex(x=>x.id===id);if(idx<0)return;
+  const newStatus=D.pantryItems[idx].status==='needed'?'in_stock':'needed';
+  D.pantryItems[idx]={...D.pantryItems[idx],status:newStatus};
+  renderPantry();
+  dbw(db.from('pantry_items').update({status:newStatus,updated_at:new Date().toISOString(),updated_by:'app'}).eq('id',id),'p.tog');
+}
+function addPantryItem(){
+  const text=document.getElementById('pantryInput').value.trim();if(!text)return;
+  const id=uuid();
+  D.pantryItems.push({id,name:text,status:'needed',updated_by:'app',created_at:new Date().toISOString()});
+  D.pantryItems.sort((a,b)=>a.name.localeCompare(b.name,'ja'));
+  document.getElementById('pantryInput').value='';
+  renderPantry();
+  dbw(db.from('pantry_items').insert({id,name:text,status:'needed',updated_by:'app'}),'p.add');
+}
+function delPantryItem(id){
+  if(!confirm('このアイテムを削除しますか？'))return;
+  D.pantryItems=D.pantryItems.filter(x=>x.id!==id);
+  renderPantry();
+  dbw(db.from('pantry_items').delete().eq('id',id),'p.del');
+}
+document.getElementById('pantryInput').addEventListener('keydown',e=>{if(e.key==='Enter')addPantryItem()});
 
 // ═══════════════════════════════════════════════
 // モーダル
@@ -2875,7 +2909,7 @@ function calMonthNext(){
 // 一括レンダー
 // ═══════════════════════════════════════════════
 function renderAll(){
-  updateDate();renderRoutines();renderTasks();renderWeeklyPanel();renderDiscards();renderDiscardStampCard();renderHomeStampMini();renderDiscardLog();renderLongTasks();renderRS();renderWishCatFilter();renderWish();renderShopPills();renderShop();updateHomeSummary();
+  updateDate();renderRoutines();renderTasks();renderWeeklyPanel();renderDiscards();renderDiscardStampCard();renderHomeStampMini();renderDiscardLog();renderLongTasks();renderRS();renderWishCatFilter();renderWish();renderShop();renderPantry();updateHomeSummary();
   const k=getGeminiKey();const el=document.getElementById('geminiKeyInput');if(el)el.value=k;
   const iu=getIcalUrl();const iel=document.getElementById('icalUrlInput');if(iel)iel.value=iu;
   const iu2=getIcalUrl2();const iel2=document.getElementById('icalUrlInput2');if(iel2)iel2.value=iu2;
