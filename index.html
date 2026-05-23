@@ -237,9 +237,9 @@ body{font-family:var(--font-body);background:var(--bg);color:var(--text);min-hei
 .wish-fab.show{display:flex}
 
 /* ─── 買い物リスト ─── */
-.shop-add-bar{background:var(--bg-card);border-bottom:1px solid var(--border);padding:12px 16px;position:sticky;top:57px;z-index:50}
+.shop-add-bar{background:var(--bg-card);border-bottom:1px solid var(--border);padding:12px 16px;position:sticky;top:var(--header-h,74px);z-index:50}
 .shop-input-row{display:flex;gap:8px;margin-bottom:8px}
-.shop-input{flex:1;padding:10px 14px;border:1px solid var(--border);border-radius:var(--radius-sm);font-size:14px;font-family:var(--font-body);color:var(--text);background:var(--bg);outline:none}
+.shop-input{flex:1;min-width:0;padding:10px 14px;border:1px solid var(--border);border-radius:var(--radius-sm);font-size:14px;font-family:var(--font-body);color:var(--text);background:var(--bg);outline:none}
 .shop-input:focus{border-color:var(--accent)}
 .shop-add-btn{padding:10px 16px;background:var(--accent);color:#fff;border:none;border-radius:var(--radius-sm);font-size:14px;font-family:var(--font-body);cursor:pointer;white-space:nowrap}
 .shop-cat-pills{display:flex;gap:6px;overflow-x:auto;padding-bottom:2px;-webkit-overflow-scrolling:touch}
@@ -265,7 +265,7 @@ body{font-family:var(--font-body);background:var(--bg);color:var(--text);min-hei
 .pantry-title{font-family:var(--font-accent);font-size:13px;color:var(--text-light);letter-spacing:.3px}
 .pantry-needed-count{font-size:12px;color:#C9897A;font-family:var(--font-body)}
 .pantry-add-row{display:flex;gap:8px;margin-bottom:10px}
-.pantry-add-input{flex:1;padding:8px 12px;border:1px solid var(--border);border-radius:var(--radius-sm);font-size:14px;font-family:var(--font-body);color:var(--text);background:var(--bg);outline:none}
+.pantry-add-input{flex:1;min-width:0;padding:8px 12px;border:1px solid var(--border);border-radius:var(--radius-sm);font-size:14px;font-family:var(--font-body);color:var(--text);background:var(--bg);outline:none}
 .pantry-add-input:focus{border-color:var(--accent)}
 .pantry-add-btn{padding:8px 14px;background:var(--accent);color:#fff;border:none;border-radius:var(--radius-sm);font-size:14px;font-family:var(--font-body);cursor:pointer;white-space:nowrap}
 .pantry-item{display:flex;align-items:center;padding:10px 14px;gap:10px;border-bottom:1px solid var(--border);background:var(--bg-card)}
