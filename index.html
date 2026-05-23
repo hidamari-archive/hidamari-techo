@@ -3017,12 +3017,8 @@ function parseRssXml(doc,feed){
   // RSS 2.0
   doc.querySelectorAll('channel > item').forEach(el=>{
     const link=el.querySelector('link');
-    // <link> in RSS can be a text node sibling (not a child with textContent)
     let url=link?.textContent?.trim()||'';
-    if(!url){
-      // try guid as fallback
-      url=el.querySelector('guid')?.textContent?.trim()||'';
-    }
+    if(!url)url=el.querySelector('guid')?.textContent?.trim()||'';
     items.push({
       title:(el.querySelector('title')?.textContent||'').trim(),
       url,
@@ -3042,6 +3038,20 @@ function parseRssXml(doc,feed){
       });
     });
   }
+  // RDF/RSS 1.0（アイテムがchannel外にある形式）
+  if(items.length===0){
+    doc.querySelectorAll('item').forEach(el=>{
+      const link=el.querySelector('link');
+      const url=link?.textContent?.trim()||el.getAttribute('rdf:about')||'';
+      const dateEl=[...el.children].find(c=>c.localName==='date');
+      items.push({
+        title:(el.querySelector('title')?.textContent||'').trim(),
+        url,
+        pubDate:(el.querySelector('pubDate')?.textContent||dateEl?.textContent||'').trim(),
+        source:feed.name,cat:feed.cat,
+      });
+    });
+  }
   return items.slice(0,15);
 }
 
@@ -3056,7 +3066,7 @@ async function fetchFeed(feed){
     const parseErr=doc.querySelector('parsererror');
     if(parseErr)return{feed,items:[],ok:false};
     const items=parseRssXml(doc,feed);
-    setNewsCache(feed.id,items);
+    if(items.length>0)setNewsCache(feed.id,items);
     return{feed,items,ok:items.length>0};
   }catch(e){
     return{feed,items:[],ok:false};
