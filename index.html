@@ -277,6 +277,10 @@ body{font-family:var(--font-body);background:var(--bg);color:var(--text);min-hei
 .pantry-cam-btn{background:none;border:none;color:var(--text-faint);font-size:16px;cursor:pointer;padding:2px 4px;flex-shrink:0;line-height:1;opacity:.6}
 .pantry-url-btn{background:none;border:none;color:var(--text-faint);font-size:13px;cursor:pointer;padding:2px 4px;flex-shrink:0;opacity:.5;font-family:var(--font-body)}
 .pantry-img-thumb{width:38px;height:38px;border-radius:8px;object-fit:cover;flex-shrink:0;cursor:pointer;border:1px solid var(--border)}
+.pantry-edit-btn{background:none;border:none;cursor:pointer;font-size:12px;color:var(--text-faint);padding:0 2px;flex-shrink:0;opacity:.6}
+.pantry-edit-input{flex:1;min-width:0;padding:3px 8px;border:1px solid var(--accent);border-radius:6px;font-size:14px;font-family:var(--font-body);color:var(--text);background:var(--bg);outline:none}
+.pantry-search-btn{width:100%;padding:11px;background:var(--bg-warm);border:1px solid var(--border);border-radius:var(--radius-sm);font-size:14px;font-family:var(--font-body);color:var(--text);cursor:pointer;text-align:center;letter-spacing:.05em}
+.pantry-url-preview{min-height:60px;display:flex;align-items:center;justify-content:center;margin:10px 0}
 
 /* ─── モーダル ─── */
 .modal-overlay{display:none;position:fixed;inset:0;background:rgba(58,53,48,.3);z-index:300;align-items:flex-end;justify-content:center;backdrop-filter:blur(2px)}
@@ -793,6 +797,22 @@ body{font-family:var(--font-body);background:var(--bg);color:var(--text);min-hei
     <div class="modal-actions">
       <button class="modal-btn secondary" id="aiCloseBtn" onclick="closeAiModal()" style="display:none">閉じる</button>
       <button class="modal-btn primary" id="aiChatBtn" onclick="sageChatFromGacha()" style="display:none">セージに話しかける ›</button>
+    </div>
+  </div>
+</div>
+
+<!-- 台所在庫 画像URLパネル -->
+<div class="modal-overlay" id="pantryUrlPanel" onclick="closePantryUrlPanel(event)">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-title" id="pantryUrlTitle">画像を登録</div>
+    <p style="font-size:12px;color:var(--text-light);margin:-8px 0 14px;line-height:1.7">Googleで画像を検索して、登録したい画像を長押し→「画像アドレスをコピー」し、下のURL欄に貼り付けてください</p>
+    <button class="pantry-search-btn" id="pantrySearchBtn" onclick="openPantryGoogleSearch()">🔍 Googleで画像を検索する</button>
+    <div class="modal-label" style="margin-top:14px">画像URL</div>
+    <input class="modal-input" id="pantryUrlInput" type="url" placeholder="https://..." oninput="previewPantryUrl()" autocomplete="off">
+    <div class="pantry-url-preview" id="pantryUrlPreview"></div>
+    <div class="modal-actions">
+      <button class="modal-cancel-btn" onclick="document.getElementById('pantryUrlPanel').classList.remove('show')">キャンセル</button>
+      <button class="modal-submit-btn" onclick="confirmPantryUrl()">登録</button>
     </div>
   </div>
 </div>
@@ -1671,10 +1691,11 @@ function renderPantry(){
     const isNeeded=x.status==='needed';
     const imgHtml=x.image_url
       ?`<img src="${x.image_url}" class="pantry-img-thumb" onclick="openPantryImagePicker('${x.id}')" alt="">`
-      :`<button class="pantry-cam-btn" onclick="openPantryImagePicker('${x.id}')">📷</button><button class="pantry-url-btn" onclick="setPantryImageUrl('${x.id}')">🔗</button>`;
+      :`<button class="pantry-cam-btn" onclick="openPantryImagePicker('${x.id}')">📷</button><button class="pantry-url-btn" onclick="openPantryUrlPanel('${x.id}')">🔗</button>`;
     return`<div class="pantry-item ${cls}">
       ${imgHtml}
-      <div class="pantry-item-name ${isNeeded?'':'in-stock'}">${esc(x.name)}</div>
+      <div class="pantry-item-name ${isNeeded?'':'in-stock'}" id="pname-${x.id}">${esc(x.name)}</div>
+      <button class="pantry-edit-btn" onclick="startEditPantry('${x.id}')">✏️</button>
       <button class="pantry-badge ${isNeeded?'needed':'in-stock'}" onclick="togPantry('${x.id}')">${isNeeded?'🔴 欠品':'🟢 在庫あり'}</button>
       <button class="item-delete" onclick="delPantryItem('${x.id}')">×</button>
     </div>`;
@@ -1726,13 +1747,60 @@ async function uploadPantryImage(input){
   dbw(db.from('pantry_items').update({image_url:url}).eq('id',id),'p.img');
 }
 document.getElementById('pantryImageInput').addEventListener('change',function(){uploadPantryImage(this)});
-function setPantryImageUrl(id){
-  const url=prompt('画像のURLを貼り付けてください');
-  if(!url||!url.startsWith('http'))return;
+// ─ 名前インライン編集 ─
+function startEditPantry(id){
+  const el=document.getElementById('pname-'+id);
+  const item=D.pantryItems.find(x=>x.id===id);
+  if(!el||!item)return;
+  el.innerHTML=`<input class="pantry-edit-input" id="pedit-${id}" value="${esc(item.name)}" onblur="savePantryName('${id}')" onkeydown="if(event.key==='Enter')this.blur();if(event.key==='Escape'){event.preventDefault();renderPantry()}" onclick="event.stopPropagation()">`;
+  const inp=document.getElementById('pedit-'+id);inp.focus();inp.select();
+}
+function savePantryName(id){
+  const inp=document.getElementById('pedit-'+id);if(!inp)return;
+  const name=inp.value.trim();
+  if(!name){renderPantry();return;}
+  const idx=D.pantryItems.findIndex(x=>x.id===id);if(idx<0)return;
+  D.pantryItems[idx]={...D.pantryItems[idx],name};
+  D.pantryItems.sort((a,b)=>a.name.localeCompare(b.name,'ja'));
+  renderPantry();
+  dbw(db.from('pantry_items').update({name}).eq('id',id),'p.name');
+}
+// ─ 画像URLパネル ─
+let _pantryUrlTarget=null;
+function openPantryUrlPanel(id){
+  const item=D.pantryItems.find(x=>x.id===id);if(!item)return;
+  _pantryUrlTarget=id;
+  document.getElementById('pantryUrlTitle').textContent=`「${item.name}」の画像`;
+  document.getElementById('pantrySearchBtn').dataset.name=item.name;
+  document.getElementById('pantryUrlInput').value='';
+  document.getElementById('pantryUrlPreview').innerHTML='';
+  document.getElementById('pantryUrlPanel').classList.add('show');
+  setTimeout(()=>document.getElementById('pantryUrlInput').focus(),300);
+}
+function closePantryUrlPanel(e){
+  if(e&&e.target!==document.getElementById('pantryUrlPanel'))return;
+  document.getElementById('pantryUrlPanel').classList.remove('show');
+}
+function openPantryGoogleSearch(){
+  const name=document.getElementById('pantrySearchBtn').dataset.name||'';
+  window.open('https://www.google.com/search?q='+encodeURIComponent(name+' 商品')+'&tbm=isch','_blank');
+}
+function previewPantryUrl(){
+  const url=document.getElementById('pantryUrlInput').value.trim();
+  const prev=document.getElementById('pantryUrlPreview');
+  if(url.startsWith('http')){
+    prev.innerHTML=`<img src="${esc(url)}" style="max-height:90px;max-width:100%;border-radius:8px;object-fit:contain" onerror="this.style.opacity='.3'">`;
+  }else{prev.innerHTML='';}
+}
+function confirmPantryUrl(){
+  const url=document.getElementById('pantryUrlInput').value.trim();
+  if(!url.startsWith('http')){return;}
+  const id=_pantryUrlTarget;
   const idx=D.pantryItems.findIndex(x=>x.id===id);
   if(idx>=0)D.pantryItems[idx].image_url=url;
   renderPantry();
   dbw(db.from('pantry_items').update({image_url:url}).eq('id',id),'p.img_url');
+  document.getElementById('pantryUrlPanel').classList.remove('show');
 }
 
 // ─── タブスワイプ ───
