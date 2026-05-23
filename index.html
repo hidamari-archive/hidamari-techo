@@ -1764,6 +1764,24 @@ function setPantryImageUrl(id){
   dbw(db.from('pantry_items').update({image_url:url}).eq('id',id),'p.img_url');
 }
 
+// ─── タブスワイプ ───
+const TAB_ORDER=['home','seiiki','news','wish','shop'];
+let _swipeX=0,_swipeY=0;
+const _swipeTarget=document.querySelector('.app-content');
+_swipeTarget.addEventListener('touchstart',e=>{
+  _swipeX=e.touches[0].clientX;
+  _swipeY=e.touches[0].clientY;
+},{passive:true});
+_swipeTarget.addEventListener('touchend',e=>{
+  const dx=e.changedTouches[0].clientX-_swipeX;
+  const dy=e.changedTouches[0].clientY-_swipeY;
+  if(Math.abs(dx)<55||Math.abs(dx)<Math.abs(dy)*1.5)return;
+  const cur=document.querySelector('.btab.active')?.dataset.tab;
+  const idx=TAB_ORDER.indexOf(cur);if(idx<0)return;
+  if(dx<0&&idx<TAB_ORDER.length-1)switchTab(TAB_ORDER[idx+1]);
+  else if(dx>0&&idx>0)switchTab(TAB_ORDER[idx-1]);
+},{passive:true});
+
 // ═══════════════════════════════════════════════
 // モーダル
 // ═══════════════════════════════════════════════
