@@ -1188,8 +1188,8 @@ function renderWeather(data){
         let icon='–',cls='';
         if(i>0){
           const diff=p.v-slots[i-1].v;
-          if(diff<=-6){icon='💣';cls='danger';}
-          else if(diff<=-3){icon='⚠️';cls='warn';}
+          if(diff<=-6||diff>=6){icon='💣';cls='danger';}
+          else if(diff<=-3||diff>=3){icon='⚠️';cls='warn';}
           else if(diff<-0.5)icon='↓';
           else if(diff>0.5)icon='↑';
           else icon='→';
