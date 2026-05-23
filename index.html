@@ -217,15 +217,11 @@ body{font-family:var(--font-body);background:var(--bg);color:var(--text);min-hei
 
 /* ─── ウィッシュリスト ─── */
 .wish-filter-row{display:flex;gap:8px;padding:0 2px;margin-bottom:10px}
-.wish-catfilter-row{display:flex;gap:6px;overflow-x:auto;padding:0 2px 12px;-webkit-overflow-scrolling:touch}
-.wish-catfilter-row::-webkit-scrollbar{display:none}
-.wish-catfilter-row .wish-filter-btn{flex-shrink:0;padding:5px 12px;font-size:11px}
 .wish-filter-btn{padding:6px 14px;border-radius:20px;border:1px solid var(--border);background:var(--bg);font-size:12px;font-family:var(--font-body);cursor:pointer;color:var(--text-light);transition:all .2s}
 .wish-filter-btn.active{background:var(--accent);border-color:var(--accent);color:#fff}
 .wish-card{background:var(--bg-card);border-radius:var(--radius-sm);box-shadow:0 1px 3px var(--shadow),0 0 0 1px rgba(0,0,0,.02);margin-bottom:5px;display:flex;overflow:hidden}
 .wish-stripe{width:3px;flex-shrink:0}
 .wish-body{flex:1;padding:5px 8px;min-width:0}
-.wish-cat{font-size:9px;color:var(--text-faint);margin-bottom:1px;letter-spacing:.3px}
 .wish-title{font-family:var(--font-accent);font-size:13px;color:var(--text);line-height:1.35}
 .wish-done-title{text-decoration:line-through;color:var(--text-faint)}
 .wish-actions{display:flex;flex-direction:row;align-items:center;gap:3px;padding:0 8px 0 0;flex-shrink:0}
@@ -728,7 +724,6 @@ body{font-family:var(--font-body);background:var(--bg);color:var(--text);min-hei
         <button class="wish-filter-btn active" data-wf="want" onclick="setWishFilter('want')">💫 やりたい</button>
         <button class="wish-filter-btn" data-wf="done" onclick="setWishFilter('done')">✅ やった！</button>
       </div>
-      <div class="wish-catfilter-row" id="wishCatFilterRow"></div>
     </div>
     <div class="panel-body" id="wishList"></div>
     <button class="wish-fab show" id="wishFab" onclick="openModal('wish-add')">＋</button>
@@ -807,11 +802,6 @@ body{font-family:var(--font-body);background:var(--bg);color:var(--text);min-hei
   <div class="modal" onclick="event.stopPropagation()">
     <div class="modal-title" id="modalTitle">追加</div>
     <input class="modal-input" id="modalInput" type="text" placeholder="" autocomplete="off">
-    <!-- カテゴリ（ウィッシュ・ショッピング共用）-->
-    <div id="modalCatWrap" style="display:none">
-      <div class="modal-label">カテゴリ</div>
-      <div class="cat-pills" id="modalCatPills"></div>
-    </div>
     <!-- メモ（ウィッシュ用）-->
     <div id="modalMemoWrap" style="display:none">
       <div class="modal-label">メモ（任意）</div>
@@ -897,11 +887,6 @@ try{
 // 定数・ユーティリティ
 // ═══════════════════════════════════════════════
 const defR=['台所リセット','洗濯','お風呂掃除','拭き掃除','モップかけ','トイレ掃除'];
-const WISH_CATS=['お出かけ','食べもの','体験','買いもの','創作','部屋づくり','その他'];
-const WISH_CAT_COLORS={
-  'お出かけ':'#A8C4A0','食べもの':'#D4A9B0','体験':'#A8C9E8',
-  '買いもの':'#C4BA96','創作':'#C0A8D4','部屋づくり':'#C4B49A','その他':'#B8AFA6'
-};
 const SHOP_CATS=['食品・日用品','画材','その他'];
 
 function gt(){const n=new Date();return n.getFullYear()+'-'+String(n.getMonth()+1).padStart(2,'0')+'-'+String(n.getDate()).padStart(2,'0')}
@@ -919,7 +904,7 @@ let D={
   routineMessageDate:'',routineRarity:'',
   _loadedDate:'',
 };
-let curModal=null,curTaskType='once',curWishCat='その他',curShopCat='食品・日用品',curShopCatFilter='すべて',curWishFilter='want',curWishCatFilter='すべて';
+let curModal=null,curTaskType='once',curShopCat='食品・日用品',curShopCatFilter='すべて',curWishFilter='want';
 
 // ═══════════════════════════════════════════════
 // データ読み込み
@@ -1570,35 +1555,22 @@ function setWishFilter(f){
   document.querySelectorAll('.wish-filter-btn[data-wf]').forEach(b=>b.classList.toggle('active',b.dataset.wf===f));
   renderWish();
 }
-function renderWishCatFilter(){
-  const el=document.getElementById('wishCatFilterRow');if(!el)return;
-  const cats=['すべて',...WISH_CATS];
-  el.innerHTML=cats.map(c=>`<button class="wish-filter-btn ${c===curWishCatFilter?'active':''}" onclick="setWishCatFilter('${c}')">${c}</button>`).join('');
-}
-function setWishCatFilter(c){
-  curWishCatFilter=c;renderWishCatFilter();renderWish();
-}
 function renderWish(){
   const el=document.getElementById('wishList');
-  let items=D.wishItems.filter(w=>w.status===(curWishFilter==='want'?'want':'done'));
-  if(curWishCatFilter!=='すべて')items=items.filter(w=>w.category===curWishCatFilter);
+  const items=D.wishItems.filter(w=>w.status===(curWishFilter==='want'?'want':'done'));
   if(!items.length){
     el.innerHTML=`<div class="wish-empty">${curWishFilter==='want'?'ウィッシュリストはまだ空です。\n✨ やりたいことを追加してみましょう':'まだやった！がありません'}</div>`;
     return;
   }
   let h='';
   items.forEach(w=>{
-    const color=WISH_CAT_COLORS[w.category]||WISH_CAT_COLORS['その他'];
     const isDone=w.status==='done';
+    const stripeColor=isDone?'var(--border)':'var(--accent)';
     const isUrl=w.memo&&(w.memo.startsWith('http://')||w.memo.startsWith('https://'));
-    const cardStyle=isUrl?'cursor:pointer':'';
-    const cardData=isUrl?`data-url="${esc(w.memo)}"`:'';
-    const cardClick=isUrl?`onclick="openWishUrl(event,this)"`:'';
     const alreadyCopied=!isDone&&D.todayTasks.some(t=>t.text===w.title&&!t.done);
-    h+=`<div class="wish-card" style="${cardStyle}" ${cardData} ${cardClick}>
-      <div class="wish-stripe" style="background:${color}"></div>
+    h+=`<div class="wish-card" style="cursor:pointer" onclick="searchWish(event,'${esc(w.title)}')">
+      <div class="wish-stripe" style="background:${stripeColor}"></div>
       <div class="wish-body">
-        <div class="wish-cat">${esc(w.category)}</div>
         <div class="wish-title ${isDone?'wish-done-title':''}">${esc(w.title)}${isUrl?' <span style="font-size:10px;color:var(--text-faint)">🔗</span>':''}</div>
       </div>
       <div class="wish-actions">
@@ -1610,9 +1582,8 @@ function renderWish(){
   });
   el.innerHTML=h;
 }
-function openWishUrl(e,el){
-  const url=el.dataset.url;
-  if(url&&(url.startsWith('http://')||url.startsWith('https://')))window.open(url,'_blank');
+function searchWish(e,title){
+  window.open('https://www.google.com/search?q='+encodeURIComponent(title),'_blank');
 }
 function togWish(id){
   const idx=D.wishItems.findIndex(x=>x.id===id);if(idx<0)return;
@@ -1791,22 +1762,12 @@ function openModal(type){
   document.getElementById('modalTitle').textContent=titles[type]||'追加';
   document.getElementById('modalInput').value='';
   document.getElementById('modalInput').placeholder=type==='wish-add'?'やりたいこと…':'';
-  document.getElementById('modalCatWrap').style.display=type==='wish-add'?'block':'none';
   document.getElementById('modalMemoWrap').style.display=type==='wish-add'?'block':'none';
   document.getElementById('modalTypeWrap').style.display=type==='long-task-add'?'block':'none';
-  if(type==='wish-add'){curWishCat='その他';renderModalCats(WISH_CATS,'wish');document.getElementById('modalMemo').value=''}
+  if(type==='wish-add'){document.getElementById('modalMemo').value=''}
   if(type==='long-task-add'){curTaskType='once';setTaskType('once')}
   document.getElementById('modalOverlay').classList.add('show');
   setTimeout(()=>document.getElementById('modalInput').focus(),300);
-}
-function renderModalCats(cats,type){
-  const el=document.getElementById('modalCatPills');
-  const cur=type==='wish'?curWishCat:curShopCat;
-  el.innerHTML=cats.map(c=>`<div class="cat-pill ${c===cur?'active':''}" onclick="selectCat('${type}','${c}')">${c}</div>`).join('');
-}
-function selectCat(type,cat){
-  if(type==='wish')curWishCat=cat;else curShopCat=cat;
-  renderModalCats(type==='wish'?WISH_CATS:SHOP_CATS,type);
 }
 function setTaskType(type){
   curTaskType=type;
@@ -1850,9 +1811,9 @@ function submitModal(){
     dbw(db.from('hk_long_tasks').insert({id,text,is_repeat}),'lt.ins');
   }else if(curModal==='wish-add'){
     const id=uuid(),memo=document.getElementById('modalMemo').value.trim();
-    const item={id,title:text,category:curWishCat,memo,status:'want',source:'self',completed_at:null,created_at:new Date().toISOString()};
+    const item={id,title:text,category:'その他',memo,status:'want',source:'self',completed_at:null,created_at:new Date().toISOString()};
     D.wishItems.unshift(item);closeModal();renderWish();
-    dbw(db.from('wishlist').insert({id,title:text,category:curWishCat,memo,status:'want',source:'self'}),'w.ins');
+    dbw(db.from('wishlist').insert({id,title:text,category:'その他',memo,status:'want',source:'self'}),'w.ins');
   }
 }
 document.getElementById('modalInput').addEventListener('keydown',e=>{if(e.key==='Enter'&&curModal!=='wish-add')submitModal()});
@@ -2966,7 +2927,7 @@ function calMonthNext(){
 // 一括レンダー
 // ═══════════════════════════════════════════════
 function renderAll(){
-  updateDate();renderRoutines();renderTasks();renderWeeklyPanel();renderDiscards();renderDiscardStampCard();renderHomeStampMini();renderDiscardLog();renderLongTasks();renderRS();renderWishCatFilter();renderWish();renderShop();renderPantry();updateHomeSummary();
+  updateDate();renderRoutines();renderTasks();renderWeeklyPanel();renderDiscards();renderDiscardStampCard();renderHomeStampMini();renderDiscardLog();renderLongTasks();renderRS();renderWish();renderShop();renderPantry();updateHomeSummary();
   const k=getGeminiKey();const el=document.getElementById('geminiKeyInput');if(el)el.value=k;
   const iu=getIcalUrl();const iel=document.getElementById('icalUrlInput');if(iel)iel.value=iu;
   const iu2=getIcalUrl2();const iel2=document.getElementById('icalUrlInput2');if(iel2)iel2.value=iu2;
