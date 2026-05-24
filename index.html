@@ -183,16 +183,16 @@ body{font-family:var(--font-body);background:var(--bg);color:var(--text);min-hei
 .sage-weather-icon{width:18px;height:18px;border-radius:4px;flex-shrink:0;margin-top:2px}
 .sage-weather-msg.loading .sage-weather-text{color:var(--text-faint)}
 /* ─── 天気カード コンパクト行レイアウト ─── */
-.weather-cols{display:flex;align-items:stretch}
-.weather-col{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:8px 6px;cursor:pointer;border-radius:8px;transition:background .15s;-webkit-tap-highlight-color:transparent}
+.weather-cols{display:flex;align-items:center}
+.weather-col{flex:1;display:flex;flex-direction:row;align-items:center;gap:6px;padding:6px 4px;cursor:pointer;border-radius:8px;transition:background .15s;-webkit-tap-highlight-color:transparent}
 .weather-col:active{background:var(--bg-warm)}
 .weather-active-day.weather-col{background:rgba(212,167,106,.09)}
 .weather-active-day .wc-label{color:var(--accent);font-weight:600}
-.wc-sep{width:1px;background:var(--border);margin:4px 2px;flex-shrink:0}
-.wc-label{font-family:var(--font-accent);font-size:10px;color:var(--text-faint);letter-spacing:.5px}
-.wc-icon{font-size:26px;line-height:1;margin:2px 0}
-.wc-temp{font-size:14px;white-space:nowrap;font-weight:700}
-.wc-precip{font-size:11px;color:var(--text-light)}
+.wc-sep{width:1px;background:var(--border);align-self:stretch;margin:2px;flex-shrink:0}
+.wc-label{font-family:var(--font-accent);font-size:10px;color:var(--text-faint);letter-spacing:.5px;min-width:20px;flex-shrink:0}
+.wc-icon{font-size:20px;line-height:1;flex-shrink:0}
+.wc-temp{font-size:13px;white-space:nowrap;font-weight:700;flex:1}
+.wc-precip{font-size:11px;color:var(--text-light);white-space:nowrap;flex-shrink:0}
 
 /* ─── セージのおすすめカード ─── */
 .sage-home-card{background:var(--bg-warm);border-radius:var(--radius);padding:12px 14px;margin-bottom:8px}
