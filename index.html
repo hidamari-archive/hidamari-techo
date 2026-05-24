@@ -1876,16 +1876,26 @@ function confirmPantryUrl(){
 
 // ─── タブスワイプ ───
 const TAB_ORDER=['home','seiiki','news','wish','shop'];
-let _swipeX=0,_swipeY=0;
+let _swipeX=0,_swipeY=0,_swipeBlocked=false;
+function _isHScrollable(el){
+  while(el&&el!==document.body){
+    const ox=getComputedStyle(el).overflowX;
+    if((ox==='auto'||ox==='scroll')&&el.scrollWidth>el.clientWidth+2)return true;
+    el=el.parentElement;
+  }
+  return false;
+}
 const _swipeTarget=document.querySelector('.app-content');
 _swipeTarget.addEventListener('touchstart',e=>{
   _swipeX=e.touches[0].clientX;
   _swipeY=e.touches[0].clientY;
+  _swipeBlocked=_isHScrollable(e.target);
 },{passive:true});
 _swipeTarget.addEventListener('touchend',e=>{
+  if(_swipeBlocked)return;
   const dx=e.changedTouches[0].clientX-_swipeX;
   const dy=e.changedTouches[0].clientY-_swipeY;
-  if(Math.abs(dx)<55||Math.abs(dx)<Math.abs(dy)*1.5)return;
+  if(Math.abs(dx)<80||Math.abs(dx)<Math.abs(dy)*2)return;
   const cur=document.querySelector('.btab.active')?.dataset.tab;
   const idx=TAB_ORDER.indexOf(cur);if(idx<0)return;
   if(dx<0&&idx<TAB_ORDER.length-1)switchTab(TAB_ORDER[idx+1]);
