@@ -150,7 +150,11 @@ body{font-family:var(--font-body);background:var(--bg);color:var(--text);min-hei
 .weather-hour-icon{font-size:18px;line-height:1}
 .weather-hour-temp{font-size:13px;font-weight:700;color:var(--text)}
 .weather-hour-precip{font-size:10px;color:var(--text-faint)}
-.pressure-row{display:flex;align-items:center;gap:6px;margin-top:6px;padding-top:6px;border-top:1px solid var(--border)}
+.pressure-row{display:flex;align-items:center;gap:6px;margin-top:6px;padding-top:6px;border-top:1px solid var(--border);cursor:pointer;-webkit-tap-highlight-color:transparent}
+.pressure-chevron{margin-left:auto;font-size:10px;color:var(--text-faint);transition:transform .2s}
+.pressure-chevron.open{transform:rotate(180deg)}
+.ph-wrap{overflow:hidden;transition:max-height .25s ease;max-height:0}
+.ph-wrap.open{max-height:120px}
 .pressure-badge{display:inline-flex;align-items:center;gap:4px;border-radius:20px;padding:3px 10px;font-size:11px;font-family:var(--font-accent);font-weight:600;letter-spacing:.3px}
 .pressure-badge.low{background:rgba(100,180,120,.12);color:#4A9060}
 .pressure-badge.mid{background:rgba(210,155,60,.12);color:#A07020}
@@ -1115,6 +1119,13 @@ function getTimeClass(){
 }
 let _weatherData=null,_weatherDay='today',_lastCalEvents=[];
 let _mainCalParsed=null,_calView='today',_calMonthYear=new Date().getFullYear(),_calMonthMonth=new Date().getMonth(),_calSelectedDate=null;
+function togPressureDetail(row){
+  const wrap=document.getElementById('phWrap');
+  const chev=document.getElementById('pressureChevron');
+  if(!wrap)return;
+  const open=wrap.classList.toggle('open');
+  if(chev)chev.classList.toggle('open',open);
+}
 function renderWeatherHourly(){
   const row=document.getElementById('weatherHourlyRow');
   if(!row||!_weatherData)return;
@@ -1181,7 +1192,7 @@ function renderWeather(data){
     const rIcon=riskIcons[data.pressureRisk]||'🟢';
     const arrow=dir==='rise'?'▲':'▼';
     const changeStr=data.pressureChange>0?` (${arrow}${data.pressureChange}hPa/6h)`:'';
-    h+=`<div class="pressure-row"><span class="pressure-badge ${data.pressureRisk}">${rIcon} ${rLabel}</span><span class="pressure-val">${data.pressureCur} hPa${changeStr}</span></div>`;
+    h+=`<div class="pressure-row" onclick="togPressureDetail(this)"><span class="pressure-badge ${data.pressureRisk}">${rIcon} ${rLabel}</span><span class="pressure-val">${data.pressureCur} hPa${changeStr}</span><span class="pressure-chevron" id="pressureChevron">▼</span></div>`;
     // 時間別気圧（今日＋明日、3時間ごと）
     if(data.pressureHours_today&&data.pressureHours_today.length){
       const todaySlots=data.pressureHours_today.filter(p=>p.h%3===0);
@@ -1206,7 +1217,7 @@ function renderWeather(data){
         ph+=`<div class="ph-item ${cls}"><div class="ph-time" style="${bold}">${p.h}時</div><div class="ph-icon">${icon}</div><div class="ph-hpa">${p.v}</div></div>`;
       });
       ph+='</div>';
-      h+=ph;
+      h+=`<div class="ph-wrap" id="phWrap">${ph}</div>`;
     }
   }
   h+=`<div class="weather-hourly-row" id="weatherHourlyRow" style="display:none"></div>`;
