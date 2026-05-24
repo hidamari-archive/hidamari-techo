@@ -309,11 +309,13 @@ body{font-family:var(--font-body);background:var(--bg);color:var(--text);min-hei
 .pantry-cat-body .pantry-item:first-child{border-radius:0}
 .pantry-cat-body .pantry-item:last-child{border-radius:0 0 var(--radius-sm) var(--radius-sm)}
 .pantry-cat-body .pantry-item.only{border-radius:0 0 var(--radius-sm) var(--radius-sm)}
-.pantry-filter-bar{display:flex;gap:6px;margin-bottom:10px;overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:2px;scrollbar-width:none}
-.pantry-filter-bar::-webkit-scrollbar{display:none}
-.pantry-filter-btn{padding:5px 14px;border-radius:12px;font-size:12px;border:1px solid var(--border);background:var(--bg);color:var(--text-light);cursor:pointer;font-family:var(--font-body);transition:all .2s;white-space:nowrap;flex-shrink:0}
+.pantry-filter-wrap{display:flex;flex-direction:column;gap:5px;margin-bottom:10px}
+.pantry-filter-row{display:flex;gap:6px;overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:2px;scrollbar-width:none}
+.pantry-filter-row::-webkit-scrollbar{display:none}
+.pantry-filter-btn{padding:5px 14px;border-radius:12px;font-size:12px;border:1px solid var(--border);background:var(--bg-warm);color:var(--text-light);cursor:pointer;font-family:var(--font-body);transition:all .2s;white-space:nowrap;flex-shrink:0}
 .pantry-filter-btn.active{background:var(--accent);color:#fff;border-color:var(--accent)}
-.pantry-filter-sep{width:1px;background:var(--border);flex-shrink:0;margin:2px 0}
+.pantry-filter-cat-btn{padding:3px 11px;border-radius:10px;font-size:11px;border:1px solid var(--border);background:transparent;color:var(--text-faint);cursor:pointer;font-family:var(--font-body);transition:all .2s;white-space:nowrap;flex-shrink:0}
+.pantry-filter-cat-btn.active{background:var(--bg-warm);color:var(--text);border-color:var(--text-light);font-weight:600}
 .pantry-cat-select{padding:8px 10px;border:1px solid var(--border);border-radius:var(--radius-sm);font-size:13px;font-family:var(--font-body);color:var(--text);background:var(--bg);outline:none;flex-shrink:0;max-width:110px}
 .pantry-cat-mgr-btn{background:none;border:none;font-size:15px;color:var(--text-faint);cursor:pointer;padding:2px 4px;line-height:1;opacity:.7}
 .pantry-cat-mgr-panel{background:var(--bg-warm);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 12px;margin-bottom:10px;display:flex;flex-direction:column;gap:8px}
@@ -825,7 +827,7 @@ body{font-family:var(--font-body);background:var(--bg);color:var(--text);min-hei
           <button class="pantry-add-btn" onclick="addPantryCat()" style="padding:6px 12px;font-size:13px">追加</button>
         </div>
       </div>
-      <div class="pantry-filter-bar" id="pantryFilterBar"></div>
+      <div class="pantry-filter-wrap" id="pantryFilterBar"></div>
       <div class="pantry-add-row" id="pantryAddRow">
         <input class="pantry-add-input" id="pantryInput" type="text" placeholder="アイテム名を入力…" autocomplete="off">
         <select class="pantry-cat-select" id="pantryCatSelect"></select>
@@ -1844,9 +1846,9 @@ function renderPantryFilterBar(){
     {f:'needed',label:'🔴 欠品'},
     {f:'amazon',label:'📦 Amazon'},
   ];
-  bar.innerHTML=tabs.map(({f,label})=>`<button class="pantry-filter-btn${_pantryFilter===f?' active':''}" onclick="setPantryFilter('${f}')">${label}</button>`).join('')
-    +`<div class="pantry-filter-sep"></div>`
-    +cats.map(c=>`<button class="pantry-filter-btn${_pantryFilter===`cat:${c}`?' active':''}" onclick="setPantryFilter('cat:${c}')">${c}</button>`).join('');
+  const statusRow=`<div class="pantry-filter-row">${tabs.map(({f,label})=>`<button class="pantry-filter-btn${_pantryFilter===f?' active':''}" onclick="setPantryFilter('${f}')">${label}</button>`).join('')}</div>`;
+  const catRow=`<div class="pantry-filter-row">${cats.map(c=>`<button class="pantry-filter-cat-btn${_pantryFilter===`cat:${c}`?' active':''}" onclick="setPantryFilter('cat:${c}')">${c}</button>`).join('')}</div>`;
+  bar.innerHTML=statusRow+catRow;
 }
 function setPantryFilter(f){
   _pantryFilter=f;
