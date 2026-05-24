@@ -286,7 +286,7 @@ body{font-family:var(--font-body);background:var(--bg);color:var(--text);min-hei
 .pantry-item.only{border-radius:var(--radius)}
 .pantry-item-name{font-size:14px;flex:1;min-width:0;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .pantry-item-name.in-stock{color:var(--text-light)}
-.pantry-badge{width:84px;text-align:center;padding:4px 0;border-radius:10px;font-size:11px;cursor:pointer;border:none;font-family:var(--font-body);transition:opacity .2s;flex-shrink:0}
+.pantry-badge{width:36px;text-align:center;padding:4px 0;border-radius:10px;font-size:15px;cursor:pointer;border:none;font-family:var(--font-body);transition:opacity .2s;flex-shrink:0}
 .pantry-badge.needed{background:#FDE8E5;color:#C9897A;border:1px solid #EFB9B2}
 .pantry-badge.amazon{background:#EAF0FB;color:#5B7EC9;border:1px solid #B3C6F0}
 .pantry-badge.in-stock{background:#E8F3EF;color:#6B9E8A;border:1px solid #BAD9CD}
@@ -1846,7 +1846,7 @@ function renderPantry(){
   const parts=[];if(needed.length)parts.push(`欠品 ${needed.length}件`);if(amazon.length)parts.push(`Amazon ${amazon.length}件`);
   if(cnt)cnt.textContent=parts.join(' / ');
   const cats=getPantryCats();
-  const byStatus=x=>(x.status==='needed'?0:x.status==='amazon'?1:2);
+  const byName=(a,b)=>a.name.localeCompare(b.name,'ja');
   const mkItem=(x,arr)=>{
     const cls=arr.length===1?'only':'';
     const st=x.status||'in_stock';
@@ -1867,7 +1867,7 @@ function renderPantry(){
     }
     const menuOpen=_pantryOpenMenu===x.id;
     const badgeCls=st==='needed'?'needed':st==='amazon'?'amazon':'in-stock';
-    const badgeLabel=st==='needed'?'🔴 欠品':st==='amazon'?'📦 Amazon':'🟢 在庫あり';
+    const badgeLabel=st==='needed'?'🔴':st==='amazon'?'📦':'🟢';
     const nameCls=st==='in_stock'?'in-stock':'';
     const menuBtns=st==='in_stock'
       ?`<button class="pantry-smenu-btn" onclick="setPantryStatus('${x.id}','needed')">🔴 欠品</button><button class="pantry-smenu-btn" onclick="setPantryStatus('${x.id}','amazon')">📦 Amazon</button>`
@@ -1888,7 +1888,7 @@ function renderPantry(){
     const catName=isCat?_pantryFilter.slice(4):null;
     const filtered=D.pantryItems
       .filter(x=>isCat?(x.category||cats[0])===catName:x.status===_pantryFilter)
-      .sort((a,b)=>byStatus(a)-byStatus(b)||a.name.localeCompare(b.name,'ja'));
+      .sort(byName);
     if(filtered.length){
       html=`<div class="pantry-cat-body" style="border-radius:var(--radius-sm)">${filtered.map(x=>mkItem(x,filtered)).join('')}</div>`;
     } else {
@@ -1900,7 +1900,7 @@ function renderPantry(){
     allCats.forEach(cat=>{
       let items=D.pantryItems.filter(x=>(x.category||'食品')===cat);
       if(cat===uncatKey)items=D.pantryItems.filter(x=>!cats.includes(x.category||'食品'));
-      items.sort((a,b)=>byStatus(a)-byStatus(b)||a.name.localeCompare(b.name,'ja'));
+      items.sort(byName);
       if(!items.length)return;
       html+=`<div class="pantry-cat-section"><div class="pantry-cat-header"><span>${cat}</span></div><div class="pantry-cat-body">${items.map(x=>mkItem(x,items)).join('')}</div></div>`;
     });
