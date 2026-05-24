@@ -276,7 +276,17 @@ body{font-family:var(--font-body);background:var(--bg);color:var(--text);min-hei
 .pantry-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
 .pantry-title{font-family:var(--font-accent);font-size:13px;color:var(--text-light);letter-spacing:.3px}
 .pantry-needed-count{font-size:12px;color:#C9897A;font-family:var(--font-body)}
-.pantry-add-row{display:flex;gap:8px;margin-bottom:10px}
+.pantry-add-row{display:none;gap:8px;margin-bottom:10px;animation:slideDown .18s ease}.pantry-add-row.open{display:flex}
+@keyframes slideDown{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:translateY(0)}}
+.pantry-add-toggle{background:none;border:1px solid var(--border);border-radius:50%;width:26px;height:26px;font-size:16px;line-height:1;color:var(--text-light);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s;flex-shrink:0}.pantry-add-toggle.open{background:var(--accent);border-color:var(--accent);color:#fff}
+#pantryEditModal{position:fixed;inset:0;background:rgba(58,53,48,.45);display:none;align-items:center;justify-content:center;z-index:500;padding:24px}
+#pantryEditModal.show{display:flex}
+.pantry-edit-modal-box{background:var(--bg-card);border-radius:var(--radius);padding:20px;width:100%;max-width:360px;display:flex;flex-direction:column;gap:12px;box-shadow:0 8px 32px rgba(80,60,40,.18)}
+.pantry-edit-modal-title{font-size:13px;color:var(--text-light);font-family:var(--font-accent);letter-spacing:.3px}
+.pantry-edit-modal-input{width:100%;box-sizing:border-box;padding:12px 14px;border:1px solid var(--border);border-radius:var(--radius-sm);font-size:16px;font-family:var(--font-body);color:var(--text);background:var(--bg);outline:none}.pantry-edit-modal-input:focus{border-color:var(--accent)}
+.pantry-edit-modal-actions{display:flex;gap:8px}
+.pantry-edit-modal-save{flex:1;padding:11px;background:var(--accent);color:#fff;border:none;border-radius:var(--radius-sm);font-size:14px;font-family:var(--font-body);cursor:pointer}
+.pantry-edit-modal-cancel{padding:11px 16px;background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-sm);font-size:14px;font-family:var(--font-body);cursor:pointer;color:var(--text-light)}
 .pantry-add-input{flex:1;min-width:0;padding:8px 12px;border:1px solid var(--border);border-radius:var(--radius-sm);font-size:14px;font-family:var(--font-body);color:var(--text);background:var(--bg-card);outline:none}
 .pantry-add-input:focus{border-color:var(--accent)}
 .pantry-add-btn{padding:8px 14px;background:var(--accent);color:#fff;border:none;border-radius:var(--radius-sm);font-size:14px;font-family:var(--font-body);cursor:pointer;white-space:nowrap}
@@ -806,6 +816,7 @@ body{font-family:var(--font-body);background:var(--bg);color:var(--text);min-hei
         <span class="pantry-title">🧺 在庫管理</span>
         <span class="pantry-needed-count" id="pantryNeededCount"></span>
         <button class="pantry-cat-mgr-btn" onclick="togPantryCatMgr()" title="カテゴリ管理">⚙</button>
+        <button class="pantry-add-toggle" id="pantryAddToggle" onclick="togPantryAdd()">＋</button>
       </div>
       <div class="pantry-cat-mgr-panel" id="pantryCatMgrPanel" style="display:none">
         <div class="pantry-cat-mgr-list" id="pantryCatMgrList"></div>
@@ -815,7 +826,7 @@ body{font-family:var(--font-body);background:var(--bg);color:var(--text);min-hei
         </div>
       </div>
       <div class="pantry-filter-bar" id="pantryFilterBar"></div>
-      <div class="pantry-add-row">
+      <div class="pantry-add-row" id="pantryAddRow">
         <input class="pantry-add-input" id="pantryInput" type="text" placeholder="アイテム名を入力…" autocomplete="off">
         <select class="pantry-cat-select" id="pantryCatSelect"></select>
         <button class="pantry-add-btn" onclick="addPantryItem()">追加</button>
@@ -853,6 +864,20 @@ body{font-family:var(--font-body);background:var(--bg);color:var(--text);min-hei
     <div class="modal-actions">
       <button class="modal-btn secondary" id="aiCloseBtn" onclick="closeAiModal()" style="display:none">閉じる</button>
       <button class="modal-btn primary" id="aiChatBtn" onclick="sageChatFromGacha()" style="display:none">セージに話しかける ›</button>
+    </div>
+  </div>
+</div>
+
+<!-- 台所在庫 アイテム編集モーダル -->
+<div id="pantryEditModal" onclick="if(event.target===this)closePantryEditModal()">
+  <div class="pantry-edit-modal-box">
+    <div class="pantry-edit-modal-title">アイテムを編集</div>
+    <input class="pantry-edit-modal-input" id="pantryEditName" type="text" placeholder="アイテム名" autocomplete="off"
+      onkeydown="if(event.key==='Enter')savePantryEditModal();if(event.key==='Escape')closePantryEditModal()">
+    <select class="pantry-cat-select" id="pantryEditCat" style="width:100%;padding:10px 12px;font-size:14px"></select>
+    <div class="pantry-edit-modal-actions">
+      <button class="pantry-edit-modal-cancel" onclick="closePantryEditModal()">キャンセル</button>
+      <button class="pantry-edit-modal-save" onclick="savePantryEditModal()">保存</button>
     </div>
   </div>
 </div>
@@ -1850,21 +1875,9 @@ function renderPantry(){
   const mkItem=(x,arr)=>{
     const cls=arr.length===1?'only':'';
     const st=x.status||'in_stock';
-    const isEditing=_pantryEditId===x.id;
     const imgHtml=x.image_url
       ?`<img src="${x.image_url}" class="pantry-img-thumb" onclick="openPantryImgMenu('${x.id}')" alt="">`
       :`<button class="pantry-cam-btn" onclick="openPantryImgMenu('${x.id}')">📷</button>`;
-    if(isEditing){
-      const cats=getPantryCats();
-      const opts=cats.map(c=>`<option value="${esc(c)}"${(x.category||cats[0])===c?' selected':''}>${esc(c)}</option>`).join('');
-      return`<div class="pantry-item ${cls}">
-        ${imgHtml}
-        <input class="pantry-edit-input" id="pedit-${x.id}" value="${esc(x.name)}" style="flex:1;min-width:0" onkeydown="if(event.key==='Enter')savePantryEdit('${x.id}');if(event.key==='Escape'){_pantryEditId=null;renderPantry()}" onclick="event.stopPropagation()">
-        <select class="pantry-cat-select" id="pcatsel-${x.id}" style="width:84px;flex-shrink:0;padding:4px 6px;font-size:12px">${opts}</select>
-        <button class="pantry-add-btn" onclick="savePantryEdit('${x.id}')" style="padding:5px 10px;font-size:12px">保存</button>
-        <button class="item-delete" onclick="_pantryEditId=null;renderPantry()">✕</button>
-      </div>`;
-    }
     const menuOpen=_pantryOpenMenu===x.id;
     const badgeCls=st==='needed'?'needed':st==='amazon'?'amazon':'in-stock';
     const badgeLabel=st==='needed'?'🔴':st==='amazon'?'📦':'🟢';
@@ -1913,6 +1926,7 @@ function addPantryItem(){
   const id=uuid();
   D.pantryItems.push({id,name:text,status:'in_stock',category:cat,updated_by:'app',created_at:new Date().toISOString()});
   document.getElementById('pantryInput').value='';
+  togPantryAdd();
   renderPantry();updateHomeSummary();
   dbw(db.from('pantry_items').insert({id,name:text,status:'in_stock',category:cat,updated_by:'app'}),'p.add');
 }
@@ -1968,22 +1982,43 @@ document.getElementById('pantryImageInput').addEventListener('change',function()
 let _pantryEditId=null;
 function startEditPantry(id){
   _pantryEditId=id;_pantryOpenMenu=null;
-  renderPantry();
-  setTimeout(()=>{const inp=document.getElementById('pedit-'+id);if(inp){inp.focus();inp.select();}},0);
+  const item=D.pantryItems.find(x=>x.id===id);if(!item)return;
+  const cats=getPantryCats();
+  const nameInp=document.getElementById('pantryEditName');
+  const catSel=document.getElementById('pantryEditCat');
+  const modal=document.getElementById('pantryEditModal');
+  if(!modal||!nameInp||!catSel)return;
+  nameInp.value=item.name;
+  catSel.innerHTML=cats.map(c=>`<option value="${esc(c)}"${(item.category||cats[0])===c?' selected':''}>${esc(c)}</option>`).join('');
+  modal.classList.add('show');
+  setTimeout(()=>{nameInp.focus();nameInp.select();},0);
 }
-function savePantryEdit(id){
-  const inp=document.getElementById('pedit-'+id);
-  const catSel=document.getElementById('pcatsel-'+id);
-  if(!inp)return;
-  const name=inp.value.trim();
+function savePantryEditModal(){
+  const id=_pantryEditId;if(!id)return;
+  const nameInp=document.getElementById('pantryEditName');
+  const catSel=document.getElementById('pantryEditCat');
+  if(!nameInp)return;
+  const name=nameInp.value.trim();
+  if(!name){closePantryEditModal();return;}
   const cat=catSel?catSel.value:null;
-  if(!name){_pantryEditId=null;renderPantry();return;}
-  const idx=D.pantryItems.findIndex(x=>x.id===id);if(idx<0)return;
+  const idx=D.pantryItems.findIndex(x=>x.id===id);if(idx<0){closePantryEditModal();return;}
   const upd={name,...(cat?{category:cat}:{})};
   D.pantryItems[idx]={...D.pantryItems[idx],...upd};
-  _pantryEditId=null;
+  closePantryEditModal();
   renderPantry();
   dbw(db.from('pantry_items').update(upd).eq('id',id),'p.edit');
+}
+function closePantryEditModal(){
+  _pantryEditId=null;
+  document.getElementById('pantryEditModal')?.classList.remove('show');
+}
+function togPantryAdd(){
+  const row=document.getElementById('pantryAddRow');
+  const btn=document.getElementById('pantryAddToggle');
+  if(!row)return;
+  const open=row.classList.toggle('open');
+  if(btn)btn.classList.toggle('open',open);
+  if(open)setTimeout(()=>{const inp=document.getElementById('pantryInput');if(inp)inp.focus();},0);
 }
 // ─ 画像URLパネル ─
 let _pantryUrlTarget=null;
