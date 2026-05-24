@@ -67,8 +67,11 @@ Deno.serve(async (req) => {
       if (!items || items.length === 0) {
         messages.push({ type: 'text', text: '✅ 今は買い物なしだよ！' })
       } else {
+        const now = new Date()
+        const jst = new Date(now.getTime() + 9 * 60 * 60 * 1000)
+        const ts = `${jst.getFullYear()}/${String(jst.getMonth()+1).padStart(2,'0')}/${String(jst.getDate()).padStart(2,'0')} ${String(jst.getHours()).padStart(2,'0')}:${String(jst.getMinutes()).padStart(2,'0')} 時点`
         const list = items.map((i: { name: string }) => `🔴 ${i.name}`).join('\n')
-        const textMsg = { type: 'text', text: `🛒 買い物リスト\n\n${list}\n\n計 ${items.length}点` }
+        const textMsg = { type: 'text', text: `🛒 買い物リスト\n\n${list}\n\n計 ${items.length}点\n📅 ${ts}` }
 
         // 画像を先に（最大4枚）、テキストリストを最後に送信
         const withImage = items
