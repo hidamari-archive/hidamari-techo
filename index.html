@@ -334,6 +334,9 @@ body{font-family:var(--font-body);background:var(--bg);color:var(--text);min-hei
 .pantry-url-btn{background:none;border:none;color:var(--text-faint);font-size:13px;cursor:pointer;padding:2px 4px;flex-shrink:0;opacity:.5;font-family:var(--font-body)}
 .pantry-img-thumb{width:38px;height:38px;border-radius:8px;object-fit:cover;flex-shrink:0;cursor:pointer;border:1px solid var(--border)}
 .pantry-edit-btn{background:none;border:none;cursor:pointer;font-size:12px;color:var(--text-faint);padding:0 2px;flex-shrink:0;opacity:.6}
+.pantry-amazon-btn{background:none;border:none;cursor:pointer;font-size:13px;padding:0 2px;flex-shrink:0;opacity:.65;color:#5B7EC9;line-height:1}
+.pantry-amazon-banner{background:#EAF0FB;border:1px solid #B3C6F0;border-radius:var(--radius-sm);padding:11px 14px;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;gap:8px}
+.pantry-amazon-banner-link{color:#5B7EC9;font-size:13px;font-family:var(--font-body);text-decoration:none;letter-spacing:.02em}
 .pantry-edit-input{width:100%;box-sizing:border-box;padding:3px 8px;border:1px solid var(--accent);border-radius:6px;font-size:14px;font-family:var(--font-body);color:var(--text);background:var(--bg);outline:none}
 .pantry-search-btn{width:100%;padding:11px;background:var(--bg-warm);border:1px solid var(--border);border-radius:var(--radius-sm);font-size:14px;font-family:var(--font-body);color:var(--text);cursor:pointer;text-align:center;letter-spacing:.05em}
 .pantry-url-preview{min-height:60px;display:flex;align-items:center;justify-content:center;margin:10px 0}
@@ -1907,10 +1910,12 @@ function renderPantry(){
       ?`<button class="pantry-smenu-btn" onclick="setPantryStatus('${x.id}','needed')">🔴 欠品</button><button class="pantry-smenu-btn" onclick="setPantryStatus('${x.id}','amazon')">📦 Amazon</button>`
       :`<button class="pantry-smenu-btn" onclick="setPantryStatus('${x.id}','in_stock')">🟢 在庫あり</button>`;
     const menuHtml=menuOpen?`<div class="pantry-smenu">${menuBtns}</div>`:'';
+    const amazonSearchBtn=st==='amazon'?`<button class="pantry-amazon-btn" data-name="${esc(x.name)}" onclick="searchAmazonItem(this.dataset.name)" title="Amazonで検索">🔍</button>`:'';
     return`<div class="pantry-item ${cls}">
       ${imgHtml}
       <div class="pantry-item-name ${nameCls}" id="pname-${x.id}">${esc(x.name)}</div>
       <button class="pantry-badge ${badgeCls}" onclick="openStatusMenu('${x.id}')">${badgeLabel}</button>
+      ${amazonSearchBtn}
       <button class="pantry-edit-btn" onclick="startEditPantry('${x.id}')">✏️</button>
       <button class="item-delete" onclick="delPantryItem('${x.id}')">×</button>
       ${menuHtml}
@@ -1939,7 +1944,13 @@ function renderPantry(){
       html+=`<div class="pantry-cat-section"><div class="pantry-cat-header"><span>${cat}</span></div><div class="pantry-cat-body">${items.map(x=>mkItem(x,items)).join('')}</div></div>`;
     });
   }
-  el.innerHTML=html||'<div class="pantry-empty">アイテムがありません</div>';
+  const amazonBanner=_pantryFilter==='amazon'
+    ?`<div class="pantry-amazon-banner"><span style="font-size:12px;color:#5B7EC9">📦 Amazonで購入する</span><a class="pantry-amazon-banner-link" href="https://www.amazon.co.jp/gp/buyagain" target="_blank">また買うリスト →</a></div>`
+    :'';
+  el.innerHTML=amazonBanner+(html||'<div class="pantry-empty">アイテムがありません</div>');
+}
+function searchAmazonItem(name){
+  window.open('https://www.amazon.co.jp/s?k='+encodeURIComponent(name),'_blank');
 }
 function addPantryItem(){
   const text=document.getElementById('pantryInput').value.trim();if(!text)return;
