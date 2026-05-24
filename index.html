@@ -1880,10 +1880,19 @@ function setPantryFilter(f){
 function openStatusMenu(id){_pantryOpenMenu=_pantryOpenMenu===id?null:id;renderPantry();}
 function setPantryStatus(id,status){
   const idx=D.pantryItems.findIndex(x=>x.id===id);if(idx<0)return;
+  const prevStatus=D.pantryItems[idx].status;
   _pantryOpenMenu=null;
   D.pantryItems[idx]={...D.pantryItems[idx],status};
   renderPantry();updateHomeSummary();
-  dbw(db.from('pantry_items').update({status,updated_at:new Date().toISOString(),updated_by:'app'}).eq('id',id),'p.tog');
+  db.from('pantry_items').update({status,updated_at:new Date().toISOString(),updated_by:'app'}).eq('id',id)
+    .then(({error})=>{
+      if(error){
+        console.error('DB write error [p.tog]:',error);
+        D.pantryItems[idx]={...D.pantryItems[idx],status:prevStatus};
+        renderPantry();updateHomeSummary();
+        alert('ステータス更新に失敗しました。\n'+error.message);
+      }
+    });
 }
 function renderPantry(){
   fillPantryCatSelect();renderPantryFilterBar();
