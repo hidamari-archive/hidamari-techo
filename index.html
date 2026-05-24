@@ -183,17 +183,16 @@ body{font-family:var(--font-body);background:var(--bg);color:var(--text);min-hei
 .sage-weather-icon{width:18px;height:18px;border-radius:4px;flex-shrink:0;margin-top:2px}
 .sage-weather-msg.loading .sage-weather-text{color:var(--text-faint)}
 /* ─── 天気カード コンパクト行レイアウト ─── */
-.weather-rows{display:flex;flex-direction:column}
-.weather-row{display:flex;align-items:center;gap:9px;padding:6px 4px;cursor:pointer;border-radius:7px;transition:background .15s;-webkit-tap-highlight-color:transparent;margin:0 -4px}
-.weather-row:active{background:var(--bg-warm)}
-.weather-row-label{font-family:var(--font-accent);font-size:10px;color:var(--text-faint);letter-spacing:.5px;min-width:22px;flex-shrink:0}
-.weather-row-icon{font-size:22px;line-height:1;flex-shrink:0;width:28px;text-align:center}
-.weather-row-desc{font-family:var(--font-accent);font-size:13px;color:var(--text);flex:1}
-.weather-row-temp{font-size:14px;font-weight:700;white-space:nowrap;flex-shrink:0}
-.weather-row-precip{font-size:11px;color:var(--text-light);white-space:nowrap;flex-shrink:0;min-width:28px;text-align:right}
-.weather-row-sep{height:1px;background:var(--border);margin:0 0}
-.weather-active-day{background:rgba(212,167,106,.09)}
-.weather-active-day .weather-row-label{color:var(--accent);font-weight:600}
+.weather-cols{display:flex;align-items:stretch}
+.weather-col{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:8px 6px;cursor:pointer;border-radius:8px;transition:background .15s;-webkit-tap-highlight-color:transparent}
+.weather-col:active{background:var(--bg-warm)}
+.weather-active-day.weather-col{background:rgba(212,167,106,.09)}
+.weather-active-day .wc-label{color:var(--accent);font-weight:600}
+.wc-sep{width:1px;background:var(--border);margin:4px 2px;flex-shrink:0}
+.wc-label{font-family:var(--font-accent);font-size:10px;color:var(--text-faint);letter-spacing:.5px}
+.wc-icon{font-size:26px;line-height:1;margin:2px 0}
+.wc-temp{font-size:14px;white-space:nowrap;font-weight:700}
+.wc-precip{font-size:11px;color:var(--text-light)}
 
 /* ─── セージのおすすめカード ─── */
 .sage-home-card{background:var(--bg-warm);border-radius:var(--radius);padding:12px 14px;margin-bottom:8px}
@@ -247,6 +246,14 @@ body{font-family:var(--font-body);background:var(--bg);color:var(--text);min-hei
 .wish-empty{text-align:center;padding:36px 20px;color:var(--text-faint);font-family:var(--font-accent);font-size:14px;line-height:2}
 .wish-fab{position:fixed;bottom:calc(var(--tabbar-h) + env(safe-area-inset-bottom,0) + 16px);right:20px;width:52px;height:52px;border-radius:50%;background:var(--accent);color:#fff;border:none;font-size:26px;cursor:pointer;box-shadow:0 3px 10px rgba(139,115,85,.35);display:none;align-items:center;justify-content:center;z-index:150}
 .wish-fab.show{display:flex}
+.flash-memo-section{padding:12px 16px 32px}
+.flash-memo-add-row{display:flex;gap:8px;margin-bottom:12px}
+.flash-memo-item{display:flex;align-items:flex-start;gap:10px;padding:10px 14px;border-bottom:1px solid var(--border);background:var(--bg-card);font-size:13px;color:var(--text);line-height:1.6}
+.flash-memo-item:first-child{border-radius:var(--radius-sm) var(--radius-sm) 0 0}
+.flash-memo-item:last-child{border-bottom:none;border-radius:0 0 var(--radius-sm) var(--radius-sm)}
+.flash-memo-item.only{border-radius:var(--radius-sm)}
+.flash-memo-text{flex:1;min-width:0;word-break:break-all}
+.flash-memo-date{font-size:10px;color:var(--text-faint);flex-shrink:0;margin-top:2px}
 
 /* ─── 買い物リスト ─── */
 .shop-tabs{display:flex;gap:0;padding:0 16px;border-bottom:1px solid var(--border);position:sticky;top:var(--header-h,74px);z-index:90;background:var(--bg)}
@@ -787,14 +794,31 @@ body{font-family:var(--font-body);background:var(--bg);color:var(--text);min-hei
 
   <!-- ウィッシュタブ -->
   <div class="tab-panel" id="tab-wish">
-    <div class="panel-body" style="padding-bottom:0">
-      <div class="wish-filter-row">
-        <button class="wish-filter-btn active" data-wf="want" onclick="setWishFilter('want')">💫 やりたい</button>
-        <button class="wish-filter-btn" data-wf="done" onclick="setWishFilter('done')">✅ やった！</button>
+    <div class="shop-tabs">
+      <button class="shop-stab active" data-stab="wishlist" onclick="switchWishTab('wishlist')">💫 ウィッシュ</button>
+      <button class="shop-stab" data-stab="memo" onclick="switchWishTab('memo')">✨ ひらめきメモ</button>
+    </div>
+    <!-- ウィッシュリストパネル -->
+    <div class="shop-stab-panel active" id="wish-stab-wishlist">
+      <div class="panel-body" style="padding-bottom:0">
+        <div class="wish-filter-row">
+          <button class="wish-filter-btn active" data-wf="want" onclick="setWishFilter('want')">💫 やりたい</button>
+          <button class="wish-filter-btn" data-wf="done" onclick="setWishFilter('done')">✅ やった！</button>
+        </div>
+      </div>
+      <div class="panel-body" id="wishList"></div>
+      <button class="wish-fab show" id="wishFab" onclick="openModal('wish-add')">＋</button>
+    </div>
+    <!-- ひらめきメモパネル -->
+    <div class="shop-stab-panel" id="wish-stab-memo">
+      <div class="flash-memo-section">
+        <div class="flash-memo-add-row">
+          <input class="shop-input" id="flashMemoInput" type="text" placeholder="思いついたこと…" autocomplete="off">
+          <button class="shop-add-btn" onclick="addFlashMemo()">追加</button>
+        </div>
+        <div id="flashMemoList"></div>
       </div>
     </div>
-    <div class="panel-body" id="wishList"></div>
-    <button class="wish-fab show" id="wishFab" onclick="openModal('wish-add')">＋</button>
   </div>
 
   <!-- ニュースタブ -->
@@ -1040,7 +1064,7 @@ let curModal=null,curTaskType='once',curShopCat='食品・日用品',curShopCatF
 // ═══════════════════════════════════════════════
 async function loadData(){
   const today=gt();
-  const [rR,cR,tR,dR,lR,mR,ltR,wR,sR,fR,wtR,pR]=await Promise.all([
+  const [rR,cR,tR,dR,lR,mR,ltR,wR,sR,fR,wtR,pR,fmR]=await Promise.all([
     db.from('hk_routines').select('*').order('sort_order').order('created_at'),
     db.from('hk_routine_checks').select('*').eq('date',today),
     db.from('hk_tasks').select('*').order('created_at'),
@@ -1053,6 +1077,7 @@ async function loadData(){
     db.from('techo_rss_feeds').select('*').order('created_at'),
     db.from('hk_weekly_tasks').select('*').order('created_at'),
     db.from('pantry_items').select('*').order('name'),
+    db.from('flash_memos').select('*').order('created_at',{ascending:false}),
   ]);
   let routines=rR.data||[];
   if(!routines.length){
@@ -1072,6 +1097,7 @@ async function loadData(){
   D.wishItems=wR.data||[];
   D.shopItems=sR.data||[];
   D.pantryItems=pR.data||[];
+  D.flashMemos=fmR.data||[];
   let feeds=fR.data||[];
   if(!feeds.length){
     const seeds=DEFAULT_FEEDS.map(f=>({name:f.name,url:f.url,cat:f.cat}));
@@ -1238,25 +1264,21 @@ function renderWeather(data){
     return;
   }
   const w=WMO[data.code]||{l:'--',i:'🌡'};
-  const umbrella=data.precip>=40;
-  let h=`<div class="weather-rows">
-    <div class="weather-row" id="weatherTodayCol" onclick="switchWeatherDay('today')">
-      <span class="weather-row-label">今日</span>
-      <span class="weather-row-icon">${w.i}</span>
-      <span class="weather-row-desc">${w.l}</span>
-      <span class="weather-row-temp"><span class="temp-max">${data.max}°</span><span class="temp-min"> / ${data.min}°</span></span>
-      <span class="weather-row-precip">${data.precip}%${umbrella?' ☂️':''}</span>
+  let h=`<div class="weather-cols">
+    <div class="weather-col" id="weatherTodayCol" onclick="switchWeatherDay('today')">
+      <div class="wc-label">今日</div>
+      <div class="wc-icon">${w.i}</div>
+      <div class="wc-temp"><span class="temp-max">${data.max}°</span><span class="temp-min" style="font-weight:400;color:var(--text-light)"> / ${data.min}°</span></div>
+      <div class="wc-precip">${data.precip}%</div>
     </div>`;
   if(data.tomorrow){
     const tw=WMO[data.tomorrow.code]||{l:'--',i:'🌡'};
-    const tumb=data.tomorrow.precip>=40;
-    h+=`<div class="weather-row-sep"></div>
-    <div class="weather-row" id="weatherTmrwCol" onclick="switchWeatherDay('tomorrow')">
-      <span class="weather-row-label">明日</span>
-      <span class="weather-row-icon">${tw.i}</span>
-      <span class="weather-row-desc">${tw.l}</span>
-      <span class="weather-row-temp"><span class="temp-max">${data.tomorrow.max}°</span><span class="temp-min"> / ${data.tomorrow.min}°</span></span>
-      <span class="weather-row-precip">${data.tomorrow.precip}%${tumb?' ☂️':''}</span>
+    h+=`<div class="wc-sep"></div>
+    <div class="weather-col" id="weatherTmrwCol" onclick="switchWeatherDay('tomorrow')">
+      <div class="wc-label">明日</div>
+      <div class="wc-icon">${tw.i}</div>
+      <div class="wc-temp"><span class="temp-max">${data.tomorrow.max}°</span><span class="temp-min" style="font-weight:400;color:var(--text-light)"> / ${data.tomorrow.min}°</span></div>
+      <div class="wc-precip">${data.tomorrow.precip}%</div>
     </div>`;
   }
   h+=`</div>`;
@@ -1851,6 +1873,46 @@ function delPantryCat(name){
   const cats=getPantryCats().filter(c=>c!==name);savePantryCats(cats);
   renderPantryCatMgr();fillPantryCatSelect();renderPantry();
 }
+let _wishTab='wishlist';
+function switchWishTab(tab){
+  _wishTab=tab;
+  document.querySelectorAll('#tab-wish .shop-stab').forEach(x=>x.classList.toggle('active',x.dataset.stab===tab));
+  document.querySelectorAll('#tab-wish .shop-stab-panel').forEach(x=>x.classList.remove('active'));
+  const p=document.getElementById('wish-stab-'+tab);if(p)p.classList.add('active');
+  const fab=document.getElementById('wishFab');if(fab)fab.classList.toggle('show',tab==='wishlist');
+  if(tab==='memo')renderFlashMemos();
+}
+function renderFlashMemos(){
+  const el=document.getElementById('flashMemoList');if(!el)return;
+  const items=D.flashMemos||[];
+  if(!items.length){el.innerHTML='<div class="pantry-empty">まだメモがありません</div>';return;}
+  el.innerHTML=`<div style="border:1px solid var(--border);border-radius:var(--radius-sm);overflow:hidden">`
+    +items.map((x,i)=>{
+      const cls=items.length===1?'only':i===0?'':'';
+      const date=new Date(x.created_at);
+      const ds=`${date.getMonth()+1}/${date.getDate()} ${String(date.getHours()).padStart(2,'0')}:${String(date.getMinutes()).padStart(2,'0')}`;
+      return`<div class="flash-memo-item${cls?' '+cls:''}">
+        <div class="flash-memo-text">${esc(x.text)}</div>
+        <div class="flash-memo-date">${ds}</div>
+        <button class="item-delete" onclick="delFlashMemo('${x.id}')">×</button>
+      </div>`;
+    }).join('')+`</div>`;
+}
+function addFlashMemo(){
+  const inp=document.getElementById('flashMemoInput');
+  const text=inp?.value.trim();if(!text)return;
+  const id=uuid();
+  const item={id,text,created_at:new Date().toISOString()};
+  D.flashMemos=[item,...(D.flashMemos||[])];
+  inp.value='';
+  renderFlashMemos();
+  dbw(db.from('flash_memos').insert({id,text}),'fm.add');
+}
+function delFlashMemo(id){
+  D.flashMemos=(D.flashMemos||[]).filter(x=>x.id!==id);
+  renderFlashMemos();
+  dbw(db.from('flash_memos').delete().eq('id',id),'fm.del');
+}
 let _shopTab='memo';
 function switchShopTab(tab){
   _shopTab=tab;
@@ -1978,6 +2040,7 @@ function delPantryItem(id){
   dbw(db.from('pantry_items').delete().eq('id',id),'p.del');
 }
 document.getElementById('pantryInput').addEventListener('keydown',e=>{if(e.key==='Enter')addPantryItem()});
+document.getElementById('flashMemoInput').addEventListener('keydown',e=>{if(e.key==='Enter')addFlashMemo()});
 document.getElementById('pantryCatInput').addEventListener('keydown',e=>{if(e.key==='Enter')addPantryCat()});
 let _pantryMenuTarget=null;
 function openPantryImgMenu(id){
