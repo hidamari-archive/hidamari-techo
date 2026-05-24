@@ -249,6 +249,12 @@ body{font-family:var(--font-body);background:var(--bg);color:var(--text);min-hei
 .wish-fab.show{display:flex}
 
 /* ─── 買い物リスト ─── */
+.shop-tabs{display:flex;gap:0;padding:0 16px;border-bottom:1px solid var(--border);position:sticky;top:var(--header-h,74px);z-index:90;background:var(--bg)}
+.shop-stab{padding:9px 14px;font-size:12px;font-weight:500;color:var(--text-light);border:none;background:none;cursor:pointer;position:relative;transition:color .2s;white-space:nowrap}
+.shop-stab.active{color:var(--text)}
+.shop-stab.active::after{content:'';position:absolute;bottom:-1px;left:14px;right:14px;height:2px;border-radius:2px;background:var(--accent)}
+.shop-stab-panel{display:none}
+.shop-stab-panel.active{display:block}
 .shop-add-bar{background:var(--bg);border-bottom:1px solid var(--border);padding:12px 16px}
 .shop-input-row{display:flex;gap:8px;margin-bottom:8px}
 .shop-input{flex:1;min-width:0;padding:8px 12px;border:1px solid var(--border);border-radius:var(--radius-sm);font-size:14px;font-family:var(--font-body);color:var(--text);background:var(--bg-card);outline:none}
@@ -618,12 +624,12 @@ body{font-family:var(--font-body);background:var(--bg);color:var(--text);min-hei
         </div>
         <div class="home-card-arrow" onclick="gotoSeiiki('today')" style="cursor:pointer;padding-left:8px;align-self:stretch;display:flex;align-items:center">›</div>
       </div>
-      <div class="home-summary-card" onclick="switchTab('shop')">
-        <div>
+      <div class="home-summary-card" style="cursor:default">
+        <div style="flex:1;min-width:0">
           <div class="home-card-label">🛒 買い物リスト</div>
           <div class="home-card-value" id="homeShopSummary">読み込み中…</div>
         </div>
-        <div class="home-card-arrow">›</div>
+        <div class="home-card-arrow" onclick="switchTab('shop');switchShopTab('memo')" style="cursor:pointer;padding-left:8px;align-self:stretch;display:flex;align-items:center">›</div>
       </div>
       <div id="homeStampMini" class="home-stamp-mini" onclick="gotoSeiiki('disclog')"></div>
       <div id="sageChatCard" class="sage-chat-card" style="display:none">
@@ -802,17 +808,22 @@ body{font-family:var(--font-body);background:var(--bg);color:var(--text);min-hei
 
   <!-- 買い物タブ -->
   <div class="tab-panel" id="tab-shop">
-    <div class="shop-add-bar">
-      <div class="pantry-header" style="margin-bottom:8px">
-        <span class="pantry-title">🛒 買い物メモ</span>
-      </div>
-      <div class="shop-input-row">
-        <input class="shop-input" id="shopInput" type="text" placeholder="品名を入力…" autocomplete="off">
-        <button class="shop-add-btn" onclick="addShopItem()">追加</button>
-      </div>
+    <div class="shop-tabs">
+      <button class="shop-stab active" data-stab="memo" onclick="switchShopTab('memo')">🛒 買い物メモ</button>
+      <button class="shop-stab" data-stab="stock" onclick="switchShopTab('stock')">🧺 在庫管理</button>
     </div>
-    <div class="shop-content" id="shopContent"></div>
-    <!-- 台所在庫セクション -->
+    <!-- メモパネル -->
+    <div class="shop-stab-panel active" id="shop-stab-memo">
+      <div class="shop-add-bar">
+        <div class="shop-input-row">
+          <input class="shop-input" id="shopInput" type="text" placeholder="品名を入力…" autocomplete="off">
+          <button class="shop-add-btn" onclick="addShopItem()">追加</button>
+        </div>
+      </div>
+      <div class="shop-content" id="shopContent"></div>
+    </div>
+    <!-- 在庫パネル -->
+    <div class="shop-stab-panel" id="shop-stab-stock">
     <div class="pantry-section">
       <div class="pantry-header">
         <span class="pantry-title">🧺 在庫管理</span>
@@ -836,6 +847,7 @@ body{font-family:var(--font-body);background:var(--bg);color:var(--text);min-hei
       <div id="pantryList"></div>
       <input type="file" id="pantryImageInput" accept="image/*" style="display:none">
     </div>
+    </div><!-- /shop-stab-stock -->
   </div>
 
 </div><!-- /app-content -->
@@ -1355,9 +1367,9 @@ function updateHomeSummary(){
   const needed=D.pantryItems.filter(x=>x.status==='needed');
   const amazonItems=D.pantryItems.filter(x=>x.status==='amazon');
   let shopHtml='';
-  if(unchecked.length) shopHtml+=`<div style="font-size:12px;color:var(--text-light);line-height:1.6">${unchecked.map(x=>esc(x.item)).join('・')}</div>`;
-  if(needed.length) shopHtml+=`<div style="font-size:12px;color:#C9897A;line-height:1.6;margin-top:${unchecked.length?3:0}px">🔴 ${needed.map(x=>esc(x.name)).join('・')}</div>`;
-  if(amazonItems.length) shopHtml+=`<div style="font-size:12px;color:#5B7EC9;line-height:1.6;margin-top:${(unchecked.length||needed.length)?3:0}px">📦 ${amazonItems.map(x=>esc(x.name)).join('・')}</div>`;
+  if(unchecked.length) shopHtml+=`<div onclick="switchTab('shop');switchShopTab('memo')" style="cursor:pointer;font-size:12px;color:var(--text-light);line-height:1.6">${unchecked.map(x=>esc(x.item)).join('・')}</div>`;
+  if(needed.length) shopHtml+=`<div onclick="switchTab('shop');switchShopTab('stock')" style="cursor:pointer;font-size:12px;color:#C9897A;line-height:1.6;margin-top:${unchecked.length?3:0}px">🔴 ${needed.map(x=>esc(x.name)).join('・')}</div>`;
+  if(amazonItems.length) shopHtml+=`<div onclick="switchTab('shop');switchShopTab('stock')" style="cursor:pointer;font-size:12px;color:#5B7EC9;line-height:1.6;margin-top:${(unchecked.length||needed.length)?3:0}px">📦 ${amazonItems.map(x=>esc(x.name)).join('・')}</div>`;
   if(!shopHtml) shopHtml='<span style="color:var(--text-faint)">空です</span>';
   document.getElementById('homeShopSummary').innerHTML=shopHtml;
 }
@@ -1835,6 +1847,13 @@ function addPantryCat(){
 function delPantryCat(name){
   const cats=getPantryCats().filter(c=>c!==name);savePantryCats(cats);
   renderPantryCatMgr();fillPantryCatSelect();renderPantry();
+}
+let _shopTab='memo';
+function switchShopTab(tab){
+  _shopTab=tab;
+  document.querySelectorAll('.shop-stab').forEach(x=>x.classList.toggle('active',x.dataset.stab===tab));
+  document.querySelectorAll('.shop-stab-panel').forEach(x=>x.classList.remove('active'));
+  const p=document.getElementById('shop-stab-'+tab);if(p)p.classList.add('active');
 }
 let _pantryOpenMenu=null;
 let _pantryFilter='all';
