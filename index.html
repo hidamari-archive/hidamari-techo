@@ -156,8 +156,10 @@ body{font-family:var(--font-body);background:var(--bg);color:var(--text);min-hei
 .pressure-badge.mid{background:rgba(210,155,60,.12);color:#A07020}
 .pressure-badge.high{background:rgba(195,80,80,.12);color:#A03030}
 .pressure-val{font-size:11px;color:var(--text-faint);font-family:var(--font-body)}
-.ph-row{display:flex;overflow-x:auto;margin-top:8px;border-radius:var(--radius-sm);overflow:hidden;-webkit-overflow-scrolling:touch;border:1px solid var(--border)}
+.ph-row{display:flex;overflow-x:auto;-webkit-overflow-scrolling:touch;margin-top:8px;border:1px solid var(--border);border-radius:var(--radius-sm)}
 .ph-row::-webkit-scrollbar{display:none}
+.ph-item:first-child{border-radius:calc(var(--radius-sm) - 1px) 0 0 calc(var(--radius-sm) - 1px)}
+.ph-item:last-child{border-radius:0 calc(var(--radius-sm) - 1px) calc(var(--radius-sm) - 1px) 0;border-right:none}
 .ph-item{flex-shrink:0;text-align:center;padding:6px 10px;min-width:52px;border-right:1px solid var(--border);background:var(--bg)}
 .ph-item:last-child{border-right:none}
 .ph-item.danger{background:#FDE8E5}
