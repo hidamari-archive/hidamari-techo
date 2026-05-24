@@ -280,19 +280,17 @@ body{font-family:var(--font-body);background:var(--bg);color:var(--text);min-hei
 .pantry-add-input{flex:1;min-width:0;padding:8px 12px;border:1px solid var(--border);border-radius:var(--radius-sm);font-size:14px;font-family:var(--font-body);color:var(--text);background:var(--bg-card);outline:none}
 .pantry-add-input:focus{border-color:var(--accent)}
 .pantry-add-btn{padding:8px 14px;background:var(--accent);color:#fff;border:none;border-radius:var(--radius-sm);font-size:14px;font-family:var(--font-body);cursor:pointer;white-space:nowrap}
-.pantry-item{display:flex;align-items:flex-start;padding:10px 14px;gap:10px;border-bottom:1px solid var(--border);background:var(--bg-card)}
+.pantry-item{display:flex;align-items:center;padding:10px 14px;gap:10px;border-bottom:1px solid var(--border);background:var(--bg-card);flex-wrap:wrap}
 .pantry-item:first-child{border-radius:var(--radius) var(--radius) 0 0}
 .pantry-item:last-child{border-bottom:none;border-radius:0 0 var(--radius) var(--radius)}
 .pantry-item.only{border-radius:var(--radius)}
-.pantry-item-body{flex:1;min-width:0;display:flex;flex-direction:column;gap:5px}
-.pantry-item-name{font-size:14px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding-top:2px}
+.pantry-item-name{font-size:14px;flex:1;min-width:0;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .pantry-item-name.in-stock{color:var(--text-light)}
-.pantry-item-row2{display:flex;align-items:center;gap:6px}
-.pantry-badge{padding:3px 10px;border-radius:10px;font-size:11px;cursor:pointer;border:none;font-family:var(--font-body);transition:opacity .2s;flex-shrink:0}
+.pantry-badge{width:84px;text-align:center;padding:4px 0;border-radius:10px;font-size:11px;cursor:pointer;border:none;font-family:var(--font-body);transition:opacity .2s;flex-shrink:0}
 .pantry-badge.needed{background:#FDE8E5;color:#C9897A;border:1px solid #EFB9B2}
 .pantry-badge.amazon{background:#EAF0FB;color:#5B7EC9;border:1px solid #B3C6F0}
 .pantry-badge.in-stock{background:#E8F3EF;color:#6B9E8A;border:1px solid #BAD9CD}
-.pantry-smenu{display:flex;gap:6px;padding-top:5px;border-top:1px dashed var(--border)}
+.pantry-smenu{display:flex;gap:6px;width:100%;order:10;padding-top:6px;border-top:1px dashed var(--border)}
 .pantry-smenu-btn{flex:1;padding:5px 4px;border-radius:8px;font-size:11px;border:1px solid var(--border);background:var(--bg);cursor:pointer;font-family:var(--font-body);white-space:nowrap;color:var(--text-light);opacity:.75;transition:opacity .15s;text-align:center}
 .pantry-smenu-btn.active{opacity:1;font-weight:600;border-color:var(--accent);background:var(--bg-warm)}
 .pantry-cat-section{margin-bottom:14px}
@@ -1852,28 +1850,36 @@ function renderPantry(){
   const mkItem=(x,arr)=>{
     const cls=arr.length===1?'only':'';
     const st=x.status||'in_stock';
+    const isEditing=_pantryEditId===x.id;
+    const imgHtml=x.image_url
+      ?`<img src="${x.image_url}" class="pantry-img-thumb" onclick="openPantryImgMenu('${x.id}')" alt="">`
+      :`<button class="pantry-cam-btn" onclick="openPantryImgMenu('${x.id}')">📷</button>`;
+    if(isEditing){
+      const cats=getPantryCats();
+      const opts=cats.map(c=>`<option value="${esc(c)}"${(x.category||cats[0])===c?' selected':''}>${esc(c)}</option>`).join('');
+      return`<div class="pantry-item ${cls}">
+        ${imgHtml}
+        <input class="pantry-edit-input" id="pedit-${x.id}" value="${esc(x.name)}" style="flex:1;min-width:0" onkeydown="if(event.key==='Enter')savePantryEdit('${x.id}');if(event.key==='Escape'){_pantryEditId=null;renderPantry()}" onclick="event.stopPropagation()">
+        <select class="pantry-cat-select" id="pcatsel-${x.id}" style="width:84px;flex-shrink:0;padding:4px 6px;font-size:12px">${opts}</select>
+        <button class="pantry-add-btn" onclick="savePantryEdit('${x.id}')" style="padding:5px 10px;font-size:12px">保存</button>
+        <button class="item-delete" onclick="_pantryEditId=null;renderPantry()">✕</button>
+      </div>`;
+    }
     const menuOpen=_pantryOpenMenu===x.id;
     const badgeCls=st==='needed'?'needed':st==='amazon'?'amazon':'in-stock';
     const badgeLabel=st==='needed'?'🔴 欠品':st==='amazon'?'📦 Amazon':'🟢 在庫あり';
     const nameCls=st==='in_stock'?'in-stock':'';
-    const imgHtml=x.image_url
-      ?`<img src="${x.image_url}" class="pantry-img-thumb" onclick="openPantryImgMenu('${x.id}')" alt="">`
-      :`<button class="pantry-cam-btn" onclick="openPantryImgMenu('${x.id}')">📷</button>`;
     const menuBtns=st==='in_stock'
       ?`<button class="pantry-smenu-btn" onclick="setPantryStatus('${x.id}','needed')">🔴 欠品</button><button class="pantry-smenu-btn" onclick="setPantryStatus('${x.id}','amazon')">📦 Amazon</button>`
       :`<button class="pantry-smenu-btn" onclick="setPantryStatus('${x.id}','in_stock')">🟢 在庫あり</button>`;
     const menuHtml=menuOpen?`<div class="pantry-smenu">${menuBtns}</div>`:'';
     return`<div class="pantry-item ${cls}">
       ${imgHtml}
-      <div class="pantry-item-body">
-        <div class="pantry-item-name ${nameCls}" id="pname-${x.id}">${esc(x.name)}</div>
-        <div class="pantry-item-row2">
-          <button class="pantry-badge ${badgeCls}" onclick="openStatusMenu('${x.id}')">${badgeLabel}</button>
-          <button class="pantry-edit-btn" onclick="startEditPantry('${x.id}')">✏️</button>
-          <button class="item-delete" onclick="delPantryItem('${x.id}')">×</button>
-        </div>
-        ${menuHtml}
-      </div>
+      <div class="pantry-item-name ${nameCls}" id="pname-${x.id}">${esc(x.name)}</div>
+      <button class="pantry-badge ${badgeCls}" onclick="openStatusMenu('${x.id}')">${badgeLabel}</button>
+      <button class="pantry-edit-btn" onclick="startEditPantry('${x.id}')">✏️</button>
+      <button class="item-delete" onclick="delPantryItem('${x.id}')">×</button>
+      ${menuHtml}
     </div>`;
   };
   let html='';
@@ -1959,16 +1965,11 @@ async function uploadPantryImage(input){
 }
 document.getElementById('pantryImageInput').addEventListener('change',function(){uploadPantryImage(this)});
 // ─ 名前・カテゴリ インライン編集 ─
+let _pantryEditId=null;
 function startEditPantry(id){
-  const el=document.getElementById('pname-'+id);
-  const row2=el?.closest('.pantry-item-body')?.querySelector('.pantry-item-row2');
-  const item=D.pantryItems.find(x=>x.id===id);
-  if(!el||!item)return;
-  const cats=getPantryCats();
-  const catOpts=cats.map(c=>`<option value="${esc(c)}"${(item.category||cats[0])===c?' selected':''}>${esc(c)}</option>`).join('');
-  el.innerHTML=`<input class="pantry-edit-input" id="pedit-${id}" value="${esc(item.name)}" onkeydown="if(event.key==='Enter')savePantryEdit('${id}');if(event.key==='Escape'){event.preventDefault();renderPantry()}" onclick="event.stopPropagation()">`;
-  if(row2)row2.innerHTML=`<select class="pantry-cat-select" id="pcatsel-${id}" style="flex:1;font-size:12px;padding:4px 8px">${catOpts}</select><button class="pantry-add-btn" onclick="savePantryEdit('${id}')" style="padding:5px 12px;font-size:12px">保存</button><button class="pantry-edit-btn" onclick="renderPantry()" style="padding:0 6px">✕</button>`;
-  const inp=document.getElementById('pedit-'+id);if(inp){inp.focus();inp.select();}
+  _pantryEditId=id;_pantryOpenMenu=null;
+  renderPantry();
+  setTimeout(()=>{const inp=document.getElementById('pedit-'+id);if(inp){inp.focus();inp.select();}},0);
 }
 function savePantryEdit(id){
   const inp=document.getElementById('pedit-'+id);
@@ -1976,10 +1977,11 @@ function savePantryEdit(id){
   if(!inp)return;
   const name=inp.value.trim();
   const cat=catSel?catSel.value:null;
-  if(!name){renderPantry();return;}
+  if(!name){_pantryEditId=null;renderPantry();return;}
   const idx=D.pantryItems.findIndex(x=>x.id===id);if(idx<0)return;
   const upd={name,...(cat?{category:cat}:{})};
   D.pantryItems[idx]={...D.pantryItems[idx],...upd};
+  _pantryEditId=null;
   renderPantry();
   dbw(db.from('pantry_items').update(upd).eq('id',id),'p.edit');
 }
