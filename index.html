@@ -568,6 +568,13 @@ body{font-family:var(--font-body);background:var(--bg);color:var(--text);min-hei
 .health-sum-grid{display:flex;gap:8px;flex-wrap:wrap;font-size:12px;color:var(--text-light)}
 .health-sum-grid .hg{background:var(--bg-warm);border-radius:8px;padding:6px 10px;flex:1;min-width:84px;text-align:center}
 .health-sum-grid .hg b{display:block;font-size:15px;color:var(--text);font-weight:600;margin-top:2px}
+/* 日付バー（さかのぼり入力） */
+.health-date-bar{display:flex;align-items:center;gap:8px;margin-bottom:14px;padding:6px 8px;background:var(--bg-warm);border-radius:10px;border:1px solid transparent;transition:border-color .2s,background .2s}
+.health-date-bar.back{background:#FBF6E3;border-color:#E0CF94}
+.health-date-bar .hd-nav{width:30px;height:30px;flex-shrink:0;border:1px solid var(--border);background:var(--bg-card);border-radius:8px;color:var(--text-light);font-size:12px;cursor:pointer}
+.health-date-bar .hd-nav:disabled{opacity:.3;cursor:default}
+.health-date-bar .hd-input{flex:1;min-width:0;border:1px solid var(--border);background:var(--bg-card);border-radius:8px;color:var(--text);font-size:14px;padding:6px 8px;text-align:center;font-family:inherit}
+.health-date-bar .hd-today{flex-shrink:0;border:1px solid var(--accent);background:var(--bg-card);color:var(--accent);font-size:11px;padding:6px 10px;border-radius:8px;cursor:pointer;white-space:nowrap}
 /* 体感入力 */
 .health-feel-row{display:flex;align-items:center;margin-bottom:12px;gap:8px}
 .health-feel-label{font-size:13px;color:var(--text-light);width:64px;flex-shrink:0}
@@ -949,12 +956,18 @@ body{font-family:var(--font-body);background:var(--bg);color:var(--text);min-hei
       <div class="health-card" id="healthSummary"></div>
       <!-- 朝の体感入力 -->
       <div class="health-card">
-        <div class="health-card-title">🌅 今朝の体感</div>
+        <div class="health-card-title" id="healthMorningTitle">🌅 今朝の体感</div>
+        <div class="health-date-bar" id="hDateBar">
+          <button class="hd-nav" onclick="hShiftDate(-1)">◀</button>
+          <input type="date" id="hDatePick" class="hd-input" onchange="hPickDate()">
+          <button class="hd-nav" id="hdNext" onclick="hShiftDate(1)">▶</button>
+          <button class="hd-today" id="hdToday" onclick="hResetDate()">今日へ</button>
+        </div>
         <div id="healthMorning"></div>
       </div>
       <!-- 追加で食べた -->
       <div class="health-card">
-        <div class="health-card-title">🍽 今日 追加で食べたもの</div>
+        <div class="health-card-title" id="healthExtraTitle">🍽 今日 追加で食べたもの</div>
         <button class="health-add-btn" onclick="openHealthFood()">＋ 追加で食べた</button>
         <div id="healthExtraList"></div>
       </div>
@@ -3527,9 +3540,33 @@ const HEALTH_BASE_DEFAULT={朝:15,昼:32,夜:10};
 const HEALTH_SKIP_KEY={朝:'skip_breakfast',昼:'skip_lunch',夜:'skip_dinner'};
 const HEALTH_QTYS=[{l:'×½',v:0.5},{l:'×1',v:1},{l:'×2',v:2},{l:'×3',v:3}];
 let _hFoodPick=null;
+let _hDate='';// 記録対象日（空＝今日）。さかのぼり入力用
 function attrEsc(s){return esc(s).replace(/"/g,'&quot;')}
 function ymd(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
+function hDate(){return _hDate||gt()}
+function hLog(date){return D.hDaily.find(d=>d.date===date)||null}
+function hCur(){return hLog(hDate())}
 function hToday(){return D.hDaily.find(d=>d.date===gt())||null}
+function renderHealthDateUI(){
+  const pick=document.getElementById('hDatePick');if(!pick)return;
+  const today=gt();
+  pick.value=hDate();pick.max=today;pick.min=ymd(new Date(Date.now()-30*864e5));
+  const isToday=hDate()===today;
+  const bar=document.getElementById('hDateBar');if(bar)bar.classList.toggle('back',!isToday);
+  const tBtn=document.getElementById('hdToday');if(tBtn)tBtn.style.visibility=isToday?'hidden':'visible';
+  const nx=document.getElementById('hdNext');if(nx)nx.disabled=isToday;
+  const[,mm,dd]=hDate().split('-');const md=(+mm)+'/'+(+dd);
+  const mT=document.getElementById('healthMorningTitle');if(mT)mT.textContent=`🌅 ${isToday?'今朝':md}の体感`;
+  const eT=document.getElementById('healthExtraTitle');if(eT)eT.textContent=`🍽 ${isToday?'今日':md} 追加で食べたもの`;
+}
+function hPickDate(){const v=document.getElementById('hDatePick').value;if(!v)return;_hDate=(v===gt()?'':v);renderHealth();}
+function hShiftDate(d){
+  const cur=new Date(hDate()+'T00:00:00');cur.setDate(cur.getDate()+d);
+  const today=gt(),min=ymd(new Date(Date.now()-30*864e5)),v=ymd(cur);
+  if(v>today||v<min)return;
+  _hDate=(v===today?'':v);renderHealth();
+}
+function hResetDate(){_hDate='';renderHealth();}
 function healthBaseCarb(meal){const b=D.hBase[meal];return b?Number(b.carb_g):(HEALTH_BASE_DEFAULT[meal]||0)}
 function healthBaseTotalForDate(dateStr){
   const log=D.hDaily.find(d=>d.date===dateStr)||{};
@@ -3556,13 +3593,13 @@ function healthZone(carb){
 }
 function renderHealth(){
   if(!document.getElementById('tab-health'))return;
-  renderHealthSummary();renderHealthMorning();renderHealthExtra();renderHealthBase();renderHealthTrend();renderHealthCorr();
+  renderHealthDateUI();renderHealthSummary();renderHealthMorning();renderHealthExtra();renderHealthBase();renderHealthTrend();renderHealthCorr();
 }
 function renderHealthSummary(){
   const el=document.getElementById('healthSummary');if(!el)return;
-  const carb=Math.round(healthCarbForDate(gt()));
+  const carb=Math.round(healthCarbForDate(hDate()));
   const z=healthZone(carb);
-  const log=hToday()||{};
+  const log=hCur()||{};
   const w=log.weight_kg!=null?log.weight_kg+' kg':'—';
   const feel=(log.swelling||log.fatigue)?`むくみ${log.swelling||'-'}・だるさ${log.fatigue||'-'}`:'未入力';
   el.innerHTML=`<div class="health-sum-head">
@@ -3578,7 +3615,7 @@ function renderHealthSummary(){
 }
 function renderHealthMorning(){
   const el=document.getElementById('healthMorning');if(!el)return;
-  const log=hToday()||{};
+  const log=hCur()||{};
   const scale=(field,cur)=>'<div class="health-scale">'+[1,2,3,4,5].map(n=>`<button class="${cur===n?'on':''}" onclick="healthSetFeel('${field}',${n})">${n}</button>`).join('')+'</div>';
   const abd=['すっきり','ふつう','張る'].map(a=>`<button class="${log.abdomen===a?'on':''}" onclick="healthSetAbdomen('${a}')">${a}</button>`).join('');
   el.innerHTML=`<div class="health-feel-row"><span class="health-feel-label">むくみ</span>${scale('swelling',log.swelling)}</div>
@@ -3587,31 +3624,31 @@ function renderHealthMorning(){
     <div class="health-feel-row"><span class="health-feel-label">お腹</span><div class="health-abd">${abd}</div></div>
     <div class="health-feel-row"><span class="health-feel-label">体重</span><input class="health-weight-input" id="healthWeight" type="number" inputmode="decimal" step="0.1" placeholder="--.-" value="${log.weight_kg!=null?log.weight_kg:''}" onchange="healthSaveWeight()"> <span style="font-size:12px;color:var(--text-light)">kg</span></div>`;
 }
-function healthUpsertToday(patch){
-  const today=gt();
-  let row=D.hDaily.find(d=>d.date===today);
-  if(!row){row={date:today};D.hDaily.unshift(row)}
+function healthUpsert(patch){
+  const date=hDate();
+  let row=D.hDaily.find(d=>d.date===date);
+  if(!row){row={date};D.hDaily.unshift(row)}
   Object.assign(row,patch);
-  dbw(db.from('health_daily_log').upsert(Object.assign({date:today},patch),{onConflict:'date'}),'hdaily.up');
+  dbw(db.from('health_daily_log').upsert(Object.assign({date},patch),{onConflict:'date'}),'hdaily.up');
 }
 function healthSetFeel(field,n){
-  const log=hToday()||{};
-  healthUpsertToday({[field]:log[field]===n?null:n});
+  const log=hCur()||{};
+  healthUpsert({[field]:log[field]===n?null:n});
   renderHealthMorning();renderHealthSummary();
 }
 function healthSetAbdomen(a){
-  const log=hToday()||{};
-  healthUpsertToday({abdomen:log.abdomen===a?null:a});
+  const log=hCur()||{};
+  healthUpsert({abdomen:log.abdomen===a?null:a});
   renderHealthMorning();
 }
 function healthSaveWeight(){
   const v=document.getElementById('healthWeight').value.trim();
-  healthUpsertToday({weight_kg:v===''?null:Number(v)});
+  healthUpsert({weight_kg:v===''?null:Number(v)});
   renderHealthSummary();
 }
 function renderHealthExtra(){
   const el=document.getElementById('healthExtraList');if(!el)return;
-  const items=D.hExtra.filter(e=>e.date===gt());
+  const items=D.hExtra.filter(e=>e.date===hDate());
   if(!items.length){el.innerHTML='<div class="health-empty">まだありません</div>';return}
   el.innerHTML=items.map(e=>{
     const q=Number(e.quantity);const qLabel=q===1?'':' ×'+(q===0.5?'½':q);
@@ -3621,22 +3658,23 @@ function renderHealthExtra(){
 }
 function renderHealthBase(){
   const el=document.getElementById('healthBaseBody');if(!el)return;
-  const log=hToday()||{};
+  const log=hCur()||{};
   el.innerHTML=HEALTH_MEALS.map(m=>{
     const b=D.hBase[m]||{};const carb=healthBaseCarb(m);const sk=log[HEALTH_SKIP_KEY[m]];
     return `<div class="health-base-row"><span class="hb-meal">${m}</span><span class="hb-desc">${esc(b.description||'')}</span><span class="hb-carb">${sk?'—':carb+'g'}</span><button class="health-skip-btn ${sk?'skipped':''}" onclick="healthToggleSkip('${m}')">${sk?'抜き':'食べた'}</button></div>`;
   }).join('');
 }
 function healthToggleSkip(m){
-  const log=hToday()||{};const key=HEALTH_SKIP_KEY[m];
-  healthUpsertToday({[key]:!log[key]});
+  const log=hCur()||{};const key=HEALTH_SKIP_KEY[m];
+  healthUpsert({[key]:!log[key]});
   renderHealthBase();renderHealthSummary();
 }
 function openHealthFood(){
   _hFoodPick=null;
   document.getElementById('healthFoodStep1').style.display='flex';
   document.getElementById('healthFoodStep2').style.display='none';
-  document.getElementById('healthFoodTitle').textContent='追加で食べたもの';
+  const[,mm,dd]=hDate().split('-');
+  document.getElementById('healthFoodTitle').textContent=(hDate()===gt()?'':`${+mm}/${+dd} `)+'追加で食べたもの';
   document.getElementById('healthFoodSearch').value='';
   document.getElementById('healthNewFood').value='';
   document.getElementById('healthNewCarb').value='';
@@ -3673,7 +3711,7 @@ function healthFoodBack(){
 }
 function healthAddIntake(qty){
   const f=_hFoodPick;if(!f)return;
-  const id=uuid(),date=gt();
+  const id=uuid(),date=hDate();
   D.hExtra.unshift({id,date,food_id:f.id,name:f.name,carb_g:Number(f.carb_g),quantity:qty,created_at:new Date().toISOString()});
   dbw(db.from('health_extra_intake').insert({id,date,food_id:f.id,name:f.name,carb_g:Number(f.carb_g),quantity:qty}),'hextra.ins');
   closeHealthFood();

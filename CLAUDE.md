@@ -274,6 +274,13 @@ searchAmazonItem(name)      // Amazon商品名検索を開く
 6. **糖質と体感のつながり**（`renderHealthCorr`）: 前日糖質→翌朝体感の相関。体感記録のある日を前日糖質でソートし中央値で上下半分に分割（`healthCorrPairs`）、各群のむくみ・だるさ平均を2ボックス比較＋差0.4以上で言葉のコメント（`healthCorrPhrase`）。記録4日未満は咎めず待つ空状態メッセージ
    - 描画は `renderHealth` と `renderHealthSummary` の末尾から呼ばれ、体感・体重・スキップ・食事の変更時に自動追従
 
+### さかのぼり入力（2026-05 追加）
+- グローバル `_hDate`（空＝今日）が「記録対象日」。`hDate()`＝`_hDate||gt()`、`hCur()`＝対象日のlog、`hLog(date)` ヘルパー
+- 体感カードの日付バー（`#hDateBar`）: ◀ / `<input type=date>` / ▶ / 「今日へ」。`hShiftDate(±1)`・`hPickDate()`・`hResetDate()`。min＝30日前・max＝今日
+- 対象日が今日でないとき日付バーが琥珀色（`.back`）になり、サマリー・体感・追加食事・ベース食スキップがすべてその日に切り替わる（見出しも `M/D` 表示に）
+- 書き込みは `healthUpsert(patch)`（旧 `healthUpsertToday` を対象日対応にリネーム）。食事追加 `healthAddIntake` も `date=hDate()`
+- 半月ぶんの体重・だるさ・チートデー（品目から追加）をまとめて遡り登録する用途
+
 ### 快適ゾーン（`healthZone(carb)`）
 〜70🟢快適 / 〜120🟡通常 / 〜170🟠注意 / 170〜🔴閾値超え（本人の体感で運用しながら調整）
 
