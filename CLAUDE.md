@@ -268,7 +268,7 @@ searchAmazonItem(name)      // Amazon商品名検索を開く
 ### カード構成（縦並び・単一パネル）
 1. **今日のサマリー**（`renderHealthSummary`）: 本日の糖質量（大数字）＋快適ゾーンバッジ／体重／体感／7日平均糖質量
 2. **今朝の体感**（`renderHealthMorning`）: むくみ・だるさ 1〜5（**1=軽い / 5=強い**、再タップで解除）／お腹3択／体重
-3. **追加で食べた**（`openHealthFood`→ピッカー）: 食品マスタ選択→数量（×½/×1/×2/×3）→`health_extra_intake` に保存。新規食品もその場で登録可
+3. **追加で食べた**（`openHealthFood`→ピッカー）: 食品マスタを**複数トグル選択**（`_hFoodSel={food_id:数量}`）。選択行に個数チップ（**¼/½/1/2個**＝`HEALTH_QTYS`）。下部ボタンに件数＋合計糖質を表示し`healthAddSelected`で一括 insert（配列まとめて）。新規食品はその場で登録し自動選択。`healthToggleFood`/`healthSetFoodQty`/`healthUpdateAddBtn`
 4. **ベース食**（`renderHealthBase`）: 朝昼夜の糖質量表示＋今日のスキップトグル（食べた/抜き）。`openHealthBase` で carb_g・内容を編集
 5. **14日の推移**（`renderHealthTrend`）: インラインSVGグラフ（横スクロール）。糖質をゾーン色の棒、体重を折れ線で重ね、170g注意ラインを点線表示。下部に「む（むくみ）/だ（だるさ）」を日ごとの色付き番号ドットで帯表示。`feelColor(n)` で 1=teal→5=coral。`healthDayData(n)` が日次配列を生成
    - 開いたとき直近（右端）が見えるよう、描画後に親 `.health-chart-scroll` を `scrollLeft=scrollWidth` で右寄せ

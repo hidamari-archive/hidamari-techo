@@ -603,10 +603,18 @@ body{font-family:var(--font-body);background:var(--bg);color:var(--text);min-hei
 .health-skip-btn.skipped{background:var(--bg-warm);color:var(--text-faint);text-decoration:line-through;border-style:dashed}
 /* 食品ピッカー */
 .health-food-cat{font-size:11px;color:var(--text-faint);font-weight:600;margin:12px 0 4px;letter-spacing:.05em}
+.health-food-hint{font-size:11px;color:var(--text-faint);margin-bottom:8px;line-height:1.6}
 .health-food-item{display:flex;align-items:center;gap:8px;padding:10px 8px;border-radius:8px;cursor:pointer;font-size:14px;color:var(--text)}
 .health-food-item:active{background:var(--bg-warm)}
+.health-food-item.selected{background:var(--discard-done-bg,#EAF5F4)}
+.health-food-item .hf-check{width:16px;flex-shrink:0;color:var(--discard-done,#7EC4C0);font-weight:700;font-size:13px}
+.health-food-item.selected .hf-name{font-weight:600}
 .health-food-item .hf-fav{color:#E0B34C}
-.health-food-item .hf-carb{margin-left:auto;color:var(--text-light);font-size:12px}
+.health-food-item .hf-name{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.health-food-item .hf-carb{margin-left:auto;color:var(--text-light);font-size:12px;flex-shrink:0;padding-left:6px}
+.health-food-qty{display:flex;gap:6px;padding:2px 8px 10px 30px}
+.health-food-qty button{flex:1;border:1px solid var(--border);background:var(--bg-card);color:var(--text-light);font-size:13px;font-weight:600;padding:8px 4px;border-radius:8px;cursor:pointer;transition:all .12s}
+.health-food-qty button.on{background:var(--discard-done,#7EC4C0);border-color:var(--discard-done,#7EC4C0);color:#fff}
 .health-food-add-row{display:flex;gap:6px;align-items:center;border-top:1px solid var(--border);padding-top:10px;margin-top:6px}
 .health-qty-name{font-size:16px;font-weight:600;color:var(--text);text-align:center;margin:8px 0 2px}
 .health-qty-carb{font-size:12px;color:var(--text-light);text-align:center;margin-bottom:16px}
@@ -1031,22 +1039,19 @@ body{font-family:var(--font-body);background:var(--bg);color:var(--text);min-hei
 <div class="modal-overlay" id="healthFoodModal" onclick="if(event.target===this)closeHealthFood()">
   <div class="modal" onclick="event.stopPropagation()" style="max-height:80vh;display:flex;flex-direction:column">
     <div class="modal-title" id="healthFoodTitle">追加で食べたもの</div>
-    <div id="healthFoodStep1" style="display:flex;flex-direction:column;min-height:0">
+    <div style="display:flex;flex-direction:column;min-height:0;flex:1">
       <input class="modal-input" id="healthFoodSearch" type="text" placeholder="食品を検索…" autocomplete="off" oninput="renderHealthFoodList()" style="margin-bottom:10px">
-      <div id="healthFoodList" style="overflow-y:auto;min-height:0"></div>
+      <div class="health-food-hint">タップで選択（いくつでも）。個数を選んで、まとめて登録できます。</div>
+      <div id="healthFoodList" style="overflow-y:auto;min-height:0;flex:1"></div>
       <div class="health-food-add-row">
         <input class="modal-input" id="healthNewFood" type="text" placeholder="新しい食品名…" autocomplete="off" style="margin:0">
         <input class="modal-input" id="healthNewCarb" type="number" inputmode="decimal" placeholder="糖質g" style="margin:0;width:72px">
-        <button class="health-mini-btn" onclick="healthAddFood()">登録</button>
+        <button class="health-mini-btn" onclick="healthAddFood()">＋追加</button>
       </div>
     </div>
-    <div id="healthFoodStep2" style="display:none">
-      <div class="health-qty-name" id="healthQtyName"></div>
-      <div class="health-qty-carb" id="healthQtyCarb"></div>
-      <div class="health-qty-row" id="healthQtyRow"></div>
-      <div class="modal-actions">
-        <button class="modal-cancel-btn" onclick="healthFoodBack()">戻る</button>
-      </div>
+    <div class="modal-actions">
+      <button class="modal-cancel-btn" onclick="closeHealthFood()">閉じる</button>
+      <button class="modal-submit-btn" id="healthAddSelBtn" onclick="healthAddSelected()" disabled>登録</button>
     </div>
   </div>
 </div>
@@ -3543,8 +3548,9 @@ function renderAll(){
 const HEALTH_MEALS=['朝','昼','夜'];
 const HEALTH_BASE_DEFAULT={朝:15,昼:32,夜:10};
 const HEALTH_SKIP_KEY={朝:'skip_breakfast',昼:'skip_lunch',夜:'skip_dinner'};
-const HEALTH_QTYS=[{l:'×½',v:0.5},{l:'×1',v:1},{l:'×2',v:2},{l:'×3',v:3}];
+const HEALTH_QTYS=[{l:'¼個',v:0.25},{l:'½個',v:0.5},{l:'1個',v:1},{l:'2個',v:2}];
 let _hFoodPick=null;
+let _hFoodSel={};// 複数選択中の食品 {food_id: 数量}
 let _hDate='';// 記録対象日（空＝今日）。さかのぼり入力用
 function attrEsc(s){return esc(s).replace(/"/g,'&quot;')}
 function ymd(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
@@ -3656,7 +3662,7 @@ function renderHealthExtra(){
   const items=D.hExtra.filter(e=>e.date===hDate());
   if(!items.length){el.innerHTML='<div class="health-empty">まだありません</div>';return}
   el.innerHTML=items.map(e=>{
-    const q=Number(e.quantity);const qLabel=q===1?'':' ×'+(q===0.5?'½':q);
+    const q=Number(e.quantity);const qLabel=q===1?'':' ×'+(q===0.25?'¼':q===0.5?'½':q);
     const carb=Math.round(Number(e.carb_g)*q*10)/10;
     return `<div class="health-intake"><span class="hi-name">${esc(e.name)}${qLabel}</span><span class="hi-carb">${carb}g</span><button class="hi-del" onclick="delHealthIntake('${e.id}')">×</button></div>`;
   }).join('');
@@ -3675,9 +3681,7 @@ function healthToggleSkip(m){
   renderHealthBase();renderHealthSummary();
 }
 function openHealthFood(){
-  _hFoodPick=null;
-  document.getElementById('healthFoodStep1').style.display='flex';
-  document.getElementById('healthFoodStep2').style.display='none';
+  _hFoodSel={};
   const[,mm,dd]=hDate().split('-');
   document.getElementById('healthFoodTitle').textContent=(hDate()===gt()?'':`${+mm}/${+dd} `)+'追加で食べたもの';
   document.getElementById('healthFoodSearch').value='';
@@ -3692,33 +3696,42 @@ function renderHealthFoodList(){
   const q=(document.getElementById('healthFoodSearch').value||'').trim().toLowerCase();
   let foods=D.hFood.slice();
   if(q)foods=foods.filter(f=>f.name.toLowerCase().includes(q));
-  if(!foods.length){el.innerHTML='<div class="health-empty">該当なし。下から新規登録できます</div>';return}
-  const row=f=>`<div class="health-food-item" onclick="healthPickFood('${f.id}')">${f.favorite?'<span class="hf-fav">★</span>':''}<span>${esc(f.name)}</span><span class="hf-carb">${f.carb_g}g / ${esc(f.unit||'')}</span></div>`;
+  if(!foods.length){el.innerHTML='<div class="health-empty">該当なし。下から新規登録できます</div>';healthUpdateAddBtn();return}
+  const row=f=>{
+    const sel=_hFoodSel[f.id]!=null;
+    let h=`<div class="health-food-item${sel?' selected':''}" onclick="healthToggleFood('${f.id}')"><span class="hf-check">${sel?'✓':''}</span>${f.favorite?'<span class="hf-fav">★</span>':''}<span class="hf-name">${esc(f.name)}</span><span class="hf-carb">${f.carb_g}g / ${esc(f.unit||'')}</span></div>`;
+    if(sel)h+='<div class="health-food-qty">'+HEALTH_QTYS.map(qq=>`<button class="${_hFoodSel[f.id]===qq.v?'on':''}" onclick="event.stopPropagation();healthSetFoodQty('${f.id}',${qq.v})">${qq.l}</button>`).join('')+'</div>';
+    return h;
+  };
   let html='';
   if(!q){const favs=foods.filter(f=>f.favorite);if(favs.length)html+='<div class="health-food-cat">★ よく食べる</div>'+favs.map(row).join('')}
   const cats=[...new Set(foods.map(f=>f.category||'その他'))];
   cats.forEach(c=>{const list=foods.filter(f=>(f.category||'その他')===c&&(q||!f.favorite));if(list.length)html+=`<div class="health-food-cat">${esc(c)}</div>`+list.map(row).join('')});
   el.innerHTML=html;
+  healthUpdateAddBtn();
 }
-function healthPickFood(id){
-  const f=D.hFood.find(x=>x.id===id);if(!f)return;
-  _hFoodPick=f;
-  document.getElementById('healthFoodStep1').style.display='none';
-  document.getElementById('healthFoodStep2').style.display='block';
-  document.getElementById('healthQtyName').textContent=f.name;
-  document.getElementById('healthQtyCarb').textContent=`${f.carb_g}g / ${f.unit||'1'}`;
-  document.getElementById('healthQtyRow').innerHTML=HEALTH_QTYS.map(qq=>`<button onclick="healthAddIntake(${qq.v})">${qq.l}</button>`).join('');
+function healthToggleFood(id){
+  if(_hFoodSel[id]!=null)delete _hFoodSel[id];else _hFoodSel[id]=1;
+  renderHealthFoodList();
 }
-function healthFoodBack(){
-  document.getElementById('healthFoodStep1').style.display='flex';
-  document.getElementById('healthFoodStep2').style.display='none';
-  _hFoodPick=null;
+function healthSetFoodQty(id,v){_hFoodSel[id]=v;renderHealthFoodList();}
+function healthUpdateAddBtn(){
+  const btn=document.getElementById('healthAddSelBtn');if(!btn)return;
+  const ids=Object.keys(_hFoodSel);
+  let carb=0;ids.forEach(id=>{const f=D.hFood.find(x=>x.id===id);if(f)carb+=Number(f.carb_g)*_hFoodSel[id]});
+  btn.disabled=ids.length===0;
+  btn.textContent=ids.length?`${ids.length}件・約${Math.round(carb)}g を登録`:'登録';
 }
-function healthAddIntake(qty){
-  const f=_hFoodPick;if(!f)return;
-  const id=uuid(),date=hDate();
-  D.hExtra.unshift({id,date,food_id:f.id,name:f.name,carb_g:Number(f.carb_g),quantity:qty,created_at:new Date().toISOString()});
-  dbw(db.from('health_extra_intake').insert({id,date,food_id:f.id,name:f.name,carb_g:Number(f.carb_g),quantity:qty}),'hextra.ins');
+function healthAddSelected(){
+  const ids=Object.keys(_hFoodSel);if(!ids.length)return;
+  const date=hDate();
+  const rows=ids.map(id=>{
+    const f=D.hFood.find(x=>x.id===id);if(!f)return null;
+    return {id:uuid(),date,food_id:f.id,name:f.name,carb_g:Number(f.carb_g),quantity:_hFoodSel[id]};
+  }).filter(Boolean);
+  rows.forEach(r=>D.hExtra.unshift(Object.assign({created_at:new Date().toISOString()},r)));
+  dbw(db.from('health_extra_intake').insert(rows),'hextra.ins');
+  _hFoodSel={};
   closeHealthFood();
   renderHealthExtra();renderHealthSummary();
 }
@@ -3734,7 +3747,10 @@ function healthAddFood(){
   const id=uuid();
   D.hFood.push({id,name,category:'その他',carb_g:carb,unit:'1回',favorite:false,sort_order:999});
   dbw(db.from('health_food_master').insert({id,name,category:'その他',carb_g:carb,unit:'1回',favorite:false,sort_order:999}),'hfood.ins');
-  healthPickFood(id);
+  document.getElementById('healthNewFood').value='';
+  document.getElementById('healthNewCarb').value='';
+  _hFoodSel[id]=1;// 追加した食品を自動で選択
+  renderHealthFoodList();
 }
 function openHealthBase(){
   document.getElementById('healthBaseEdit').innerHTML=HEALTH_MEALS.map(m=>{
