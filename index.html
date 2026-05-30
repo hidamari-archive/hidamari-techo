@@ -3772,7 +3772,10 @@ function renderHealthTrend(){
   const wY=w=>topPad+15+(1-(w-wMin)/wRange)*(chartH-30);
   const cx=i=>leftPad+i*colW+colW/2;
   const dateY=base+16,swY=base+34,faY=base+52,H=base+62;
+  const sel=hDate(),colTop=topPad,colH=faY+8-topPad;
   let s=`<svg class="health-chart-svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">`;
+  // 選択中の日のハイライト
+  days.forEach((d,i)=>{if(d.date===sel)s+=`<rect x="${leftPad+i*colW}" y="${colTop}" width="${colW}" height="${colH}" rx="4" fill="var(--accent)" opacity=".12"/>`});
   // 170 注意ライン
   if(170<maxC){const refY=base-(170/maxC)*chartH;s+=`<line x1="${leftPad}" y1="${refY.toFixed(1)}" x2="${W-6}" y2="${refY.toFixed(1)}" stroke="#E5A876" stroke-width="1" stroke-dasharray="3 3" opacity=".55"/><text x="${W-6}" y="${(refY-3).toFixed(1)}" text-anchor="end" font-size="8" fill="#C0635A">170</text>`}
   // 糖質バー
@@ -3786,16 +3789,26 @@ function renderHealthTrend(){
     s+=`<polyline points="${pts.join(' ')}" fill="none" stroke="var(--accent)" stroke-width="1.6" opacity=".9"/>`;
   }
   days.forEach((d,i)=>{if(d.weight!=null)s+=`<circle cx="${cx(i)}" cy="${wY(d.weight).toFixed(1)}" r="2.6" fill="var(--accent)"/>`});
-  // 日付ラベル（一日おき）
-  days.forEach((d,i)=>{if(i%2===(n-1)%2){const[,mm,dd]=d.date.split('-');s+=`<text x="${cx(i)}" y="${dateY}" text-anchor="middle" font-size="9" fill="var(--text-faint)">${+mm}/${+dd}</text>`}});
+  // 日付ラベル（一日おき＋選択日）
+  days.forEach((d,i)=>{const isSel=d.date===sel;if(i%2===(n-1)%2||isSel){const[,mm,dd]=d.date.split('-');s+=`<text x="${cx(i)}" y="${dateY}" text-anchor="middle" font-size="9" fill="${isSel?'var(--accent)':'var(--text-faint)'}" font-weight="${isSel?'700':'400'}">${+mm}/${+dd}</text>`}});
   // 体感ドット
   s+=`<text x="2" y="${swY+3}" font-size="9" fill="var(--text-light)">む</text><text x="2" y="${faY+3}" font-size="9" fill="var(--text-light)">だ</text>`;
   days.forEach((d,i)=>{
     if(d.sw)s+=`<circle cx="${cx(i)}" cy="${swY}" r="7.5" fill="${feelColor(d.sw)}"/><text x="${cx(i)}" y="${swY+3}" text-anchor="middle" font-size="9" fill="#fff" font-weight="700">${d.sw}</text>`;
     if(d.fa)s+=`<circle cx="${cx(i)}" cy="${faY}" r="7.5" fill="${feelColor(d.fa)}"/><text x="${cx(i)}" y="${faY+3}" text-anchor="middle" font-size="9" fill="#fff" font-weight="700">${d.fa}</text>`;
   });
+  // タップ領域（各日 → その日の登録画面へ）
+  days.forEach((d,i)=>{s+=`<rect x="${leftPad+i*colW}" y="${colTop}" width="${colW}" height="${colH}" fill="transparent" style="cursor:pointer" onclick="healthEditDay('${d.date}')"/>`});
   s+='</svg>';
   el.innerHTML=s;
+  // 直近（右端）が見えるように右寄せスクロール
+  const sc=el.parentElement;if(sc&&sc.classList.contains('health-chart-scroll'))requestAnimationFrame(()=>{sc.scrollLeft=sc.scrollWidth});
+}
+function healthEditDay(date){
+  _hDate=(date===gt()?'':date);
+  renderHealth();
+  const t=document.getElementById('healthMorningTitle');
+  if(t)t.scrollIntoView({behavior:'smooth',block:'center'});
 }
 function healthCorrPairs(){
   const pairs=[];

@@ -271,6 +271,8 @@ searchAmazonItem(name)      // Amazon商品名検索を開く
 3. **追加で食べた**（`openHealthFood`→ピッカー）: 食品マスタ選択→数量（×½/×1/×2/×3）→`health_extra_intake` に保存。新規食品もその場で登録可
 4. **ベース食**（`renderHealthBase`）: 朝昼夜の糖質量表示＋今日のスキップトグル（食べた/抜き）。`openHealthBase` で carb_g・内容を編集
 5. **14日の推移**（`renderHealthTrend`）: インラインSVGグラフ（横スクロール）。糖質をゾーン色の棒、体重を折れ線で重ね、170g注意ラインを点線表示。下部に「む（むくみ）/だ（だるさ）」を日ごとの色付き番号ドットで帯表示。`feelColor(n)` で 1=teal→5=coral。`healthDayData(n)` が日次配列を生成
+   - 開いたとき直近（右端）が見えるよう、描画後に親 `.health-chart-scroll` を `scrollLeft=scrollWidth` で右寄せ
+   - 各日に透明な `<rect onclick=healthEditDay(date)>` を重ね、棒・体感ドットどこでもタップでその日の登録に切替（`_hDate` 設定→`renderHealth`→体感カードへスクロール）。選択中の日は列を `var(--accent)` で淡くハイライト＋日付ラベルをアクセント色太字
 6. **糖質と体感のつながり**（`renderHealthCorr`）: 前日糖質→翌朝体感の相関。体感記録のある日を前日糖質でソートし中央値で上下半分に分割（`healthCorrPairs`）、各群のむくみ・だるさ平均を2ボックス比較＋差0.4以上で言葉のコメント（`healthCorrPhrase`）。記録4日未満は咎めず待つ空状態メッセージ
    - 描画は `renderHealth` と `renderHealthSummary` の末尾から呼ばれ、体感・体重・スキップ・食事の変更時に自動追従
 
