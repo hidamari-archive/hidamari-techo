@@ -256,7 +256,8 @@ body{font-family:var(--font-body);background:var(--bg);color:var(--text);min-hei
 .flash-memo-date{font-size:10px;color:var(--text-faint);flex-shrink:0;margin-top:2px}
 
 /* ─── 買い物リスト ─── */
-.shop-tabs{display:flex;gap:0;padding:0 16px;border-bottom:1px solid var(--border);position:sticky;top:var(--header-h,74px);z-index:90;background:var(--bg)}
+.shop-tabs{display:flex;gap:0;padding:0 16px;border-bottom:1px solid var(--border);position:sticky;top:var(--header-h,74px);z-index:90;background:var(--bg);overflow-x:auto;scrollbar-width:none}
+.shop-tabs::-webkit-scrollbar{display:none}
 .shop-stab{padding:9px 14px;font-size:12px;font-weight:500;color:var(--text-light);border:none;background:none;cursor:pointer;position:relative;transition:color .2s;white-space:nowrap}
 .shop-stab.active{color:var(--text)}
 .shop-stab.active::after{content:'';position:absolute;bottom:-1px;left:14px;right:14px;height:2px;border-radius:2px;background:var(--accent)}
@@ -552,6 +553,75 @@ body{font-family:var(--font-body);background:var(--bg);color:var(--text);min-hei
 .login-btn{background:var(--accent-light);border:1px solid var(--accent);border-radius:var(--radius-sm);color:var(--text);font-family:var(--font-body);font-size:14px;padding:10px 32px;cursor:pointer;letter-spacing:.1em;transition:opacity .2s}
 .login-btn:active{opacity:.7}.login-btn:disabled{opacity:.5}
 .login-error{font-size:12px;color:var(--danger);opacity:0;transition:opacity .3s;min-height:16px}
+/* ── 健康タブ ── */
+.health-card{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px;margin-bottom:12px;box-shadow:0 1px 3px rgba(80,60,40,.05)}
+.health-card-title{font-size:13px;font-weight:600;color:var(--text);margin-bottom:12px;display:flex;align-items:center;gap:6px}
+.health-base-edit,.health-mini-btn{margin-left:auto;background:var(--discard-done-bg,#EAF5F4);border:1px solid var(--discard-done,#7EC4C0);color:#4a8c88;font-size:11px;padding:4px 12px;border-radius:8px;cursor:pointer}
+.health-mini-btn{margin-left:0;white-space:nowrap}
+.health-add-btn{width:100%;background:var(--discard-done-bg,#EAF5F4);border:1px solid var(--discard-done,#7EC4C0);color:#3d7a76;font-size:14px;font-weight:600;padding:12px;border-radius:10px;cursor:pointer;margin-bottom:10px;transition:opacity .2s}
+.health-add-btn:active{opacity:.7}
+/* サマリー */
+.health-sum-head{display:flex;align-items:baseline;gap:10px;margin-bottom:10px}
+.health-sum-carb{font-size:34px;font-weight:700;color:var(--text);line-height:1;font-family:var(--font-accent)}
+.health-sum-unit{font-size:13px;color:var(--text-light)}
+.health-zone{display:inline-block;font-size:12px;padding:3px 12px;border-radius:20px;font-weight:600;margin-left:auto}
+.health-sum-grid{display:flex;gap:8px;flex-wrap:wrap;font-size:12px;color:var(--text-light)}
+.health-sum-grid .hg{background:var(--bg-warm);border-radius:8px;padding:6px 10px;flex:1;min-width:84px;text-align:center}
+.health-sum-grid .hg b{display:block;font-size:15px;color:var(--text);font-weight:600;margin-top:2px}
+/* 体感入力 */
+.health-feel-row{display:flex;align-items:center;margin-bottom:12px;gap:8px}
+.health-feel-label{font-size:13px;color:var(--text-light);width:64px;flex-shrink:0}
+.health-scale{display:flex;gap:6px;flex:1}
+.health-scale button{flex:1;aspect-ratio:1;max-width:42px;border:1px solid var(--border);background:var(--bg-warm);border-radius:8px;font-size:14px;color:var(--text-light);cursor:pointer;transition:all .15s}
+.health-scale button.on{background:var(--discard-done,#7EC4C0);border-color:var(--discard-done,#7EC4C0);color:#fff;font-weight:700}
+.health-feel-hint{font-size:10px;color:var(--text-faint);text-align:right;margin:-6px 0 12px}
+.health-abd{display:flex;gap:6px;flex:1}
+.health-abd button{flex:1;border:1px solid var(--border);background:var(--bg-warm);border-radius:8px;font-size:12px;color:var(--text-light);padding:8px 4px;cursor:pointer;transition:all .15s}
+.health-abd button.on{background:var(--discard-done,#7EC4C0);border-color:var(--discard-done,#7EC4C0);color:#fff;font-weight:600}
+.health-weight-input{width:90px;border:1px solid var(--border);background:var(--bg-warm);border-radius:8px;padding:8px 10px;font-size:16px;color:var(--text);text-align:right}
+/* 追加リスト */
+.health-intake{display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--border);font-size:13px}
+.health-intake:last-child{border-bottom:none}
+.health-intake .hi-name{flex:1;color:var(--text)}
+.health-intake .hi-carb{color:var(--text-light);font-size:12px}
+.health-intake .hi-del{background:none;border:none;color:var(--text-faint);font-size:16px;cursor:pointer;padding:0 4px}
+.health-empty{font-size:12px;color:var(--text-faint);text-align:center;padding:10px 0}
+/* ベース食表示 */
+.health-base-row{display:flex;align-items:center;gap:8px;padding:7px 0;font-size:13px;border-bottom:1px solid var(--border)}
+.health-base-row:last-child{border-bottom:none}
+.health-base-row .hb-meal{font-weight:600;width:28px;color:var(--text)}
+.health-base-row .hb-desc{flex:1;color:var(--text-light);font-size:11px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.health-base-row .hb-carb{color:var(--text);font-size:12px;white-space:nowrap}
+.health-skip-btn{border:1px solid var(--border);background:var(--bg-warm);color:var(--text-light);font-size:10px;padding:3px 8px;border-radius:6px;cursor:pointer;white-space:nowrap}
+.health-skip-btn.skipped{background:var(--bg-warm);color:var(--text-faint);text-decoration:line-through;border-style:dashed}
+/* 食品ピッカー */
+.health-food-cat{font-size:11px;color:var(--text-faint);font-weight:600;margin:12px 0 4px;letter-spacing:.05em}
+.health-food-item{display:flex;align-items:center;gap:8px;padding:10px 8px;border-radius:8px;cursor:pointer;font-size:14px;color:var(--text)}
+.health-food-item:active{background:var(--bg-warm)}
+.health-food-item .hf-fav{color:#E0B34C}
+.health-food-item .hf-carb{margin-left:auto;color:var(--text-light);font-size:12px}
+.health-food-add-row{display:flex;gap:6px;align-items:center;border-top:1px solid var(--border);padding-top:10px;margin-top:6px}
+.health-qty-name{font-size:16px;font-weight:600;color:var(--text);text-align:center;margin:8px 0 2px}
+.health-qty-carb{font-size:12px;color:var(--text-light);text-align:center;margin-bottom:16px}
+.health-qty-row{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
+.health-qty-row button{flex:1;min-width:64px;border:1px solid var(--discard-done,#7EC4C0);background:var(--discard-done-bg,#EAF5F4);color:#3d7a76;font-size:15px;font-weight:600;padding:14px 8px;border-radius:10px;cursor:pointer}
+.health-qty-row button:active{opacity:.7}
+/* 推移グラフ */
+.health-chart-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;margin:0 -6px;padding:0 6px}
+.health-chart-svg{display:block}
+.hc-legend{display:flex;gap:12px;flex-wrap:wrap;font-size:10px;color:var(--text-light);margin-top:10px;align-items:center}
+.hc-legend span{display:inline-flex;align-items:center;gap:4px}
+.hc-legend i{width:10px;height:10px;border-radius:2px;display:inline-block}
+.hc-legend i.line{height:0;border-top:2px solid var(--accent);border-radius:1px;width:14px}
+/* 相関 */
+.health-corr-row{display:flex;gap:10px;margin-bottom:12px}
+.health-corr-box{flex:1;background:var(--bg-warm);border-radius:10px;padding:12px 8px;text-align:center}
+.health-corr-box .cc-label{font-size:11px;color:var(--text-light);margin-bottom:4px}
+.health-corr-box .cc-carb{font-size:11px;color:var(--text-faint);margin-bottom:8px}
+.health-corr-box .cc-feel{font-size:12px;color:var(--text);line-height:1.7}
+.health-corr-box .cc-feel b{font-size:19px;font-weight:700;font-family:var(--font-accent);color:var(--text)}
+.health-corr-msg{font-size:12px;color:var(--text-light);line-height:1.9;background:var(--discard-done-bg,#EAF5F4);border-radius:8px;padding:11px 13px}
+.health-corr-empty{font-size:12px;color:var(--text-faint);text-align:center;padding:16px 4px;line-height:1.9}
 </style>
 </head>
 <body>
@@ -792,34 +862,6 @@ body{font-family:var(--font-body);background:var(--bg);color:var(--text);min-hei
     </div>
   </div>
 
-  <!-- ウィッシュタブ -->
-  <div class="tab-panel" id="tab-wish">
-    <div class="shop-tabs">
-      <button class="shop-stab active" data-stab="wishlist" onclick="switchWishTab('wishlist')">💫 ウィッシュ</button>
-      <button class="shop-stab" data-stab="memo" onclick="switchWishTab('memo')">✨ ひらめきメモ</button>
-    </div>
-    <!-- ウィッシュリストパネル -->
-    <div class="shop-stab-panel active" id="wish-stab-wishlist">
-      <div class="panel-body" style="padding-bottom:0">
-        <div class="wish-filter-row">
-          <button class="wish-filter-btn active" data-wf="want" onclick="setWishFilter('want')">💫 やりたい</button>
-          <button class="wish-filter-btn" data-wf="done" onclick="setWishFilter('done')">✅ やった！</button>
-        </div>
-      </div>
-      <div class="panel-body" id="wishList"></div>
-      <button class="wish-fab show" id="wishFab" onclick="openModal('wish-add')">＋</button>
-    </div>
-    <!-- ひらめきメモパネル -->
-    <div class="shop-stab-panel" id="wish-stab-memo">
-      <div class="flash-memo-section">
-        <div class="flash-memo-add-row">
-          <input class="shop-input" id="flashMemoInput" type="text" placeholder="思いついたこと…" autocomplete="off">
-          <button class="shop-add-btn" onclick="addFlashMemo()">追加</button>
-        </div>
-        <div id="flashMemoList"></div>
-      </div>
-    </div>
-  </div>
 
   <!-- ニュースタブ -->
   <div class="tab-panel" id="tab-news">
@@ -836,8 +878,10 @@ body{font-family:var(--font-body);background:var(--bg);color:var(--text);min-hei
   <!-- 買い物タブ -->
   <div class="tab-panel" id="tab-shop">
     <div class="shop-tabs">
-      <button class="shop-stab active" data-stab="memo" onclick="switchShopTab('memo')">🛒 買い物メモ</button>
-      <button class="shop-stab" data-stab="stock" onclick="switchShopTab('stock')">🧺 在庫管理</button>
+      <button class="shop-stab active" data-stab="memo" onclick="switchShopTab('memo')">🛒 買い物</button>
+      <button class="shop-stab" data-stab="stock" onclick="switchShopTab('stock')">🧺 在庫</button>
+      <button class="shop-stab" data-stab="wishlist" onclick="switchShopTab('wishlist')">💫 ウィッシュ</button>
+      <button class="shop-stab" data-stab="flash" onclick="switchShopTab('flash')">✨ ひらめき</button>
     </div>
     <!-- メモパネル -->
     <div class="shop-stab-panel active" id="shop-stab-memo">
@@ -875,6 +919,67 @@ body{font-family:var(--font-body);background:var(--bg);color:var(--text);min-hei
       <input type="file" id="pantryImageInput" accept="image/*" style="display:none">
     </div>
     </div><!-- /shop-stab-stock -->
+    <!-- ウィッシュリストパネル -->
+    <div class="shop-stab-panel" id="shop-stab-wishlist">
+      <div class="panel-body" style="padding-bottom:0">
+        <div class="wish-filter-row">
+          <button class="wish-filter-btn active" data-wf="want" onclick="setWishFilter('want')">💫 やりたい</button>
+          <button class="wish-filter-btn" data-wf="done" onclick="setWishFilter('done')">✅ やった！</button>
+        </div>
+      </div>
+      <div class="panel-body" id="wishList"></div>
+      <button class="wish-fab" id="wishFab" onclick="openModal('wish-add')">＋</button>
+    </div>
+    <!-- ひらめきメモパネル -->
+    <div class="shop-stab-panel" id="shop-stab-flash">
+      <div class="flash-memo-section">
+        <div class="flash-memo-add-row">
+          <input class="shop-input" id="flashMemoInput" type="text" placeholder="思いついたこと…" autocomplete="off">
+          <button class="shop-add-btn" onclick="addFlashMemo()">追加</button>
+        </div>
+        <div id="flashMemoList"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 健康タブ -->
+  <div class="tab-panel" id="tab-health">
+    <div class="panel-body">
+      <!-- 今日のサマリー -->
+      <div class="health-card" id="healthSummary"></div>
+      <!-- 朝の体感入力 -->
+      <div class="health-card">
+        <div class="health-card-title">🌅 今朝の体感</div>
+        <div id="healthMorning"></div>
+      </div>
+      <!-- 追加で食べた -->
+      <div class="health-card">
+        <div class="health-card-title">🍽 今日 追加で食べたもの</div>
+        <button class="health-add-btn" onclick="openHealthFood()">＋ 追加で食べた</button>
+        <div id="healthExtraList"></div>
+      </div>
+      <!-- ベース食 -->
+      <div class="health-card">
+        <div class="health-card-title">🍚 ベース食 <button class="health-base-edit" onclick="openHealthBase()">編集</button></div>
+        <div id="healthBaseBody"></div>
+      </div>
+      <!-- 推移グラフ -->
+      <div class="health-card">
+        <div class="health-card-title">📈 14日の推移</div>
+        <div class="health-chart-scroll"><div id="healthTrend"></div></div>
+        <div class="hc-legend">
+          <span><i style="background:#B5773C"></i>糖質(g)</span>
+          <span><i class="line"></i>体重</span>
+          <span>む=むくみ・だ=だるさ（数字=強さ1〜5）</span>
+        </div>
+      </div>
+      <!-- 糖質と体感の相関 -->
+      <div class="health-card">
+        <div class="health-card-title">🔗 糖質と体感のつながり</div>
+        <div id="healthCorr"></div>
+      </div>
+      <div style="text-align:center;padding:14px 0 4px;color:var(--text-faint);font-size:11px;font-family:var(--font-accent)">🕯</div>
+    </div>
   </div>
 
 </div><!-- /app-content -->
@@ -887,14 +992,14 @@ body{font-family:var(--font-body);background:var(--bg);color:var(--text);min-hei
   <button class="btab" data-tab="seiiki" onclick="switchTab('seiiki')">
     <span class="btab-icon">☑</span><span class="btab-label">くらし</span>
   </button>
+  <button class="btab" data-tab="health" onclick="switchTab('health')">
+    <span class="btab-icon">🌿</span><span class="btab-label">健康</span>
+  </button>
   <button class="btab" data-tab="news" onclick="switchTab('news')">
     <span class="btab-icon">📰</span><span class="btab-label">ニュース</span>
   </button>
-  <button class="btab" data-tab="wish" onclick="switchTab('wish')">
-    <span class="btab-icon">✨</span><span class="btab-label">ウィッシュ</span>
-  </button>
   <button class="btab" data-tab="shop" onclick="switchTab('shop')">
-    <span class="btab-icon">🛒</span><span class="btab-label">買い物</span>
+    <span class="btab-icon">🧺</span><span class="btab-label">ほしいもの</span>
   </button>
 </div>
 
@@ -905,6 +1010,43 @@ body{font-family:var(--font-body);background:var(--bg);color:var(--text);min-hei
     <div class="modal-actions">
       <button class="modal-btn secondary" id="aiCloseBtn" onclick="closeAiModal()" style="display:none">閉じる</button>
       <button class="modal-btn primary" id="aiChatBtn" onclick="sageChatFromGacha()" style="display:none">セージに話しかける ›</button>
+    </div>
+  </div>
+</div>
+
+<!-- 健康 食品ピッカーモーダル -->
+<div class="modal-overlay" id="healthFoodModal" onclick="if(event.target===this)closeHealthFood()">
+  <div class="modal" onclick="event.stopPropagation()" style="max-height:80vh;display:flex;flex-direction:column">
+    <div class="modal-title" id="healthFoodTitle">追加で食べたもの</div>
+    <div id="healthFoodStep1" style="display:flex;flex-direction:column;min-height:0">
+      <input class="modal-input" id="healthFoodSearch" type="text" placeholder="食品を検索…" autocomplete="off" oninput="renderHealthFoodList()" style="margin-bottom:10px">
+      <div id="healthFoodList" style="overflow-y:auto;min-height:0"></div>
+      <div class="health-food-add-row">
+        <input class="modal-input" id="healthNewFood" type="text" placeholder="新しい食品名…" autocomplete="off" style="margin:0">
+        <input class="modal-input" id="healthNewCarb" type="number" inputmode="decimal" placeholder="糖質g" style="margin:0;width:72px">
+        <button class="health-mini-btn" onclick="healthAddFood()">登録</button>
+      </div>
+    </div>
+    <div id="healthFoodStep2" style="display:none">
+      <div class="health-qty-name" id="healthQtyName"></div>
+      <div class="health-qty-carb" id="healthQtyCarb"></div>
+      <div class="health-qty-row" id="healthQtyRow"></div>
+      <div class="modal-actions">
+        <button class="modal-cancel-btn" onclick="healthFoodBack()">戻る</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 健康 ベース食編集モーダル -->
+<div class="modal-overlay" id="healthBaseModal" onclick="if(event.target===this)closeHealthBase()">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-title">ベース食の設定</div>
+    <p style="font-size:12px;color:var(--text-light);margin:-8px 0 14px;line-height:1.7">毎日自動で加算される定型食の糖質量です。</p>
+    <div id="healthBaseEdit"></div>
+    <div class="modal-actions">
+      <button class="modal-cancel-btn" onclick="closeHealthBase()">キャンセル</button>
+      <button class="modal-submit-btn" onclick="saveHealthBase()">保存</button>
     </div>
   </div>
 </div>
@@ -1054,6 +1196,7 @@ let D={
   routines:[],routineChecks:[],todayTasks:[],todayDiscards:[],
   discardLog:[],longTasks:[],weeklyTasks:[],
   wishItems:[],shopItems:[],pantryItems:[],rssFeeds:[],
+  hFood:[],hBase:{},hDaily:[],hExtra:[],
   routineMessageDate:'',routineRarity:'',
   _loadedDate:'',
 };
@@ -1064,7 +1207,9 @@ let curModal=null,curTaskType='once',curShopCat='食品・日用品',curShopCatF
 // ═══════════════════════════════════════════════
 async function loadData(){
   const today=gt();
-  const [rR,cR,tR,dR,lR,mR,ltR,wR,sR,fR,wtR,pR,fmR]=await Promise.all([
+  const since=new Date(Date.now()-30*864e5);
+  const sinceStr=since.getFullYear()+'-'+String(since.getMonth()+1).padStart(2,'0')+'-'+String(since.getDate()).padStart(2,'0');
+  const [rR,cR,tR,dR,lR,mR,ltR,wR,sR,fR,wtR,pR,fmR,hfR,hbR,hdR,heR]=await Promise.all([
     db.from('hk_routines').select('*').order('sort_order').order('created_at'),
     db.from('hk_routine_checks').select('*').eq('date',today),
     db.from('hk_tasks').select('*').order('created_at'),
@@ -1078,6 +1223,10 @@ async function loadData(){
     db.from('hk_weekly_tasks').select('*').order('created_at'),
     db.from('pantry_items').select('*').order('name'),
     db.from('flash_memos').select('*').order('created_at',{ascending:false}),
+    db.from('health_food_master').select('*').order('sort_order').order('name'),
+    db.from('health_base_meal').select('*'),
+    db.from('health_daily_log').select('*').gte('date',sinceStr).order('date',{ascending:false}),
+    db.from('health_extra_intake').select('*').gte('date',sinceStr).order('created_at',{ascending:false}),
   ]);
   let routines=rR.data||[];
   if(!routines.length){
@@ -1098,6 +1247,10 @@ async function loadData(){
   D.shopItems=sR.data||[];
   D.pantryItems=pR.data||[];
   D.flashMemos=fmR.data||[];
+  D.hFood=hfR.data||[];
+  D.hBase={};(hbR.data||[]).forEach(b=>{D.hBase[b.meal]=b});
+  D.hDaily=hdR.data||[];
+  D.hExtra=heR.data||[];
   let feeds=fR.data||[];
   if(!feeds.length){
     const seeds=DEFAULT_FEEDS.map(f=>({name:f.name,url:f.url,cat:f.cat}));
@@ -1118,8 +1271,9 @@ function switchTab(tab){
   document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.btab').forEach(b=>b.classList.toggle('active',b.dataset.tab===tab));
   document.getElementById('tab-'+tab).classList.add('active');
-  document.getElementById('wishFab').classList.toggle('show',tab==='wish');
+  document.getElementById('wishFab').classList.toggle('show',tab==='shop'&&_shopTab==='wishlist');
   if(tab==='news'&&!_newsLoaded)loadNews();
+  if(tab==='health')renderHealth();
 }
 document.querySelectorAll('.stab').forEach(t=>{
   t.addEventListener('click',()=>{
@@ -1873,15 +2027,6 @@ function delPantryCat(name){
   const cats=getPantryCats().filter(c=>c!==name);savePantryCats(cats);
   renderPantryCatMgr();fillPantryCatSelect();renderPantry();
 }
-let _wishTab='wishlist';
-function switchWishTab(tab){
-  _wishTab=tab;
-  document.querySelectorAll('#tab-wish .shop-stab').forEach(x=>x.classList.toggle('active',x.dataset.stab===tab));
-  document.querySelectorAll('#tab-wish .shop-stab-panel').forEach(x=>x.classList.remove('active'));
-  const p=document.getElementById('wish-stab-'+tab);if(p)p.classList.add('active');
-  const fab=document.getElementById('wishFab');if(fab)fab.classList.toggle('show',tab==='wishlist');
-  if(tab==='memo')renderFlashMemos();
-}
 function renderFlashMemos(){
   const el=document.getElementById('flashMemoList');if(!el)return;
   const items=D.flashMemos||[];
@@ -1919,6 +2064,8 @@ function switchShopTab(tab){
   document.querySelectorAll('.shop-stab').forEach(x=>x.classList.toggle('active',x.dataset.stab===tab));
   document.querySelectorAll('.shop-stab-panel').forEach(x=>x.classList.remove('active'));
   const p=document.getElementById('shop-stab-'+tab);if(p)p.classList.add('active');
+  const fab=document.getElementById('wishFab');if(fab)fab.classList.toggle('show',tab==='wishlist');
+  if(tab==='flash')renderFlashMemos();
 }
 let _pantryOpenMenu=null;
 let _pantryFilter='all';
@@ -2163,7 +2310,7 @@ function confirmPantryUrl(){
 }
 
 // ─── タブスワイプ ───
-const TAB_ORDER=['home','seiiki','news','wish','shop'];
+const TAB_ORDER=['home','seiiki','health','news','shop'];
 let _swipeX=0,_swipeY=0,_swipeBlocked=false;
 function _isHScrollable(el){
   while(el&&el!==document.body){
@@ -3364,12 +3511,287 @@ function calMonthNext(){
 // 一括レンダー
 // ═══════════════════════════════════════════════
 function renderAll(){
-  updateDate();renderRoutines();renderTasks();renderWeeklyPanel();renderDiscards();renderDiscardStampCard();renderHomeStampMini();renderDiscardLog();renderLongTasks();renderRS();renderWish();renderShop();renderPantry();updateHomeSummary();
+  updateDate();renderRoutines();renderTasks();renderWeeklyPanel();renderDiscards();renderDiscardStampCard();renderHomeStampMini();renderDiscardLog();renderLongTasks();renderRS();renderWish();renderShop();renderPantry();renderHealth();updateHomeSummary();
   const k=getGeminiKey();const el=document.getElementById('geminiKeyInput');if(el)el.value=k;
   const iu=getIcalUrl();const iel=document.getElementById('icalUrlInput');if(iel)iel.value=iu;
   const iu2=getIcalUrl2();const iel2=document.getElementById('icalUrlInput2');if(iel2)iel2.value=iu2;
   const ms=document.getElementById('techoModelSel');if(ms)ms.value=getGeminiModel();
   updatePinSettingUI();
+}
+
+// ═══════════════════════════════════════════════
+// 健康タブ（Phase 1）
+// ═══════════════════════════════════════════════
+const HEALTH_MEALS=['朝','昼','夜'];
+const HEALTH_BASE_DEFAULT={朝:15,昼:32,夜:10};
+const HEALTH_SKIP_KEY={朝:'skip_breakfast',昼:'skip_lunch',夜:'skip_dinner'};
+const HEALTH_QTYS=[{l:'×½',v:0.5},{l:'×1',v:1},{l:'×2',v:2},{l:'×3',v:3}];
+let _hFoodPick=null;
+function attrEsc(s){return esc(s).replace(/"/g,'&quot;')}
+function ymd(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
+function hToday(){return D.hDaily.find(d=>d.date===gt())||null}
+function healthBaseCarb(meal){const b=D.hBase[meal];return b?Number(b.carb_g):(HEALTH_BASE_DEFAULT[meal]||0)}
+function healthBaseTotalForDate(dateStr){
+  const log=D.hDaily.find(d=>d.date===dateStr)||{};
+  let t=0;
+  if(!log.skip_breakfast)t+=healthBaseCarb('朝');
+  if(!log.skip_lunch)t+=healthBaseCarb('昼');
+  if(!log.skip_dinner)t+=healthBaseCarb('夜');
+  return t;
+}
+function healthExtraTotalForDate(dateStr){
+  return D.hExtra.filter(e=>e.date===dateStr).reduce((s,e)=>s+Number(e.carb_g)*Number(e.quantity),0);
+}
+function healthCarbForDate(dateStr){return healthBaseTotalForDate(dateStr)+healthExtraTotalForDate(dateStr)}
+function healthAvg7(){
+  let sum=0;
+  for(let i=0;i<7;i++)sum+=healthCarbForDate(ymd(new Date(Date.now()-i*864e5)));
+  return Math.round(sum/7);
+}
+function healthZone(carb){
+  if(carb<=70)return{e:'🟢',l:'快適ゾーン',bg:'#EAF5F4',c:'#3d7a76'};
+  if(carb<=120)return{e:'🟡',l:'通常ゾーン',bg:'#FBF6E3',c:'#9A8330'};
+  if(carb<=170)return{e:'🟠',l:'注意ゾーン',bg:'#FBEEE0',c:'#B5773C'};
+  return{e:'🔴',l:'閾値超え',bg:'#F7E6E2',c:'#C0635A'};
+}
+function renderHealth(){
+  if(!document.getElementById('tab-health'))return;
+  renderHealthSummary();renderHealthMorning();renderHealthExtra();renderHealthBase();renderHealthTrend();renderHealthCorr();
+}
+function renderHealthSummary(){
+  const el=document.getElementById('healthSummary');if(!el)return;
+  const carb=Math.round(healthCarbForDate(gt()));
+  const z=healthZone(carb);
+  const log=hToday()||{};
+  const w=log.weight_kg!=null?log.weight_kg+' kg':'—';
+  const feel=(log.swelling||log.fatigue)?`むくみ${log.swelling||'-'}・だるさ${log.fatigue||'-'}`:'未入力';
+  el.innerHTML=`<div class="health-sum-head">
+      <div><span class="health-sum-carb">${carb}</span><span class="health-sum-unit"> g 糖質</span></div>
+      <span class="health-zone" style="background:${z.bg};color:${z.c}">${z.e} ${z.l}</span>
+    </div>
+    <div class="health-sum-grid">
+      <div class="hg">体重<b>${esc(String(w))}</b></div>
+      <div class="hg">体感<b style="font-size:12px">${esc(feel)}</b></div>
+      <div class="hg">7日平均<b>${healthAvg7()} g</b></div>
+    </div>`;
+  renderHealthTrend();renderHealthCorr();
+}
+function renderHealthMorning(){
+  const el=document.getElementById('healthMorning');if(!el)return;
+  const log=hToday()||{};
+  const scale=(field,cur)=>'<div class="health-scale">'+[1,2,3,4,5].map(n=>`<button class="${cur===n?'on':''}" onclick="healthSetFeel('${field}',${n})">${n}</button>`).join('')+'</div>';
+  const abd=['すっきり','ふつう','張る'].map(a=>`<button class="${log.abdomen===a?'on':''}" onclick="healthSetAbdomen('${a}')">${a}</button>`).join('');
+  el.innerHTML=`<div class="health-feel-row"><span class="health-feel-label">むくみ</span>${scale('swelling',log.swelling)}</div>
+    <div class="health-feel-row"><span class="health-feel-label">だるさ</span>${scale('fatigue',log.fatigue)}</div>
+    <div class="health-feel-hint">1=軽い ・ 5=強い（もう一度押すと解除）</div>
+    <div class="health-feel-row"><span class="health-feel-label">お腹</span><div class="health-abd">${abd}</div></div>
+    <div class="health-feel-row"><span class="health-feel-label">体重</span><input class="health-weight-input" id="healthWeight" type="number" inputmode="decimal" step="0.1" placeholder="--.-" value="${log.weight_kg!=null?log.weight_kg:''}" onchange="healthSaveWeight()"> <span style="font-size:12px;color:var(--text-light)">kg</span></div>`;
+}
+function healthUpsertToday(patch){
+  const today=gt();
+  let row=D.hDaily.find(d=>d.date===today);
+  if(!row){row={date:today};D.hDaily.unshift(row)}
+  Object.assign(row,patch);
+  dbw(db.from('health_daily_log').upsert(Object.assign({date:today},patch),{onConflict:'date'}),'hdaily.up');
+}
+function healthSetFeel(field,n){
+  const log=hToday()||{};
+  healthUpsertToday({[field]:log[field]===n?null:n});
+  renderHealthMorning();renderHealthSummary();
+}
+function healthSetAbdomen(a){
+  const log=hToday()||{};
+  healthUpsertToday({abdomen:log.abdomen===a?null:a});
+  renderHealthMorning();
+}
+function healthSaveWeight(){
+  const v=document.getElementById('healthWeight').value.trim();
+  healthUpsertToday({weight_kg:v===''?null:Number(v)});
+  renderHealthSummary();
+}
+function renderHealthExtra(){
+  const el=document.getElementById('healthExtraList');if(!el)return;
+  const items=D.hExtra.filter(e=>e.date===gt());
+  if(!items.length){el.innerHTML='<div class="health-empty">まだありません</div>';return}
+  el.innerHTML=items.map(e=>{
+    const q=Number(e.quantity);const qLabel=q===1?'':' ×'+(q===0.5?'½':q);
+    const carb=Math.round(Number(e.carb_g)*q*10)/10;
+    return `<div class="health-intake"><span class="hi-name">${esc(e.name)}${qLabel}</span><span class="hi-carb">${carb}g</span><button class="hi-del" onclick="delHealthIntake('${e.id}')">×</button></div>`;
+  }).join('');
+}
+function renderHealthBase(){
+  const el=document.getElementById('healthBaseBody');if(!el)return;
+  const log=hToday()||{};
+  el.innerHTML=HEALTH_MEALS.map(m=>{
+    const b=D.hBase[m]||{};const carb=healthBaseCarb(m);const sk=log[HEALTH_SKIP_KEY[m]];
+    return `<div class="health-base-row"><span class="hb-meal">${m}</span><span class="hb-desc">${esc(b.description||'')}</span><span class="hb-carb">${sk?'—':carb+'g'}</span><button class="health-skip-btn ${sk?'skipped':''}" onclick="healthToggleSkip('${m}')">${sk?'抜き':'食べた'}</button></div>`;
+  }).join('');
+}
+function healthToggleSkip(m){
+  const log=hToday()||{};const key=HEALTH_SKIP_KEY[m];
+  healthUpsertToday({[key]:!log[key]});
+  renderHealthBase();renderHealthSummary();
+}
+function openHealthFood(){
+  _hFoodPick=null;
+  document.getElementById('healthFoodStep1').style.display='flex';
+  document.getElementById('healthFoodStep2').style.display='none';
+  document.getElementById('healthFoodTitle').textContent='追加で食べたもの';
+  document.getElementById('healthFoodSearch').value='';
+  document.getElementById('healthNewFood').value='';
+  document.getElementById('healthNewCarb').value='';
+  renderHealthFoodList();
+  document.getElementById('healthFoodModal').classList.add('show');
+}
+function closeHealthFood(){document.getElementById('healthFoodModal').classList.remove('show')}
+function renderHealthFoodList(){
+  const el=document.getElementById('healthFoodList');if(!el)return;
+  const q=(document.getElementById('healthFoodSearch').value||'').trim().toLowerCase();
+  let foods=D.hFood.slice();
+  if(q)foods=foods.filter(f=>f.name.toLowerCase().includes(q));
+  if(!foods.length){el.innerHTML='<div class="health-empty">該当なし。下から新規登録できます</div>';return}
+  const row=f=>`<div class="health-food-item" onclick="healthPickFood('${f.id}')">${f.favorite?'<span class="hf-fav">★</span>':''}<span>${esc(f.name)}</span><span class="hf-carb">${f.carb_g}g / ${esc(f.unit||'')}</span></div>`;
+  let html='';
+  if(!q){const favs=foods.filter(f=>f.favorite);if(favs.length)html+='<div class="health-food-cat">★ よく食べる</div>'+favs.map(row).join('')}
+  const cats=[...new Set(foods.map(f=>f.category||'その他'))];
+  cats.forEach(c=>{const list=foods.filter(f=>(f.category||'その他')===c&&(q||!f.favorite));if(list.length)html+=`<div class="health-food-cat">${esc(c)}</div>`+list.map(row).join('')});
+  el.innerHTML=html;
+}
+function healthPickFood(id){
+  const f=D.hFood.find(x=>x.id===id);if(!f)return;
+  _hFoodPick=f;
+  document.getElementById('healthFoodStep1').style.display='none';
+  document.getElementById('healthFoodStep2').style.display='block';
+  document.getElementById('healthQtyName').textContent=f.name;
+  document.getElementById('healthQtyCarb').textContent=`${f.carb_g}g / ${f.unit||'1'}`;
+  document.getElementById('healthQtyRow').innerHTML=HEALTH_QTYS.map(qq=>`<button onclick="healthAddIntake(${qq.v})">${qq.l}</button>`).join('');
+}
+function healthFoodBack(){
+  document.getElementById('healthFoodStep1').style.display='flex';
+  document.getElementById('healthFoodStep2').style.display='none';
+  _hFoodPick=null;
+}
+function healthAddIntake(qty){
+  const f=_hFoodPick;if(!f)return;
+  const id=uuid(),date=gt();
+  D.hExtra.unshift({id,date,food_id:f.id,name:f.name,carb_g:Number(f.carb_g),quantity:qty,created_at:new Date().toISOString()});
+  dbw(db.from('health_extra_intake').insert({id,date,food_id:f.id,name:f.name,carb_g:Number(f.carb_g),quantity:qty}),'hextra.ins');
+  closeHealthFood();
+  renderHealthExtra();renderHealthSummary();
+}
+function delHealthIntake(id){
+  D.hExtra=D.hExtra.filter(e=>e.id!==id);
+  dbw(db.from('health_extra_intake').delete().eq('id',id),'hextra.del');
+  renderHealthExtra();renderHealthSummary();
+}
+function healthAddFood(){
+  const name=document.getElementById('healthNewFood').value.trim();
+  const carb=Number(document.getElementById('healthNewCarb').value);
+  if(!name||isNaN(carb))return;
+  const id=uuid();
+  D.hFood.push({id,name,category:'その他',carb_g:carb,unit:'1回',favorite:false,sort_order:999});
+  dbw(db.from('health_food_master').insert({id,name,category:'その他',carb_g:carb,unit:'1回',favorite:false,sort_order:999}),'hfood.ins');
+  healthPickFood(id);
+}
+function openHealthBase(){
+  document.getElementById('healthBaseEdit').innerHTML=HEALTH_MEALS.map(m=>{
+    const b=D.hBase[m]||{carb_g:HEALTH_BASE_DEFAULT[m],description:''};
+    return `<div class="modal-label" style="margin-top:10px">${m}（糖質g・内容）</div>
+      <div style="display:flex;gap:8px"><input class="modal-input" id="hbCarb_${m}" type="number" inputmode="decimal" value="${b.carb_g}" style="width:84px;margin:0"><input class="modal-input" id="hbDesc_${m}" type="text" placeholder="内容メモ" value="${attrEsc(b.description||'')}" style="flex:1;margin:0"></div>`;
+  }).join('');
+  document.getElementById('healthBaseModal').classList.add('show');
+}
+function closeHealthBase(){document.getElementById('healthBaseModal').classList.remove('show')}
+function saveHealthBase(){
+  HEALTH_MEALS.forEach(m=>{
+    const carb=Number(document.getElementById('hbCarb_'+m).value)||0;
+    const desc=document.getElementById('hbDesc_'+m).value.trim();
+    D.hBase[m]=Object.assign({},D.hBase[m]||{},{meal:m,carb_g:carb,description:desc});
+    dbw(db.from('health_base_meal').upsert({meal:m,carb_g:carb,description:desc},{onConflict:'meal'}),'hbase.up');
+  });
+  closeHealthBase();
+  renderHealthBase();renderHealthSummary();
+}
+// ── 推移グラフ＋相関 ──
+function healthDayData(n){
+  const days=[];
+  for(let i=n-1;i>=0;i--){
+    const date=ymd(new Date(Date.now()-i*864e5));
+    const log=D.hDaily.find(d=>d.date===date)||{};
+    days.push({date,carb:Math.round(healthCarbForDate(date)),weight:log.weight_kg!=null?Number(log.weight_kg):null,sw:log.swelling||null,fa:log.fatigue||null});
+  }
+  return days;
+}
+function feelColor(n){return['','#A8D8D4','#BFD594','#E8CF8E','#E5A876','#D77A6B'][n]||'#ccc'}
+function renderHealthTrend(){
+  const el=document.getElementById('healthTrend');if(!el)return;
+  const days=healthDayData(14),n=days.length;
+  const colW=30,leftPad=16,topPad=12,chartH=110,base=topPad+chartH;
+  const W=leftPad+colW*n+6;
+  const maxC=Math.max(180,...days.map(d=>d.carb));
+  const ws=days.filter(d=>d.weight!=null).map(d=>d.weight);
+  const wMin=ws.length?Math.min(...ws):0,wMax=ws.length?Math.max(...ws):0,wRange=(wMax-wMin)||1;
+  const wY=w=>topPad+15+(1-(w-wMin)/wRange)*(chartH-30);
+  const cx=i=>leftPad+i*colW+colW/2;
+  const dateY=base+16,swY=base+34,faY=base+52,H=base+62;
+  let s=`<svg class="health-chart-svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">`;
+  // 170 注意ライン
+  if(170<maxC){const refY=base-(170/maxC)*chartH;s+=`<line x1="${leftPad}" y1="${refY.toFixed(1)}" x2="${W-6}" y2="${refY.toFixed(1)}" stroke="#E5A876" stroke-width="1" stroke-dasharray="3 3" opacity=".55"/><text x="${W-6}" y="${(refY-3).toFixed(1)}" text-anchor="end" font-size="8" fill="#C0635A">170</text>`}
+  // 糖質バー
+  days.forEach((d,i)=>{
+    const bx=leftPad+i*colW+6,bw=colW-12,bh=Math.max(2,(d.carb/maxC)*chartH),by=base-bh;
+    s+=`<rect x="${bx}" y="${by.toFixed(1)}" width="${bw}" height="${bh.toFixed(1)}" rx="3" fill="${healthZone(d.carb).c}" opacity=".82"/>`;
+  });
+  // 体重折れ線
+  if(ws.length>1){
+    const pts=days.map((d,i)=>d.weight!=null?cx(i)+','+wY(d.weight).toFixed(1):null).filter(Boolean);
+    s+=`<polyline points="${pts.join(' ')}" fill="none" stroke="var(--accent)" stroke-width="1.6" opacity=".9"/>`;
+  }
+  days.forEach((d,i)=>{if(d.weight!=null)s+=`<circle cx="${cx(i)}" cy="${wY(d.weight).toFixed(1)}" r="2.6" fill="var(--accent)"/>`});
+  // 日付ラベル（一日おき）
+  days.forEach((d,i)=>{if(i%2===(n-1)%2){const[,mm,dd]=d.date.split('-');s+=`<text x="${cx(i)}" y="${dateY}" text-anchor="middle" font-size="9" fill="var(--text-faint)">${+mm}/${+dd}</text>`}});
+  // 体感ドット
+  s+=`<text x="2" y="${swY+3}" font-size="9" fill="var(--text-light)">む</text><text x="2" y="${faY+3}" font-size="9" fill="var(--text-light)">だ</text>`;
+  days.forEach((d,i)=>{
+    if(d.sw)s+=`<circle cx="${cx(i)}" cy="${swY}" r="7.5" fill="${feelColor(d.sw)}"/><text x="${cx(i)}" y="${swY+3}" text-anchor="middle" font-size="9" fill="#fff" font-weight="700">${d.sw}</text>`;
+    if(d.fa)s+=`<circle cx="${cx(i)}" cy="${faY}" r="7.5" fill="${feelColor(d.fa)}"/><text x="${cx(i)}" y="${faY+3}" text-anchor="middle" font-size="9" fill="#fff" font-weight="700">${d.fa}</text>`;
+  });
+  s+='</svg>';
+  el.innerHTML=s;
+}
+function healthCorrPairs(){
+  const pairs=[];
+  D.hDaily.forEach(log=>{
+    if(!log.swelling&&!log.fatigue)return;
+    const prev=ymd(new Date(new Date(log.date+'T00:00:00').getTime()-864e5));
+    pairs.push({pc:healthCarbForDate(prev),sw:log.swelling||null,fa:log.fatigue||null});
+  });
+  return pairs;
+}
+function hAvg(arr){return arr.length?arr.reduce((a,b)=>a+b,0)/arr.length:null}
+function healthCorrPhrase(label,hi,lo){
+  if(hi==null||lo==null)return '';
+  const d=hi-lo;
+  if(d>=0.4)return `糖質が多めだった翌朝は、${label}がすこし強めに出ているみたいです（${lo.toFixed(1)}→${hi.toFixed(1)}）。`;
+  if(d<=-0.4)return `糖質が多めの翌朝のほうが、むしろ${label}は穏やかでした（${lo.toFixed(1)}→${hi.toFixed(1)}）。`;
+  return `${label}は、糖質の多い少ないとはあまり連動していないようです（${lo.toFixed(1)}前後）。`;
+}
+function renderHealthCorr(){
+  const el=document.getElementById('healthCorr');if(!el)return;
+  const pairs=healthCorrPairs();
+  if(pairs.length<4){
+    const left=4-pairs.length;
+    el.innerHTML=`<div class="health-corr-empty">体感の記録は ${pairs.length}日ぶん。<br>あと ${left}日ほど積もると、前の日の糖質と翌朝のつながりが見えてきます……ゆっくりで大丈夫ですよ。</div>`;
+    return;
+  }
+  const sp=pairs.slice().sort((a,b)=>a.pc-b.pc),mid=Math.floor(sp.length/2);
+  const lo=sp.slice(0,mid),hi=sp.slice(sp.length-mid);
+  const g=(arr,k)=>hAvg(arr.filter(p=>p[k]).map(p=>p[k]));
+  const loSw=g(lo,'sw'),loFa=g(lo,'fa'),hiSw=g(hi,'sw'),hiFa=g(hi,'fa');
+  const loC=Math.round(hAvg(lo.map(p=>p.pc))),hiC=Math.round(hAvg(hi.map(p=>p.pc)));
+  const box=(label,c,sw,fa)=>`<div class="health-corr-box"><div class="cc-label">${label}</div><div class="cc-carb">前日 約${c}g</div><div class="cc-feel">むくみ <b>${sw!=null?sw.toFixed(1):'—'}</b><br>だるさ <b>${fa!=null?fa.toFixed(1):'—'}</b></div></div>`;
+  const msg=(healthCorrPhrase('むくみ',hiSw,loSw)+healthCorrPhrase('だるさ',hiFa,loFa))||'まだ傾向ははっきりしていません。記録が積もるほど、輪郭がくっきりしていきます。';
+  el.innerHTML=`<div class="health-corr-row">${box('糖質ひかえめの翌朝',loC,loSw,loFa)}${box('糖質おおめの翌朝',hiC,hiSw,hiFa)}</div><div class="health-corr-msg">${msg}</div>`;
 }
 
 // ═══════════════════════════════════════════════

@@ -22,9 +22,11 @@ supabase/functions/line-webhook/index.ts      ── LINE Webhook（Deno/Edge Fu
 |---|---|---|---|
 | home | 🏠 | tab-home | ホーム（天気・予定・くらしサマリー・買い物サマリー・セージ） |
 | seiiki | ☑ | tab-seiiki | くらし（ルーティン・今日のタスク・捨て活ログ・設定） |
+| health | 🌿 | tab-health | 健康（糖質量×体感マネジメント。朝の体感入力・食事追加・ベース食・デイリーサマリー） |
 | news | 📰 | tab-news | ニュース（RSS フィード） |
-| wish | ✨ | tab-wish | ウィッシュリスト |
-| shop | 🛒 | tab-shop | 買い物リスト＋台所在庫 |
+| shop | 🧺 | tab-shop | ほしいもの（🛒買い物 / 🧺在庫 / 💫ウィッシュ / ✨ひらめき の4サブタブ） |
+
+> **2026-05 改修**: 旧「ウィッシュ」タブ（tab-wish）を廃止し、買い物タブに吸収。ボトムタブは5→4。タブ名「買い物」→「ほしいもの」🧺。`switchWishTab` は廃止し `switchShopTab(tab)` に統合（tab: `memo`/`stock`/`wishlist`/`flash`）。FAB（wishFab）は shop タブ＋wishlist サブタブ時のみ表示。
 
 `switchTab(tab)` でパネル切替。ニュースタブは初回訪問時に `loadNews()` を呼ぶ（`_newsLoaded` フラグ）。
 
@@ -50,8 +52,13 @@ supabase/functions/line-webhook/index.ts      ── LINE Webhook（Deno/Edge Fu
 | `hk_weekly_tasks` | 週間タスク（text, last_done_week: YYYY-MM-DD） |
 | `wishlist` | ウィッシュリスト（title, category, memo, status: want/done, completed_at） |
 | `shopping_list` | 買い物リスト（item, category, checked） |
-| `pantry_items` | 台所在庫（name, status: in_stock/needed, image_url, updated_by: app/line） |
+| `pantry_items` | 台所在庫（name, status: in_stock/needed/amazon, image_url, category, updated_by: app/line） |
+| `flash_memos` | ひらめきメモ（text） |
 | `techo_rss_feeds` | ニュースフィード定義（name, url, cat） |
+| `health_food_master` | 食品マスタ（name, category, carb_g, kcal, unit, favorite, sort_order） |
+| `health_base_meal` | ベース食設定（meal: 朝/昼/夜・unique, carb_g, description） |
+| `health_daily_log` | 日次記録（date・unique, weight_kg, swelling, fatigue, abdomen, skip_*, memo） |
+| `health_extra_intake` | 追加食事（date, food_id, name/carb_g スナップショット, quantity, eat_time） |
 
 グローバル `D` オブジェクトにすべてのデータをキャッシュ。`loadData()` で一括取得、`renderAll()` で全描画。
 
@@ -110,7 +117,8 @@ supabase/functions/line-webhook/index.ts      ── LINE Webhook（Deno/Edge Fu
 ## ホームタブの各カード
 
 ### 天気カード
-2カラム（今日・明日）。タップで時間推移トグル。傘マーク（降水確率 40%以上）を表示。
+横1行コンパクト（今日・明日を `.wc-sep` で左右に並べた flex 行）。タップで時間推移トグル。
+天気テキスト（「晴れ」等）・傘マークは廃止。アイコン＋気温＋降水確率のみ表示。
 気圧バッジ（タップで時間別グラフ展開）を天気カード内に表示。
 
 ### セージのおすすめカード
@@ -138,7 +146,8 @@ supabase/functions/line-webhook/index.ts      ── LINE Webhook（Deno/Edge Fu
 - チャットラベルはテキストなし（🕯アイコンのみ）
 
 ### 買い物リストカード
-`homeShopSummary`。未チェックアイテム名を `・` 区切りで最大5件表示。
+`homeShopSummary`。買い物メモ（未チェック）と台所在庫の欠品アイテムを表示。
+タップ先を分岐: 買い物メモ行タップ→買い物タブの「買い物メモ」サブタブ / 欠品行タップ→「在庫管理」サブタブ。
 
 ---
 
@@ -151,18 +160,67 @@ supabase/functions/line-webhook/index.ts      ── LINE Webhook（Deno/Edge Fu
 - ○ / × ボタンは横並び（`wish-actions` flex-direction: row）
 - 細長い付箋スタイル（padding 小さめ、margin-bottom:5px）
 
+### ひらめきメモ サブタブ（2026-05 追加）
+`switchWishTab(tab)` で切り替え。タブキー: `wishlist` / `memo`。
+- **💫 ウィッシュ**: 従来のウィッシュリスト（FAB はこのタブのみ表示）
+- **✨ ひらめきメモ**: `flash_memos` テーブル。テキスト入力のみシンプルな一覧
+  - `addFlashMemo()` / `delFlashMemo(id)` / `renderFlashMemos()`
+  - 作成日時を `M/D HH:mm` 形式で表示
+  - 新着順（`created_at DESC`）
+
+**flash_memos テーブル作成 SQL**（初回のみ実行）:
+```sql
+CREATE TABLE flash_memos (
+  id         uuid primary key default gen_random_uuid(),
+  created_at timestamptz not null default now(),
+  text       text not null
+);
+ALTER TABLE flash_memos ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "auth_only" ON flash_memos
+  FOR ALL USING (auth.role() = 'authenticated')
+  WITH CHECK (auth.role() = 'authenticated');
+```
+
 ---
 
-## 台所在庫（マステシステム）仕様（2026-05 新規）
+## 買い物タブ（tab-shop）サブタブ構成（2026-05 追加）
+
+`switchShopTab(tab)` で切り替え。タブキー: `list` / `pantry`。
+- **🛍 買い物メモ**: `shopping_list` テーブル。個人用（絵具・化粧品等）の買い物メモ
+- **📦 在庫管理**: `pantry_items` テーブル。台所在庫マステシステム（LINE連携あり）
+
+---
+
+## 台所在庫（マステシステム）仕様（2026-05）
 
 ### 概要
-買い物タブ（tab-shop）下部の `.pantry-section` に実装。
+買い物タブ（tab-shop）の「📦 在庫管理」サブタブ内に実装。
 物理マステ運用（冷蔵庫にマステを貼る）のデジタル補助。
 
+### ステータス 3値
+| status | バッジ | 意味 |
+|---|---|---|
+| `in_stock` | 🟢 | 在庫あり |
+| `needed` | 🔴 | 欠品（LINE連携で通知対象） |
+| `amazon` | 📦 | Amazon購入品 |
+
+CHECK制約: `pantry_items_status_check CHECK (status IN ('in_stock', 'needed', 'amazon'))`
+ステータスバッジはアイコンのみ（テキストなし）でコンパクト表示（`setPantryStatus(id, status)` でサイクル）。
+
+### カテゴリ管理
+`pantry_items.category` カラム（text）。アイテム追加モーダルで自由入力。デフォルト `''`（未分類）。
+
+### フィルター（2段レイアウト）
+- **上段（濃い `.pantry-filter-btn`）**: ステータスフィルター — 全て / 🔴欠品 / 📦Amazon / 🟢在庫
+- **下段（薄い `.pantry-filter-cat-btn`）**: カテゴリフィルター — 全カテゴリ + 登録済みカテゴリ
+- `_pantryFilter`（status）/ `_pantryFilterCat`（category）で状態保持
+
+### ソート
+あいうえお順（`byName`）。ステータス変更時に位置が動かない（ソートをステータス優先からあいうえお順に変更）。
+
 ### UI
-- 欠品アイテムをリスト上部にソートして表示
-- ステータスバッジタップ（`togPantry(id)`）で `needed` ↔ `in_stock` 切り替え
-- **✏️ボタン**: アイテム名インライン編集（`startEditPantry(id)` → `savePantryName(id)`）
+- **アイテム追加**: ＋ボタンタップで追加モーダル（`openAddPantryModal()`）。名前・カテゴリ・ステータスをまとめて設定
+- **名前編集**: ✏️ボタンタップで編集モーダル（`openEditPantryModal(id)`）。広いテキスト入力で操作しやすい
 - **画像なし時**: 📷（カメラ撮影）・🔗（URLパネル）の2ボタン
 - **画像あり時（サムネイル）**: タップでアクションシート（`openPantryImgMenu`）が開く
   - 📷 カメラで撮り直す
@@ -170,20 +228,63 @@ supabase/functions/line-webhook/index.ts      ── LINE Webhook（Deno/Edge Fu
   - 🗑 画像を削除する（`deletePantryImage`）
 - **画像URLパネル**（`pantryUrlPanel`）:「🔍 Googleで画像を検索する」ボタン → `https://www.google.com/search?q={name}+商品&tbm=isch` を開く。URL貼り付け後にプレビュー表示。
 
+### Amazon連携
+- `status=amazon` のアイテムには 🔍 ボタン（`searchAmazonItem(name)`）→ Amazonで商品名検索
+- `_pantryFilter==='amazon'` 時にバナー表示: 「また買うリスト」へのリンク（`https://www.amazon.co.jp/gp/buyagain`）
+
+### DBエラーハンドリング（ロールバック付き）
+`setPantryStatus(id, status)` は楽観的UI更新＋ロールバック方式:
+- DB書き込みエラー時に `prevStatus` へ戻す
+- `alert()` でユーザーにエラー内容を通知
+
 ### 主要関数
 ```js
-renderPantry()          // 描画（欠品→在庫の順）
-togPantry(id)           // ステータストグル
-addPantryItem()         // アイテム追加
-delPantryItem(id)       // アイテム削除（confirm付き）
-startEditPantry(id)     // 名前インライン編集開始
-savePantryName(id)      // 名前保存
-openPantryImgMenu(id)   // 画像アクションシート表示
-deletePantryImage(id)   // 画像削除（image_url → null）
-openPantryUrlPanel(id)  // URL登録パネル表示
-openPantryGoogleSearch()// Google画像検索を開く
-uploadPantryImage(input)// カメラ写真をStorageにアップロード
+renderPantry()              // 描画（フィルター＋あいうえお順）
+setPantryStatus(id,status)  // ステータス変更（ロールバック付き）
+openAddPantryModal()        // 追加モーダル表示
+addPantryItem()             // アイテム追加（モーダルから）
+delPantryItem(id)           // アイテム削除（confirm付き）
+openEditPantryModal(id)     // 名前編集モーダル表示
+savePantryName(id)          // 名前保存
+openPantryImgMenu(id)       // 画像アクションシート表示
+deletePantryImage(id)       // 画像削除（image_url → null）
+openPantryUrlPanel(id)      // URL登録パネル表示
+openPantryGoogleSearch()    // Google画像検索を開く
+uploadPantryImage(input)    // カメラ写真をStorageにアップロード
+searchAmazonItem(name)      // Amazon商品名検索を開く
 ```
+
+---
+
+## 健康タブ（tab-health）仕様（2026-05 Phase 2）
+
+糖質量×体感（むくみ・だるさ）のマネジメントツール。仕様書: `資料/hidamari_health_spec_v1.md`。
+**初回のみ `health_setup.sql` を Supabase SQL Editor で実行**（4テーブル＋RLS＋ベース食3行＋食品マスタ初期データ）。
+
+### 設計の芯
+- 目的は「見た目」でなく「体感」。記録コストを最小化。未入力日も咎めない（赤字・警告色なし）。
+- ベース食（朝昼夜の定型）を自動加算し、追加で食べた分だけ記録する方式。
+
+### カード構成（縦並び・単一パネル）
+1. **今日のサマリー**（`renderHealthSummary`）: 本日の糖質量（大数字）＋快適ゾーンバッジ／体重／体感／7日平均糖質量
+2. **今朝の体感**（`renderHealthMorning`）: むくみ・だるさ 1〜5（**1=軽い / 5=強い**、再タップで解除）／お腹3択／体重
+3. **追加で食べた**（`openHealthFood`→ピッカー）: 食品マスタ選択→数量（×½/×1/×2/×3）→`health_extra_intake` に保存。新規食品もその場で登録可
+4. **ベース食**（`renderHealthBase`）: 朝昼夜の糖質量表示＋今日のスキップトグル（食べた/抜き）。`openHealthBase` で carb_g・内容を編集
+5. **14日の推移**（`renderHealthTrend`）: インラインSVGグラフ（横スクロール）。糖質をゾーン色の棒、体重を折れ線で重ね、170g注意ラインを点線表示。下部に「む（むくみ）/だ（だるさ）」を日ごとの色付き番号ドットで帯表示。`feelColor(n)` で 1=teal→5=coral。`healthDayData(n)` が日次配列を生成
+6. **糖質と体感のつながり**（`renderHealthCorr`）: 前日糖質→翌朝体感の相関。体感記録のある日を前日糖質でソートし中央値で上下半分に分割（`healthCorrPairs`）、各群のむくみ・だるさ平均を2ボックス比較＋差0.4以上で言葉のコメント（`healthCorrPhrase`）。記録4日未満は咎めず待つ空状態メッセージ
+   - 描画は `renderHealth` と `renderHealthSummary` の末尾から呼ばれ、体感・体重・スキップ・食事の変更時に自動追従
+
+### 快適ゾーン（`healthZone(carb)`）
+〜70🟢快適 / 〜120🟡通常 / 〜170🟠注意 / 170〜🔴閾値超え（本人の体感で運用しながら調整）
+
+### データ
+- `D.hFood`（食品マスタ）/ `D.hBase`（{朝,昼,夜} マップ）/ `D.hDaily`（直近30日）/ `D.hExtra`（直近30日）
+- 日次記録は `date` を一意キーに `upsert(onConflict:'date')`。`healthUpsertToday(patch)` が局所更新＋DB反映
+- 糖質計算: `healthCarbForDate(date)` = ベース（スキップ反映）＋追加分。`healthAvg7()` で7日平均
+
+### 残（Phase 3 以降）
+- 散布図（前日糖質×翌朝体感の点プロット）は今回見送り。相関は中央値2群比較で代替
+- リマインダー（未入力日のみ表示するアプリ内カード）・お気に入り編集・食品マスタ本格編集
 
 ---
 
@@ -202,6 +303,7 @@ uploadPantryImage(input)// カメラ写真をStorageにアップロード
 ### 返信形式
 - 欠品画像（最大4枚）を先に送信、テキストリストを最後に送信
 - 1メッセージ最大5件（LINE Reply APIの上限）
+- テキストリスト末尾に取得日時を JST で `📅 YYYY/MM/DD HH:mm 時点` 形式で表示
 
 ---
 
