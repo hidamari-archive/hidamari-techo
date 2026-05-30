@@ -2187,11 +2187,11 @@ function addPantryItem(){
   const text=document.getElementById('pantryInput').value.trim();if(!text)return;
   const cat=document.getElementById('pantryCatSelect').value||getPantryCats()[0];
   const id=uuid();
-  D.pantryItems.push({id,name:text,status:'in_stock',category:cat,updated_by:'app',created_at:new Date().toISOString()});
+  D.pantryItems.push({id,name:text,status:'needed',category:cat,updated_by:'app',created_at:new Date().toISOString()});
   document.getElementById('pantryInput').value='';
   togPantryAdd();
   renderPantry();updateHomeSummary();
-  dbw(db.from('pantry_items').insert({id,name:text,status:'in_stock',category:cat,updated_by:'app'}),'p.add');
+  dbw(db.from('pantry_items').insert({id,name:text,status:'needed',category:cat,updated_by:'app'}),'p.add');
 }
 function delPantryItem(id){
   if(!confirm('このアイテムを削除しますか？'))return;
