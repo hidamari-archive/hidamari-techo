@@ -885,8 +885,8 @@ body{font-family:var(--font-body);background:var(--bg);color:var(--text);min-hei
   <!-- 買い物タブ -->
   <div class="tab-panel" id="tab-shop">
     <div class="shop-tabs">
-      <button class="shop-stab active" data-stab="memo" onclick="switchShopTab('memo')">🛒 買い物</button>
-      <button class="shop-stab" data-stab="stock" onclick="switchShopTab('stock')">🧺 在庫</button>
+      <button class="shop-stab" data-stab="memo" onclick="switchShopTab('memo')">🛒 買い物</button>
+      <button class="shop-stab active" data-stab="stock" onclick="switchShopTab('stock')">🧺 在庫</button>
       <button class="shop-stab" data-stab="wishlist" onclick="switchShopTab('wishlist')">💫 ウィッシュ</button>
       <button class="shop-stab" data-stab="flash" onclick="switchShopTab('flash')">✨ ひらめき</button>
     </div>
@@ -2014,7 +2014,12 @@ document.getElementById('shopInput').addEventListener('keydown',e=>{if(e.key==='
 
 // ─── 台所在庫 ───
 const PANTRY_CATS_DEFAULT=['食品','調味料','洗面所・お風呂','日用品'];
-function getPantryCats(){try{return JSON.parse(localStorage.getItem('pantry_cats'))||PANTRY_CATS_DEFAULT;}catch{return PANTRY_CATS_DEFAULT;}}
+function getPantryCats(){
+  const fromItems=[...new Set((D.pantryItems||[]).map(x=>x.category).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'ja'));
+  const fromLocal=(()=>{try{return JSON.parse(localStorage.getItem('pantry_cats'))||[];}catch{return [];}})();
+  const merged=[...new Set([...fromItems,...fromLocal])];
+  return merged.length?merged:PANTRY_CATS_DEFAULT;
+}
 function savePantryCats(cats){localStorage.setItem('pantry_cats',JSON.stringify(cats));}
 function fillPantryCatSelect(){
   const sel=document.getElementById('pantryCatSelect');if(!sel)return;
@@ -2071,7 +2076,7 @@ function delFlashMemo(id){
   renderFlashMemos();
   dbw(db.from('flash_memos').delete().eq('id',id),'fm.del');
 }
-let _shopTab='memo';
+let _shopTab='stock';
 function switchShopTab(tab){
   _shopTab=tab;
   document.querySelectorAll('.shop-stab').forEach(x=>x.classList.toggle('active',x.dataset.stab===tab));
