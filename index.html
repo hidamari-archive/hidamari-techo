@@ -1990,6 +1990,21 @@ function renderShop(){
   });
   h+='</div>';
   if(D.shopItems.some(x=>x.checked))h+=`<button class="shop-clear-btn" onclick="clearChecked()">チェック済みを削除</button>`;
+  const priSort={urgent:0,normal:1,low:2};
+  const needed=(D.pantryItems||[]).filter(x=>x.status==='needed').sort((a,b)=>(priSort[a.priority||'normal']||1)-(priSort[b.priority||'normal']||1)||a.name.localeCompare(b.name,'ja'));
+  if(needed.length){
+    h+=`<div style="margin-top:16px;padding:0 2px"><div style="font-size:11px;color:var(--text-faint);margin-bottom:6px;letter-spacing:.05em">🔴 欠品（タップで買った！）</div><div class="card" style="margin-bottom:8px">`;
+    needed.forEach((x,i)=>{
+      const pri=x.priority||'normal';
+      const priIcon=pri==='urgent'?'🔥 ':pri==='low'?'💤 ':'';
+      const cls=needed.length===1?'only':'';
+      h+=`<div class="shop-item ${cls}" onclick="setPantryStatus('${x.id}','in_stock')" style="cursor:pointer">
+        <div style="font-size:14px;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${priIcon}${esc(x.name)}</div>
+        <span style="font-size:11px;color:var(--text-faint)">🟢</span>
+      </div>`;
+    });
+    h+=`</div></div>`;
+  }
   el.innerHTML=h;
 }
 function togShop(id){
