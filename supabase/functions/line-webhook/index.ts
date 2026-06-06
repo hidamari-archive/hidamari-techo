@@ -86,17 +86,15 @@ Deno.serve(async (req) => {
       }
 
       await sendReply(replyToken, messages, accessToken)
-    } else if (IMG_KEYWORDS.some(k => text.includes(k))) {
-      const { data: items } = await db
-        .from('pantry_items')
-        .select('name, image_url')
-        .eq('status', 'needed')
-        .not('image_url', 'is', null)
-        .order('name')
+    } else if (text.includes('画像')) {
+      const keyword = text.replace(/の?画像/g, '').trim()
+      let query = db.from('pantry_items').select('name, image_url').eq('status', 'needed').not('image_url', 'is', null)
+      if (keyword) query = query.ilike('name', `%${keyword}%`)
+      const { data: items } = await query.order('name')
 
       const messages: object[] = []
       if (!items || items.length === 0) {
-        messages.push({ type: 'text', text: '📷 画像が登録されている欠品はないよ' })
+        messages.push({ type: 'text', text: keyword ? `📷「${keyword}」に一致する画像はないよ` : '📷 画像が登録されている欠品はないよ' })
       } else {
         const imgs = items.slice(0, 4)
         for (const item of imgs) {
