@@ -2136,7 +2136,7 @@ function setPantryStatus(id,status){
   _pantryOpenMenu=null;
   D.pantryItems[idx]={...D.pantryItems[idx],status};
   if(status!=='needed')D.pantryItems[idx].priority='normal';
-  renderPantry();updateHomeSummary();
+  renderPantry();renderShop();updateHomeSummary();
   const patch={status,updated_at:new Date().toISOString(),updated_by:'app'};
   if(status!=='needed')patch.priority='normal';
   db.from('pantry_items').update(patch).eq('id',id)
@@ -2144,7 +2144,7 @@ function setPantryStatus(id,status){
       if(error){
         console.error('DB write error [p.tog]:',error);
         D.pantryItems[idx]={...D.pantryItems[idx],status:prevStatus};
-        renderPantry();updateHomeSummary();
+        renderPantry();renderShop();updateHomeSummary();
         alert('ステータス更新に失敗しました。\n'+error.message);
       }
     });
