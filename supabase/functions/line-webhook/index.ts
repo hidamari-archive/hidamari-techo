@@ -58,7 +58,7 @@ Deno.serve(async (req) => {
     if (KEYWORDS.some(k => text.includes(k))) {
       const { data: items } = await db
         .from('pantry_items')
-        .select('name, image_url')
+        .select('name, image_url, priority')
         .eq('status', 'needed')
         .order('name')
 
@@ -67,10 +67,12 @@ Deno.serve(async (req) => {
       if (!items || items.length === 0) {
         messages.push({ type: 'text', text: '✅ 今は買い物なしだよ！' })
       } else {
+        const priOrder: Record<string, number> = { urgent: 0, normal: 1, low: 2 }
+        const sorted = [...items].sort((a: any, b: any) => (priOrder[a.priority || 'normal'] ?? 1) - (priOrder[b.priority || 'normal'] ?? 1))
         const now = new Date()
         const jst = new Date(now.getTime() + 9 * 60 * 60 * 1000)
         const ts = `${jst.getFullYear()}/${String(jst.getMonth()+1).padStart(2,'0')}/${String(jst.getDate()).padStart(2,'0')} ${String(jst.getHours()).padStart(2,'0')}:${String(jst.getMinutes()).padStart(2,'0')} 時点`
-        const list = items.map((i: { name: string }) => `🔴 ${i.name}`).join('\n')
+        const list = sorted.map((i: any) => {const p=i.priority||'normal';return `${p==='urgent'?'🔥':p==='low'?'💤':'🔴'} ${i.name}`}).join('\n')
         const textMsg = { type: 'text', text: `🛒 買い物リスト\n\n${list}\n\n計 ${items.length}点\n📅 ${ts}` }
 
         // 画像を先に（最大4枚）、テキストリストを最後に送信

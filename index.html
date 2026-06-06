@@ -342,6 +342,9 @@ body{font-family:var(--font-body);background:var(--bg);color:var(--text);min-hei
 .pantry-url-btn{background:none;border:none;color:var(--text-faint);font-size:13px;cursor:pointer;padding:2px 4px;flex-shrink:0;opacity:.5;font-family:var(--font-body)}
 .pantry-img-thumb{width:38px;height:38px;border-radius:8px;object-fit:cover;flex-shrink:0;cursor:pointer;border:1px solid var(--border)}
 .pantry-edit-btn{background:none;border:none;cursor:pointer;font-size:12px;color:var(--text-faint);padding:0 2px;flex-shrink:0;opacity:.6}
+.pantry-pri-btn{background:none;border:none;cursor:pointer;font-size:12px;padding:0 2px;flex-shrink:0;line-height:1;opacity:.35}
+.pantry-pri-btn.urgent{opacity:1}
+.pantry-pri-btn.low{opacity:1}
 .pantry-amazon-btn{background:none;border:none;cursor:pointer;font-size:13px;padding:0 2px;flex-shrink:0;opacity:.65;color:#5B7EC9;line-height:1}
 .pantry-amazon-banner{background:#EAF0FB;border:1px solid #B3C6F0;border-radius:var(--radius-sm);padding:11px 14px;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;gap:8px}
 .pantry-amazon-banner-link{color:#5B7EC9;font-size:13px;font-family:var(--font-body);text-decoration:none;letter-spacing:.02em}
@@ -1565,7 +1568,7 @@ function updateHomeSummary(){
   const amazonItems=D.pantryItems.filter(x=>x.status==='amazon');
   let shopHtml='';
   if(unchecked.length) shopHtml+=`<div onclick="switchTab('shop');switchShopTab('memo')" style="cursor:pointer;font-size:12px;color:var(--text-light);line-height:1.6">${unchecked.map(x=>esc(x.item)).join('・')}</div>`;
-  if(needed.length) shopHtml+=`<div onclick="switchTab('shop');switchShopTab('stock')" style="cursor:pointer;font-size:12px;color:#C9897A;line-height:1.6;margin-top:${unchecked.length?3:0}px">🔴 ${needed.map(x=>esc(x.name)).join('・')}</div>`;
+  if(needed.length){const priSort={urgent:0,normal:1,low:2};const sorted=[...needed].sort((a,b)=>(priSort[a.priority||'normal']||1)-(priSort[b.priority||'normal']||1));shopHtml+=`<div onclick="switchTab('shop');switchShopTab('stock')" style="cursor:pointer;font-size:12px;color:#C9897A;line-height:1.6;margin-top:${unchecked.length?3:0}px">🔴 ${sorted.map(x=>(x.priority==='urgent'?'🔥':'')+esc(x.name)).join('・')}</div>`;}
   if(amazonItems.length) shopHtml+=`<div onclick="switchTab('shop');switchShopTab('stock')" style="cursor:pointer;font-size:12px;color:#5B7EC9;line-height:1.6;margin-top:${(unchecked.length||needed.length)?3:0}px">📦 ${amazonItems.map(x=>esc(x.name)).join('・')}</div>`;
   if(!shopHtml) shopHtml='<span style="color:var(--text-faint)">空です</span>';
   document.getElementById('homeShopSummary').innerHTML=shopHtml;
@@ -2115,14 +2118,33 @@ function setPantryStatus(id,status){
   const prevStatus=D.pantryItems[idx].status;
   _pantryOpenMenu=null;
   D.pantryItems[idx]={...D.pantryItems[idx],status};
+  if(status!=='needed')D.pantryItems[idx].priority='normal';
   renderPantry();updateHomeSummary();
-  db.from('pantry_items').update({status,updated_at:new Date().toISOString(),updated_by:'app'}).eq('id',id)
+  const patch={status,updated_at:new Date().toISOString(),updated_by:'app'};
+  if(status!=='needed')patch.priority='normal';
+  db.from('pantry_items').update(patch).eq('id',id)
     .then(({error})=>{
       if(error){
         console.error('DB write error [p.tog]:',error);
         D.pantryItems[idx]={...D.pantryItems[idx],status:prevStatus};
         renderPantry();updateHomeSummary();
         alert('ステータス更新に失敗しました。\n'+error.message);
+      }
+    });
+}
+function setPantryPriority(id){
+  const idx=D.pantryItems.findIndex(x=>x.id===id);if(idx<0)return;
+  const cycle={normal:'urgent',urgent:'low',low:'normal'};
+  const prev=D.pantryItems[idx].priority||'normal';
+  const next=cycle[prev]||'normal';
+  D.pantryItems[idx]={...D.pantryItems[idx],priority:next};
+  renderPantry();updateHomeSummary();
+  db.from('pantry_items').update({priority:next,updated_at:new Date().toISOString(),updated_by:'app'}).eq('id',id)
+    .then(({error})=>{
+      if(error){
+        console.error('DB write error [p.pri]:',error);
+        D.pantryItems[idx]={...D.pantryItems[idx],priority:prev};
+        renderPantry();updateHomeSummary();
       }
     });
 }
@@ -2152,9 +2174,12 @@ function renderPantry(){
       :`<button class="pantry-smenu-btn" onclick="setPantryStatus('${x.id}','in_stock')">🟢 在庫あり</button>`;
     const menuHtml=menuOpen?`<div class="pantry-smenu">${menuBtns}</div>`:'';
     const amazonSearchBtn=st==='amazon'?`<button class="pantry-amazon-btn" data-name="${esc(x.name)}" onclick="searchAmazonItem(this.dataset.name)" title="Amazonで検索">🔍</button>`:'';
+    const pri=x.priority||'normal';
+    const priBtn=st==='needed'?`<button class="pantry-pri-btn ${pri}" onclick="setPantryPriority('${x.id}')" title="優先度">${pri==='urgent'?'🔥':pri==='low'?'💤':'☁️'}</button>`:'';
     return`<div class="pantry-item ${cls}">
       ${imgHtml}
       <div class="pantry-item-name ${nameCls}" id="pname-${x.id}">${esc(x.name)}</div>
+      ${priBtn}
       <button class="pantry-badge ${badgeCls}" onclick="openStatusMenu('${x.id}')">${badgeLabel}</button>
       ${amazonSearchBtn}
       <button class="pantry-edit-btn" onclick="startEditPantry('${x.id}')">✏️</button>
