@@ -72,21 +72,14 @@ Deno.serve(async (req) => {
         const now = new Date()
         const jst = new Date(now.getTime() + 9 * 60 * 60 * 1000)
         const ts = `${jst.getFullYear()}/${String(jst.getMonth()+1).padStart(2,'0')}/${String(jst.getDate()).padStart(2,'0')} ${String(jst.getHours()).padStart(2,'0')}:${String(jst.getMinutes()).padStart(2,'0')} 時点`
-        const list = sorted.map((i: any) => {const p=i.priority||'normal';return `${p==='urgent'?'🔥':p==='low'?'💤':'🔴'} ${i.name}`}).join('\n')
+        const list = sorted.map((i: any) => {
+          const p = i.priority || 'normal'
+          const mark = p === 'urgent' ? '🔥' : p === 'low' ? '💤' : '・'
+          const imgLink = i.image_url ? `\n  📷 ${(i.image_url as string).split('?')[0]}` : ''
+          return `${mark} ${i.name}${imgLink}`
+        }).join('\n')
         const textMsg = { type: 'text', text: `🛒 買い物リスト\n\n${list}\n\n計 ${items.length}点\n📅 ${ts}` }
 
-        // 画像を先に（最大4枚）、テキストリストを最後に送信
-        const withImage = items
-          .filter((i: { name: string; image_url: string | null }) => i.image_url)
-          .slice(0, 4)
-        for (const item of withImage) {
-          const url = (item.image_url as string).split('?')[0]
-          messages.push({
-            type: 'image',
-            originalContentUrl: url,
-            previewImageUrl: url,
-          })
-        }
         messages.push(textMsg)
       }
 
