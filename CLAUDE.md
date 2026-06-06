@@ -268,9 +268,9 @@ searchAmazonItem(name)      // Amazon商品名検索を開く
 ### カード構成（縦並び・単一パネル）
 1. **今日のサマリー**（`renderHealthSummary`）: 本日の糖質量（大数字）＋快適ゾーンバッジ／体重／体感／7日平均糖質量
 2. **今朝の体感**（`renderHealthMorning`）: むくみ・だるさ 1〜5（**1=軽い / 5=強い**、再タップで解除）／お腹3択／体重
-3. **追加で食べた**（`openHealthFood`→ピッカー）: 食品マスタを**複数トグル選択**（`_hFoodSel={food_id:数量}`）。選択行に個数チップ（**¼/½/1/2個**＝`HEALTH_QTYS`）。下部ボタンに件数＋合計糖質を表示し`healthAddSelected`で一括 insert（配列まとめて）。新規食品はその場で登録し自動選択。`healthToggleFood`/`healthSetFoodQty`/`healthUpdateAddBtn`
+3. **追加で食べた**: カード上部に**「よく食べる」ワンタップ追加チップ**（`renderHealthQuick`／favorite食品を画面遷移なく `healthQuickAdd` で数量1即追加）。「＋ ほかのものを追加」で `openHealthFood`→ピッカー：食品マスタを**複数トグル選択**（`_hFoodSel={food_id:数量}`）、選択行に個数チップ（**¼/½/1/2個**＝`HEALTH_QTYS`）、下部ボタンに件数＋合計糖質を表示し`healthAddSelected`で一括 insert。新規食品はその場で登録し自動選択。`healthToggleFood`/`healthSetFoodQty`/`healthUpdateAddBtn`
 4. **ベース食**（`renderHealthBase`）: 朝昼夜の糖質量表示＋今日のスキップトグル（食べた/抜き）。`openHealthBase` で carb_g・内容を編集
-5. **14日の推移**（`renderHealthTrend`）: インラインSVGグラフ（横スクロール）。糖質をゾーン色の棒、体重を折れ線で重ね、170g注意ラインを点線表示。下部に「む（むくみ）/だ（だるさ）」を日ごとの色付き番号ドットで帯表示。`feelColor(n)` で 1=teal→5=coral。`healthDayData(n)` が日次配列を生成
+5. **推移グラフ**（`renderHealthTrend`／タイトル `📈 推移（N日）` は動的）: インラインSVGグラフ（横スクロール）。糖質をゾーン色の棒、体重を折れ線で重ね、170g注意ラインを点線表示。下部に「む（むくみ）/だ（だるさ）」を日ごとの色付き番号ドットで帯表示。`feelColor(n)` で 1=teal→5=coral。`healthDayData(n)` が日次配列を生成。**表示日数Nは「最古の記録日〜今日」を `[14, HEALTH_DAYS(=90)]` でクランプ**（`healthEarliestDate`）。記録が増えるほどグラフも伸びる
    - 開いたとき直近（右端）が見えるよう、描画後に親 `.health-chart-scroll` を `scrollLeft=scrollWidth` で右寄せ
    - 各日に透明な `<rect onclick=healthEditDay(date)>` を重ね、棒・体感ドットどこでもタップでその日の登録に切替（`_hDate` 設定→`renderHealth`→体感カードへスクロール）。選択中の日は列を `var(--accent)` で淡くハイライト＋日付ラベルをアクセント色太字
 6. **糖質と体感のつながり**（`renderHealthCorr`）: 前日糖質→翌朝体感の相関。体感記録のある日を前日糖質でソートし中央値で上下半分に分割（`healthCorrPairs`）、各群のむくみ・だるさ平均を2ボックス比較＋差0.4以上で言葉のコメント（`healthCorrPhrase`）。記録4日未満は咎めず待つ空状態メッセージ
@@ -278,7 +278,7 @@ searchAmazonItem(name)      // Amazon商品名検索を開く
 
 ### さかのぼり入力（2026-05 追加）
 - グローバル `_hDate`（空＝今日）が「記録対象日」。`hDate()`＝`_hDate||gt()`、`hCur()`＝対象日のlog、`hLog(date)` ヘルパー
-- 体感カードの日付バー（`#hDateBar`）: ◀ / `<input type=date>` / ▶ / 「今日へ」。`hShiftDate(±1)`・`hPickDate()`・`hResetDate()`。min＝30日前・max＝今日
+- 体感カードの日付バー（`#hDateBar`）: ◀ / `<input type=date>` / ▶ / 「今日へ」。`hShiftDate(±1)`・`hPickDate()`・`hResetDate()`。min＝`HEALTH_DAYS`(=90)日前・max＝今日
 - 対象日が今日でないとき日付バーが琥珀色（`.back`）になり、サマリー・体感・追加食事・ベース食スキップがすべてその日に切り替わる（見出しも `M/D` 表示に）
 - 書き込みは `healthUpsert(patch)`（旧 `healthUpsertToday` を対象日対応にリネーム）。食事追加 `healthAddIntake` も `date=hDate()`
 - 半月ぶんの体重・だるさ・チートデー（品目から追加）をまとめて遡り登録する用途
@@ -287,9 +287,10 @@ searchAmazonItem(name)      // Amazon商品名検索を開く
 〜70🟢快適 / 〜120🟡通常 / 〜170🟠注意 / 170〜🔴閾値超え（本人の体感で運用しながら調整）
 
 ### データ
-- `D.hFood`（食品マスタ）/ `D.hBase`（{朝,昼,夜} マップ）/ `D.hDaily`（直近30日）/ `D.hExtra`（直近30日）
-- 日次記録は `date` を一意キーに `upsert(onConflict:'date')`。`healthUpsertToday(patch)` が局所更新＋DB反映
+- `D.hFood`（食品マスタ）/ `D.hBase`（{朝,昼,夜} マップ）/ `D.hDaily`（直近`HEALTH_DAYS`=90日）/ `D.hExtra`（直近90日）
+- 日次記録は `date` を一意キーに `upsert(onConflict:'date')`。`healthUpsert(patch)` が局所更新＋DB反映
 - 糖質計算: `healthCarbForDate(date)` = ベース（スキップ反映）＋追加分。`healthAvg7()` で7日平均
+- **食品マスタ更新は `health_food_update_202606.sql`**（よく食べる8品の差し替え・飲み物/パフェ追加・お酒削除）。過去の `health_extra_intake` は name/carb スナップショットのため、マスタ削除しても記録は残る
 
 ### 残（Phase 3 以降）
 - 散布図（前日糖質×翌朝体感の点プロット）は今回見送り。相関は中央値2群比較で代替
