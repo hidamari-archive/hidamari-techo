@@ -1979,8 +1979,9 @@ function renderShop(){
   const unchecked=D.shopItems.filter(x=>!x.checked);
   const checked=D.shopItems.filter(x=>x.checked);
   const all=[...unchecked,...checked];
-  if(!all.length){el.innerHTML='<div style="padding:24px;text-align:center;color:var(--text-faint);font-family:var(--font-accent);font-size:14px">リストは空です</div>';return}
-  let h='<div class="card" style="margin-bottom:8px">';
+  let h='';
+  if(!all.length){h='<div style="padding:24px;text-align:center;color:var(--text-faint);font-family:var(--font-accent);font-size:14px">リストは空です</div>';}
+  else{h='<div class="card" style="margin-bottom:8px">';
   all.forEach(x=>{
     h+=`<div class="shop-item ${all.length===1?'only':''} ${x.checked?'checked':''}">
       <div class="shop-checkbox ${x.checked?'checked':''}" onclick="togShop('${x.id}')"></div>
@@ -1990,6 +1991,7 @@ function renderShop(){
   });
   h+='</div>';
   if(D.shopItems.some(x=>x.checked))h+=`<button class="shop-clear-btn" onclick="clearChecked()">チェック済みを削除</button>`;
+  }
   const priSort={urgent:0,normal:1,low:2};
   const needed=(D.pantryItems||[]).filter(x=>x.status==='needed').sort((a,b)=>(priSort[a.priority||'normal']||1)-(priSort[b.priority||'normal']||1)||a.name.localeCompare(b.name,'ja'));
   if(needed.length){
