@@ -1,6 +1,7 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
 const KEYWORDS = ['リスト', '買い物', 'ある？', '何がいる', '買い物ある']
+const IMG_KEYWORDS = ['画像']
 
 async function verifySignature(body: string, signature: string, secret: string): Promise<boolean> {
   const key = await crypto.subtle.importKey(
@@ -75,14 +76,37 @@ Deno.serve(async (req) => {
         const list = sorted.map((i: any) => {
           const p = i.priority || 'normal'
           const mark = p === 'urgent' ? '🔥' : p === 'low' ? '💤' : '・'
-          const imgLink = i.image_url ? `\n  📷 ${(i.image_url as string).split('?')[0]}` : ''
-          return `${mark} ${i.name}${imgLink}`
+          return `${mark} ${i.name}`
         }).join('\n')
-        const textMsg = { type: 'text', text: `🛒 買い物リスト\n\n${list}\n\n計 ${items.length}点\n📅 ${ts}` }
+        const hasImg = sorted.some((i: any) => i.image_url)
+        const imgHint = hasImg ? '\n\n📷 商品画像を見るには「画像」と送ってね' : ''
+        const textMsg = { type: 'text', text: `🛒 買い物リスト\n\n${list}\n\n計 ${items.length}点\n📅 ${ts}${imgHint}` }
 
         messages.push(textMsg)
       }
 
+      await sendReply(replyToken, messages, accessToken)
+    } else if (IMG_KEYWORDS.some(k => text.includes(k))) {
+      const { data: items } = await db
+        .from('pantry_items')
+        .select('name, image_url')
+        .eq('status', 'needed')
+        .not('image_url', 'is', null)
+        .order('name')
+
+      const messages: object[] = []
+      if (!items || items.length === 0) {
+        messages.push({ type: 'text', text: '📷 画像が登録されている欠品はないよ' })
+      } else {
+        const imgs = items.slice(0, 4)
+        for (const item of imgs) {
+          const url = (item.image_url as string).split('?')[0]
+          messages.push({ type: 'image', originalContentUrl: url, previewImageUrl: url })
+        }
+        if (items.length > 4) {
+          messages.push({ type: 'text', text: `他 ${items.length - 4}件の画像あり` })
+        }
+      }
       await sendReply(replyToken, messages, accessToken)
     } else {
       await sendReply(replyToken, [
