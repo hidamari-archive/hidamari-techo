@@ -340,6 +340,7 @@ body{font-family:var(--font-body);background:var(--bg);color:var(--text);min-hei
 .pantry-badge.mine{background:#F3EEE6;color:#A98B68;border:1px solid #E0D2BD}
 .buy-reroute{background:none;border:1px solid var(--border);border-radius:8px;width:30px;height:28px;font-size:14px;line-height:1;cursor:pointer;flex-shrink:0;padding:0;color:var(--text-light)}
 .buy-reroute:active{background:var(--bg-warm)}
+.buy-actions{display:flex;gap:4px;flex-shrink:0}
 .pantry-smenu{display:flex;gap:6px;width:100%;order:10;padding-top:6px;border-top:1px dashed var(--border)}
 .pantry-smenu-btn{flex:1;padding:5px 4px;border-radius:8px;font-size:11px;border:1px solid var(--border);background:var(--bg);cursor:pointer;font-family:var(--font-body);white-space:nowrap;color:var(--text-light);opacity:.75;transition:opacity .15s;text-align:center}
 .pantry-smenu-btn.active{opacity:1;font-weight:600;border-color:var(--accent);background:var(--bg-warm)}
@@ -2070,18 +2071,18 @@ function renderShop(){
       const priIcon=status==='needed'?(pri==='urgent'?'🔥 ':pri==='low'?'💤 ':''):'';
       const cls=items.length===1?'only':'';
       const reroute=others.map(o=>`<button class="buy-reroute" title="${PANTRY_LABEL[o]}へ" onclick="event.stopPropagation();setPantryStatus('${x.id}','${o}')">${PANTRY_ICON[o]}</button>`).join('');
-      const azBtn=status==='amazon'?`<button class="buy-reroute" data-name="${esc(x.name)}" title="Amazonで検索" onclick="event.stopPropagation();searchAmazonItem(this.dataset.name)">🔍</button>`:'';
-      s+=`<div class="shop-item ${cls}" onclick="setPantryStatus('${x.id}','in_stock')" style="cursor:pointer">
-        <div style="font-size:14px;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${priIcon}${esc(x.name)}</div>
-        ${azBtn}${reroute}
-        <span style="font-size:11px;color:var(--text-faint)" title="買った">🟢</span>
+      const azBtn=status==='amazon'?`<button class="buy-reroute" data-name="${esc(x.name)}" title="Amazonで検索" onclick="searchAmazonItem(this.dataset.name)">🔍</button>`:'';
+      s+=`<div class="shop-item ${cls}">
+        <div class="shop-checkbox" onclick="setPantryStatus('${x.id}','in_stock')" title="買った（在庫ありに）"></div>
+        <div class="shop-item-label" style="min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${priIcon}${esc(x.name)}</div>
+        <div class="buy-actions">${azBtn}${reroute}</div>
       </div>`;
     });
     return s+`</div></div>`;
   };
-  h+=buySection('needed','欠品（夫・LINE／タップで買った！）');
-  h+=buySection('amazon','Amazon購入待機（タップで買った！）');
-  h+=buySection('mine','自分で買う（LINEに出さない）');
+  h+=buySection('needed','欠品（夫・LINE／✓で買った）');
+  h+=buySection('amazon','Amazon購入待機（✓で買った）');
+  h+=buySection('mine','自分で買う（LINEに出さない／✓で買った）');
   el.innerHTML=h;
 }
 function togShop(id){
