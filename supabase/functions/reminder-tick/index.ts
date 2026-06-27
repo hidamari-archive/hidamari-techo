@@ -39,12 +39,26 @@ async function sageText(key: string, label: string, time: string, done: boolean,
   }
 }
 
-Deno.serve(async () => {
+Deno.serve(async (req) => {
   const db = createClient(Deno.env.get('SUPABASE_URL') ?? '', Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '')
   // セージ専用ボットがあればそちらへ（買い物ボットと分離）。無ければ旧設定にフォールバック
   const lineToken = Deno.env.get('SAGE_LINE_CHANNEL_ACCESS_TOKEN') ?? Deno.env.get('LINE_CHANNEL_ACCESS_TOKEN') ?? ''
   const userId = Deno.env.get('SAGE_LINE_TARGET_USER_ID') ?? Deno.env.get('LINE_TARGET_USER_ID') ?? ''
   const geminiKey = Deno.env.get('GEMINI_API_KEY') ?? ''
+
+  // 診断用: ?whoami で「今どのボットの口を使うか」を返す（秘密は出さない）
+  if (new URL(req.url).searchParams.has('whoami')) {
+    let bot: any = null
+    try { bot = await (await fetch('https://api.line.me/v2/bot/info', { headers: { Authorization: `Bearer ${lineToken}` } })).json() } catch { /* noop */ }
+    return new Response(JSON.stringify({
+      sage_token_set: !!Deno.env.get('SAGE_LINE_CHANNEL_ACCESS_TOKEN'),
+      sage_user_set: !!Deno.env.get('SAGE_LINE_TARGET_USER_ID'),
+      gemini_set: !!geminiKey,
+      送信に使うボット名: bot?.displayName ?? '(取得できませんでした)',
+      ボットの基本ID: bot?.basicId ?? null,
+    }, null, 2), { headers: { 'Content-Type': 'application/json; charset=utf-8' } })
+  }
+
   if (!lineToken || !userId) return new Response('missing line config', { status: 200 })
 
   const now = new Date(Date.now() + 9 * 3600 * 1000) // JST
