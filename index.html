@@ -564,6 +564,18 @@ body{font-family:var(--font-body);background:var(--bg);color:var(--text);min-hei
 /* ─── ルーティンドット ─── */
 .rdots{display:inline-flex;gap:3px;align-items:center;vertical-align:middle}
 .rdot{width:12px;height:12px;border-radius:50%;border:1.5px solid var(--border);display:inline-block;flex-shrink:0;transition:background .3s,border-color .3s}
+/* ─── 今週のゆるめ習慣グリッド ─── */
+.wgrid{min-width:max-content}
+.wgrid-row{display:flex;align-items:stretch;border-bottom:1px solid var(--border)}
+.wgrid-row:last-child{border-bottom:none}
+.wgrid-head{color:var(--text-light)}
+.wgrid-name{flex:1;min-width:88px;max-width:130px;padding:9px 6px 9px 12px;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:flex;align-items:center}
+.wgrid-day{width:32px;text-align:center;padding:7px 0;flex-shrink:0;font-size:11px}
+.wgrid-day.today{color:var(--accent);font-weight:700}
+.wgrid-cell{width:32px;min-height:36px;display:flex;align-items:center;justify-content:center;flex-shrink:0;cursor:pointer;color:var(--accent);font-size:15px;border-left:1px solid var(--border);-webkit-tap-highlight-color:transparent}
+.wgrid-cell.today{background:var(--bg-warm)}
+.wgrid-cell.future{color:var(--text-faint);cursor:default;opacity:.35}
+.wgrid-cell.on{font-weight:700}
 /* ─── カレンダーチェック ─── */
 .cal-event-check{width:16px;height:16px;border-radius:4px;border:1.5px solid var(--border);flex-shrink:0;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s}
 .cal-event-check.checked{background:var(--accent);border-color:var(--accent)}
@@ -796,6 +808,10 @@ body{font-family:var(--font-body);background:var(--bg);color:var(--text);min-hei
         <div class="section-header"><div class="section-title">毎日のルーティン</div><div class="section-count" id="routineCount"></div></div>
         <div class="progress-bar"><div class="progress-fill routine" id="routineProgress" style="width:0%"></div></div>
         <div class="card" id="routineList"></div>
+      </div>
+      <div class="section" id="weeklyRoutineSection" style="display:none">
+        <div class="section-header"><div class="section-title">今週のゆるめ習慣</div></div>
+        <div class="card" id="weeklyRoutineGrid" style="overflow-x:auto"></div>
       </div>
       <div class="section">
         <div class="section-header"><div class="section-title">今日のタスク</div><div class="section-count" id="taskCount"></div></div>
@@ -1269,7 +1285,7 @@ function dbw(p,label){p.then(({error})=>{if(error)console.error('DB write error 
 // 状態
 // ═══════════════════════════════════════════════
 let D={
-  routines:[],routineChecks:[],todayTasks:[],todayDiscards:[],
+  routines:[],routineChecks:[],weekChecks:[],todayTasks:[],todayDiscards:[],
   discardLog:[],longTasks:[],weeklyTasks:[],
   wishItems:[],shopItems:[],pantryItems:[],rssFeeds:[],
   hFood:[],hBase:{},hDaily:[],hExtra:[],links:[],
@@ -1298,7 +1314,7 @@ async function loadData(){
   const today=gt();
   const [rR,cR,tR,dR,lR,mR,ltR,wR,sR,fR,wtR,pR,fmR,hfR,hbR]=await Promise.all([
     db.from('hk_routines').select('*').order('sort_order').order('created_at'),
-    db.from('hk_routine_checks').select('*').eq('date',today),
+    db.from('hk_routine_checks').select('*').gte('date',getWeekKey()),
     db.from('hk_tasks').select('*').order('created_at'),
     db.from('hk_discard_log').select('*').eq('date',today).order('created_at'),
     db.from('hk_discard_log').select('*').eq('done',true).order('date',{ascending:false}).order('created_at',{ascending:false}),
@@ -1322,7 +1338,8 @@ async function loadData(){
   // 重複除去（同じtextのものは最初の1件だけ残す）
   const seen=new Set();
   D.routines=routines.filter(r=>{if(seen.has(r.text))return false;seen.add(r.text);return true});
-  D.routineChecks=(cR.data||[]).map(c=>c.routine_id);
+  D.weekChecks=cR.data||[];
+  D.routineChecks=D.weekChecks.filter(c=>c.date===today).map(c=>c.routine_id);
   D.todayTasks=(tR.data||[]).filter(t=>!t.done||t.done_date===today);
   D.todayDiscards=dR.data||[];
   D.discardLog=lR.data||[];
@@ -1601,7 +1618,8 @@ function gotoSeiiki(section){
   }
 }
 function updateHomeSummary(){
-  const rTot=D.routines.length,rDone=D.routineChecks.filter(id=>D.routines.some(r=>r.id===id)).length;
+  const dailyR=D.routines.filter(isDailyR);
+  const rTot=dailyR.length,rDone=dailyR.filter(r=>D.routineChecks.includes(r.id)).length;
   const tTot=D.todayTasks.length,tDone=D.todayTasks.filter(x=>x.done).length;
   const wk=getWeekKey();
   const undoneWeekly=D.weeklyTasks.filter(t=>t.last_done_week!==wk);
@@ -1644,25 +1662,75 @@ function updateHomeSummary(){
 // ═══════════════════════════════════════════════
 // 聖域 ── ルーティン
 // ═══════════════════════════════════════════════
+const isDailyR=r=>r.kind!=='weekly';
 function renderRoutines(){
   const el=document.getElementById('routineList');
+  const daily=D.routines.filter(isDailyR);
   let h='';
-  D.routines.forEach(r=>{
+  daily.forEach(r=>{
     const dn=D.routineChecks.includes(r.id);
     h+=`<div class="check-item ${dn?'done-routine':''}"><div class="checkbox ${dn?'checked-routine':''}" onclick="togR('${r.id}')"></div><div class="check-label">${esc(r.text)}</div></div>`;
   });
   el.innerHTML=h;
-  const tot=D.routines.length,done=D.routineChecks.filter(id=>D.routines.some(r=>r.id===id)).length;
+  const tot=daily.length,done=daily.filter(r=>D.routineChecks.includes(r.id)).length;
   document.getElementById('routineCount').textContent=`${done} / ${tot}`;
   document.getElementById('routineProgress').style.width=tot?(done/tot*100)+'%':'0%';
+  renderWeeklyRoutines();
   updateSage();updateHomeSummary();
+}
+// 今週のゆるめ習慣：項目×曜日のグリッド（やった日にチェック。咎めなし）
+function weekDates(){
+  const [y,m,d]=getWeekKey().split('-').map(Number);
+  const base=new Date(y,m-1,d);const today=gt();const wd=['月','火','水','木','金','土','日'];
+  const out=[];
+  for(let i=0;i<7;i++){
+    const dt=new Date(base);dt.setDate(base.getDate()+i);
+    const ds=dt.getFullYear()+'-'+String(dt.getMonth()+1).padStart(2,'0')+'-'+String(dt.getDate()).padStart(2,'0');
+    out.push({date:ds,label:wd[i],isToday:ds===today,isFuture:ds>today});
+  }
+  return out;
+}
+function renderWeeklyRoutines(){
+  const sec=document.getElementById('weeklyRoutineSection');const grid=document.getElementById('weeklyRoutineGrid');
+  if(!sec||!grid)return;
+  const wr=D.routines.filter(r=>r.kind==='weekly');
+  if(!wr.length){sec.style.display='none';grid.innerHTML='';return;}
+  sec.style.display='';
+  const days=weekDates();
+  const on=(rid,date)=>(D.weekChecks||[]).some(c=>c.routine_id===rid&&c.date===date);
+  let h=`<div class="wgrid"><div class="wgrid-row wgrid-head"><div class="wgrid-name"></div>`
+    +days.map(d=>`<div class="wgrid-day${d.isToday?' today':''}">${d.label}</div>`).join('')+`</div>`;
+  wr.forEach(r=>{
+    h+=`<div class="wgrid-row"><div class="wgrid-name">${esc(r.text)}</div>`
+      +days.map(d=>{
+        const c=on(r.id,d.date);
+        const cls=`wgrid-cell${c?' on':''}${d.isToday?' today':''}${d.isFuture?' future':''}`;
+        return `<div class="${cls}"${d.isFuture?'':` onclick="togWeekCell('${r.id}','${d.date}')"`}>${c?'✓':''}</div>`;
+      }).join('')+`</div>`;
+  });
+  grid.innerHTML=h+`</div>`;
+}
+function togWeekCell(rid,date){
+  const arr=D.weekChecks||(D.weekChecks=[]);
+  const i=arr.findIndex(c=>c.routine_id===rid&&c.date===date);
+  if(i>=0){arr.splice(i,1);dbw(db.from('hk_routine_checks').delete().eq('date',date).eq('routine_id',rid),'rc.del');}
+  else{arr.push({routine_id:rid,date});dbw(db.from('hk_routine_checks').insert({date,routine_id:rid}),'rc.ins');}
+  if(date===gt()){if(i>=0)D.routineChecks=D.routineChecks.filter(x=>x!==rid);else if(!D.routineChecks.includes(rid))D.routineChecks.push(rid);}
+  renderWeeklyRoutines();
+}
+function toggleRoutineKind(id){
+  const r=D.routines.find(x=>x.id===id);if(!r)return;
+  r.kind=r.kind==='weekly'?'daily':'weekly';
+  dbw(db.from('hk_routines').update({kind:r.kind}).eq('id',id),'r.kind');
+  renderAll();
 }
 function togR(id){
   const i=D.routineChecks.indexOf(id);
   if(i>=0){D.routineChecks.splice(i,1);dbw(db.from('hk_routine_checks').delete().eq('date',gt()).eq('routine_id',id),'rc.del')}
   else{D.routineChecks.push(id);dbw(db.from('hk_routine_checks').insert({date:gt(),routine_id:id}),'rc.ins');const _r=D.routines.find(x=>x.id===id);if(_r)addDailyEvent(`ルーティン「${_r.text}」を完了`);}
   renderRoutines();
-  const allDone=D.routines.length>0&&D.routines.every(r=>D.routineChecks.includes(r.id));
+  const dailyR=D.routines.filter(isDailyR);
+  const allDone=dailyR.length>0&&dailyR.every(r=>D.routineChecks.includes(r.id));
   if(allDone&&D.routineMessageDate!==gt()){
     const rarity=drawRarity();D.routineMessageDate=gt();D.routineRarity=rarity;
     dbw(db.from('hk_daily_meta').upsert({date:gt(),routine_message_shown:true,routine_rarity:rarity},{onConflict:'date'}),'meta.ups');
@@ -1882,7 +1950,7 @@ function delLT(id){
 function renderRS(){
   const el=document.getElementById('routineSettings');
   let h='';
-  D.routines.forEach(r=>{h+=`<div class="settings-item"><span>${esc(r.text)}</span><button class="reset-btn" onclick="delR('${r.id}')">削除</button></div>`});
+  D.routines.forEach(r=>{const wk=r.kind==='weekly';h+=`<div class="settings-item"><span>${esc(r.text)}</span><span style="display:flex;gap:6px;align-items:center;flex-shrink:0"><button class="reset-btn" onclick="toggleRoutineKind('${r.id}')" title="毎日(必須)⇔週(ゆるめ)">${wk?'🗓 週':'☀️ 毎日'}</button><button class="reset-btn" onclick="delR('${r.id}')">削除</button></span></div>`});
   if(!D.routines.length)h='<div style="padding:18px;text-align:center;color:var(--text-faint);font-size:14px">ルーティンがありません</div>';
   el.innerHTML=h;
 }
@@ -1895,6 +1963,7 @@ async function resetToday(){
   if(!confirm('今日のチェックをリセットしますか？'))return;
   const today=gt();
   D.routineChecks=[];
+  D.weekChecks=(D.weekChecks||[]).filter(c=>c.date!==today);
   D.todayTasks=D.todayTasks.map(t=>t.done_date===today?{...t,done:false,done_date:null}:t);
   D.discardLog=D.discardLog.filter(e=>e.date!==today);D.todayDiscards=[];
   renderAll();
@@ -1906,7 +1975,7 @@ async function resetToday(){
 }
 async function resetAll(){
   if(!confirm('全データを消去しますか？\nこの操作は取り消せません。'))return;
-  D={routines:[],routineChecks:[],todayTasks:[],todayDiscards:[],discardLog:[],longTasks:[],weeklyTasks:[],wishItems:[],shopItems:[],rssFeeds:D.rssFeeds||[],routineMessageDate:'',routineRarity:'',_loadedDate:gt()};
+  D={routines:[],routineChecks:[],weekChecks:[],todayTasks:[],todayDiscards:[],discardLog:[],longTasks:[],weeklyTasks:[],wishItems:[],shopItems:[],rssFeeds:D.rssFeeds||[],routineMessageDate:'',routineRarity:'',_loadedDate:gt()};
   renderAll();
   await Promise.all([
     db.from('hk_routines').delete().not('id','is',null),
@@ -1931,7 +2000,8 @@ const sageM={
   complete:['……ことはさん。\n全部、終わりましたね。\n……今日のあなたの手は、とても美しかった。','……お疲れさまでした。\nことはさんが守った聖域の空気、\n今日もとても澄んでいますよ。','……全部終わりましたね。\nことはさんが整えた場所は、\n今日も静かに輝いています。','……ことはさん。\nあなたがいるから、この聖域は聖域なのですよ。\n今日もお疲れさまでした。']
 };
 function updateSage(){
-  const rT=D.routines.length,rD=D.routineChecks.filter(id=>D.routines.some(r=>r.id===id)).length;
+  const _dr=D.routines.filter(isDailyR);
+  const rT=_dr.length,rD=_dr.filter(r=>D.routineChecks.includes(r.id)).length;
   const dD=D.todayDiscards.filter(x=>x.done).length,dT=D.todayDiscards.length;
   const tD=D.todayTasks.filter(x=>x.done).length,tT=D.todayTasks.length;
   const aT=rT+dT+tT,aD=rD+dD+tD;
@@ -1956,9 +2026,10 @@ function saveTechoDaily(){
   const calLines=(_lastCalEvents&&_lastCalEvents.length)
     ?_lastCalEvents.map(e=>e.allDay?`・${e.title}（終日）`:`・${e.time} ${e.title}`).join('\n')
     :'なし';
-  const routineDone=D.routineChecks.filter(id=>D.routines.some(r=>r.id===id)).length;
-  const routineLines=D.routines.length
-    ?D.routines.map(r=>`・${r.text}（${D.routineChecks.includes(r.id)?'✅':'…'}）`).join('\n')
+  const _dailyR=D.routines.filter(isDailyR);
+  const routineDone=_dailyR.filter(r=>D.routineChecks.includes(r.id)).length;
+  const routineLines=_dailyR.length
+    ?_dailyR.map(r=>`・${r.text}（${D.routineChecks.includes(r.id)?'✅':'…'}）`).join('\n')
     :'なし';
   const taskLines=D.todayTasks.length
     ?D.todayTasks.map(t=>`・${t.text}（${t.done?'✅':'…'}）`).join('\n')
@@ -1968,7 +2039,7 @@ function saveTechoDaily(){
     `■ 手帖コンテキスト（${today} ${dow}曜日）\n`
     +`---\n`
     +`予定：\n${calLines}\n\n`
-    +`ルーティン（${routineDone}/${D.routines.length}完了）：\n${routineLines}\n\n`
+    +`ルーティン（${routineDone}/${_dailyR.length}完了）：\n${routineLines}\n\n`
     +`今日のタスク：\n${taskLines}\n\n`
     +`捨て活：今日${todayDiscards.length}個（累計${D.discardLog.length}個）`
     +(todayDiscards.length?'\n'+todayDiscards.map(e=>`・${e.text}`).join('\n'):'')
@@ -2622,9 +2693,9 @@ function submitModal(){
     triggerDiscardGacha(text);
   }else if(curModal==='routine-add'){
     const id=uuid(),sort_order=D.routines.length;
-    D.routines.push({id,text,sort_order,created_at:new Date().toISOString()});
+    D.routines.push({id,text,sort_order,kind:'daily',created_at:new Date().toISOString()});
     closeModal();renderAll();
-    dbw(db.from('hk_routines').insert({id,text,sort_order}),'r.ins');
+    dbw(db.from('hk_routines').insert({id,text,sort_order,kind:'daily'}),'r.ins');
   }else if(curModal==='task'){
     const id=uuid();
     D.todayTasks.push({id,text,done:false,done_date:null,long_task_id:null,created_at:new Date().toISOString()});

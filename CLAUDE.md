@@ -45,8 +45,8 @@ supabase/functions/line-webhook/index.ts      ── LINE Webhook（Deno/Edge Fu
 
 | テーブル | 用途 |
 |---|---|
-| `hk_routines` | 毎日のルーティン定義（text, sort_order） |
-| `hk_routine_checks` | ルーティン完了記録（date, routine_id） |
+| `hk_routines` | ルーティン定義（text, sort_order, **kind: daily/weekly**） |
+| `hk_routine_checks` | ルーティン完了記録（date, routine_id）※毎日チェックと週グリッドで共用 |
 | `hk_tasks` | 今日のタスク（text, done, done_date） |
 | `hk_discard_log` | 一日一捨て記録（date, text, done） |
 | `hk_daily_meta` | セージメッセージ管理（date, routine_message_shown, routine_rarity） |
@@ -343,7 +343,11 @@ searchAmazonItem(name)      // Amazon商品名検索を開く
 
 - ボトムタブ・ホームカードの「聖域」表記を「くらし」に変更済み
 - サブタブバー `.seiiki-tabs` は `position:sticky; top:var(--header-h)` でヘッダー直下に固定
-- ルーティン: 毎日リセット。`hk_routine_checks` にチェック記録
+- ルーティン（2026-06 に毎日／週の2種に分割。`routine_kind_202606.sql` で `kind` 列追加）:
+  - **毎日（`kind='daily'`・必須）**: 従来のチェックリスト（`renderRoutines`）。毎日リセット。`hk_routine_checks` に記録。**この daily 全部やりきると 👑 コンプ＋ガチャ**（`togR` の allDone は daily のみで判定）。猫の薬・自分の薬・風呂掃除・洗濯など
+  - **週単位（`kind='weekly'`・ゆるめ）**: 「今週のゆるめ習慣」＝**項目×曜日（月〜日）のグリッド**（`renderWeeklyRoutines`／`#weeklyRoutineSection`）。やった日のマスにチェック（`togWeekCell`）。同じ `hk_routine_checks` を週分（`gte(getWeekKey())`）読み込んで描画（`D.weekChecks`）。未実施を咎めない・コンプ非対象。トイレ掃除など「数日空いてOK」なもの
+  - 設定タブのルーティン編集に **毎日⇔週 切替ボタン**（`toggleRoutineKind`）。新規追加は `kind='daily'`
+  - `isDailyR(r)=r.kind!=='weekly'`。コンプ・ホームサマリー・セージ文脈はすべて daily のみで集計
 - 今日のタスク: `done_date` が今日 or 未完のものを表示。週間タスク（未完）も先頭に自動表示（「週」バッジ付き）
 - 週間タスク: `hk_weekly_tasks` テーブル。`last_done_week`（月曜日の YYYY-MM-DD）で完了週を管理
 - 一日一捨て: **今日タブには存在しない。すべて「捨て活ログ」タブに集約済み**
