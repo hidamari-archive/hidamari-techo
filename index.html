@@ -960,12 +960,12 @@ body{font-family:var(--font-body);background:var(--bg);color:var(--text);min-hei
   <!-- 買い物タブ -->
   <div class="tab-panel" id="tab-shop">
     <div class="shop-tabs">
-      <button class="shop-stab" data-stab="memo" onclick="switchShopTab('memo')">🛒 買い物</button>
-      <button class="shop-stab active" data-stab="stock" onclick="switchShopTab('stock')">🧺 在庫</button>
+      <button class="shop-stab active" data-stab="memo" onclick="switchShopTab('memo')">🛒 買い物</button>
+      <button class="shop-stab" data-stab="stock" onclick="switchShopTab('stock')">🧺 在庫</button>
       <button class="shop-stab" data-stab="wishlist" onclick="switchShopTab('wishlist')">💫 ウィッシュ</button>
     </div>
     <!-- メモパネル -->
-    <div class="shop-stab-panel" id="shop-stab-memo">
+    <div class="shop-stab-panel active" id="shop-stab-memo">
       <div class="shop-add-bar">
         <div class="shop-input-row">
           <input class="shop-input" id="shopInput" type="text" placeholder="品名を入力…" autocomplete="off" oninput="renderShopSuggest()">
@@ -976,7 +976,7 @@ body{font-family:var(--font-body);background:var(--bg);color:var(--text);min-hei
       <div class="shop-content" id="shopContent"></div>
     </div>
     <!-- 在庫パネル -->
-    <div class="shop-stab-panel active" id="shop-stab-stock">
+    <div class="shop-stab-panel" id="shop-stab-stock">
     <div class="pantry-section">
       <div class="pantry-header">
         <span class="pantry-title">🧺 在庫管理</span>
@@ -1356,6 +1356,7 @@ function switchTab(tab){
   document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.btab').forEach(b=>b.classList.toggle('active',b.dataset.tab===tab));
   document.getElementById('tab-'+tab).classList.add('active');
+  if(tab==='shop')switchShopTab('memo');
   document.getElementById('wishFab').classList.toggle('show',tab==='shop'&&_shopTab==='wishlist');
   if(tab==='news')switchInfoTab(_infoTab);
   if(tab==='health'){if(_healthLoaded)renderHealth();else loadHealthData().then(renderHealth);}
@@ -2040,6 +2041,21 @@ function copyWishToTask(wishId,btn){
 // ═══════════════════════════════════════════════
 // 買い物リスト
 // ═══════════════════════════════════════════════
+// 欠品/Amazon/自分で買う を「買った」とチェックする保留セット（個人メモと同じワンクッション）
+let _buyChecked=new Set();
+function toggleBuyCheck(id){
+  if(_buyChecked.has(id))_buyChecked.delete(id);else _buyChecked.add(id);
+  renderShop();
+}
+function commitBuyChecked(){
+  const buyStatuses=['needed','amazon','mine'];
+  const ids=(D.pantryItems||[]).filter(x=>buyStatuses.includes(x.status)&&_buyChecked.has(x.id)).map(x=>x.id);
+  _buyChecked.clear();
+  if(!ids.length){renderShop();return;}
+  ids.forEach(id=>{const idx=D.pantryItems.findIndex(x=>x.id===id);if(idx>=0)D.pantryItems[idx]={...D.pantryItems[idx],status:'in_stock',priority:'normal'};});
+  renderPantry();renderShop();updateHomeSummary();
+  dbw(db.from('pantry_items').update({status:'in_stock',priority:'normal',updated_at:new Date().toISOString(),updated_by:'app'}).in('id',ids),'p.buyDone');
+}
 function renderShop(){
   const el=document.getElementById('shopContent');
   const unchecked=D.shopItems.filter(x=>!x.checked);
@@ -2072,8 +2088,9 @@ function renderShop(){
       const cls=items.length===1?'only':'';
       const reroute=others.map(o=>`<button class="buy-reroute" title="${PANTRY_LABEL[o]}へ" onclick="event.stopPropagation();setPantryStatus('${x.id}','${o}')">${PANTRY_ICON[o]}</button>`).join('');
       const azBtn=status==='amazon'?`<button class="buy-reroute" data-name="${esc(x.name)}" title="Amazonで検索" onclick="searchAmazonItem(this.dataset.name)">🔍</button>`:'';
-      s+=`<div class="shop-item ${cls}">
-        <div class="shop-checkbox" onclick="setPantryStatus('${x.id}','in_stock')" title="買った（在庫ありに）"></div>
+      const isChk=_buyChecked.has(x.id);
+      s+=`<div class="shop-item ${cls}${isChk?' checked':''}">
+        <div class="shop-checkbox${isChk?' checked':''}" onclick="toggleBuyCheck('${x.id}')" title="買った（チェックして下のボタンで反映）"></div>
         <div class="shop-item-label" style="min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${priIcon}${esc(x.name)}</div>
         <div class="buy-actions">${azBtn}${reroute}</div>
       </div>`;
@@ -2083,6 +2100,9 @@ function renderShop(){
   h+=buySection('needed','欠品（夫・LINE／✓で買った）');
   h+=buySection('amazon','Amazon購入待機（✓で買った）');
   h+=buySection('mine','自分で買う（LINEに出さない／✓で買った）');
+  const buyStatuses=['needed','amazon','mine'];
+  const chkCount=(D.pantryItems||[]).filter(x=>buyStatuses.includes(x.status)&&_buyChecked.has(x.id)).length;
+  if(chkCount)h+=`<button class="shop-clear-btn" onclick="commitBuyChecked()">🟢 チェックした品を在庫に戻す（${chkCount}）</button>`;
   el.innerHTML=h;
 }
 function togShop(id){
@@ -2203,7 +2223,7 @@ function delFlashMemo(id){
   renderFlashMemos();
   dbw(db.from('flash_memos').delete().eq('id',id),'fm.del');
 }
-let _shopTab='stock';
+let _shopTab='memo';
 function switchShopTab(tab){
   _shopTab=tab;
   document.querySelectorAll('.shop-stab').forEach(x=>x.classList.toggle('active',x.dataset.stab===tab));
