@@ -199,15 +199,23 @@ CREATE POLICY "auth_only" ON flash_memos
 買い物タブ（tab-shop）の「📦 在庫管理」サブタブ内に実装。
 物理マステ運用（冷蔵庫にマステを貼る）のデジタル補助。
 
-### ステータス 3値
+### ステータス 4値（2026-06 に `mine` 追加）
 | status | バッジ | 意味 |
 |---|---|---|
 | `in_stock` | 🟢 | 在庫あり |
 | `needed` | 🔴 | 欠品（LINE連携で通知対象） |
 | `amazon` | 📦 | Amazon購入品 |
+| `mine` | 🛒 | 自分で買う（カルディ・ドラスト等。**LINEには出さない**） |
 
-CHECK制約: `pantry_items_status_check CHECK (status IN ('in_stock', 'needed', 'amazon'))`
-ステータスバッジはアイコンのみ（テキストなし）でコンパクト表示（`setPantryStatus(id, status)` でサイクル）。
+CHECK制約: `pantry_items_status_check CHECK (status IN ('in_stock', 'needed', 'amazon', 'mine'))`
+**`mine` 追加には `pantry_status_mine_202606.sql` を SQL Editor で一度実行**（旧3値の制約を作り直す）。
+ステータスの定義は `PANTRY_STATUSES`/`PANTRY_ICON`/`PANTRY_LABEL` に集約。バッジタップ→`openStatusMenu`→他3状態へ任意に変更可（旧来の in_stock⇄欠品/Amazon だけでなく欠品→Amazon等も直接可）。
+LINE webhook は `status='needed'` のみ参照するため、`mine`/`amazon` は夫さんのリストに出ない。
+
+### 買い物メモサブタブの行き先別リスト（2026-06）
+`renderShop` 末尾の `buySection(status,title)` で 🔴欠品 / 📦Amazon待機 / 🛒自分で買う を順に表示。
+- 行タップ＝買った（→`in_stock`）。各行の `.buy-reroute` 小ボタンで他の行き先へワンタップ変更
+- サジェスト（`renderShopSuggest`）のタップは既定で欠品化（`quickNeed`）。Amazon/自分への振り分けは下のリストで行う
 
 ### カテゴリ管理
 `pantry_items.category` カラム（text）。アイテム追加モーダルで自由入力。デフォルト `''`（未分類）。

@@ -323,6 +323,9 @@ body{font-family:var(--font-body);background:var(--bg);color:var(--text);min-hei
 .pantry-badge.needed{background:#FDE8E5;color:#C9897A;border:1px solid #EFB9B2}
 .pantry-badge.amazon{background:#EAF0FB;color:#5B7EC9;border:1px solid #B3C6F0}
 .pantry-badge.in-stock{background:#E8F3EF;color:#6B9E8A;border:1px solid #BAD9CD}
+.pantry-badge.mine{background:#F3EEE6;color:#A98B68;border:1px solid #E0D2BD}
+.buy-reroute{background:none;border:1px solid var(--border);border-radius:8px;width:30px;height:28px;font-size:14px;line-height:1;cursor:pointer;flex-shrink:0;padding:0;color:var(--text-light)}
+.buy-reroute:active{background:var(--bg-warm)}
 .pantry-smenu{display:flex;gap:6px;width:100%;order:10;padding-top:6px;border-top:1px dashed var(--border)}
 .pantry-smenu-btn{flex:1;padding:5px 4px;border-radius:8px;font-size:11px;border:1px solid var(--border);background:var(--bg);cursor:pointer;font-family:var(--font-body);white-space:nowrap;color:var(--text-light);opacity:.75;transition:opacity .15s;text-align:center}
 .pantry-smenu-btn.active{opacity:1;font-weight:600;border-color:var(--accent);background:var(--bg-warm)}
@@ -1592,10 +1595,12 @@ function updateHomeSummary(){
   const unchecked=D.shopItems.filter(x=>!x.checked);
   const needed=D.pantryItems.filter(x=>x.status==='needed');
   const amazonItems=D.pantryItems.filter(x=>x.status==='amazon');
+  const mineItems=D.pantryItems.filter(x=>x.status==='mine');
   let shopHtml='';
   if(unchecked.length) shopHtml+=`<div onclick="switchTab('shop');switchShopTab('memo')" style="cursor:pointer;font-size:12px;color:var(--text-light);line-height:1.6">${unchecked.map(x=>esc(x.item)).join('・')}</div>`;
   if(needed.length){const priSort={urgent:0,normal:1,low:2};const sorted=[...needed].sort((a,b)=>(priSort[a.priority||'normal']||1)-(priSort[b.priority||'normal']||1));shopHtml+=`<div onclick="switchTab('shop');switchShopTab('stock')" style="cursor:pointer;font-size:12px;color:#C9897A;line-height:1.6;margin-top:${unchecked.length?3:0}px">🔴 ${sorted.map(x=>(x.priority==='urgent'?'🔥':'')+esc(x.name)).join('・')}</div>`;}
   if(amazonItems.length) shopHtml+=`<div onclick="switchTab('shop');switchShopTab('stock')" style="cursor:pointer;font-size:12px;color:#5B7EC9;line-height:1.6;margin-top:${(unchecked.length||needed.length)?3:0}px">📦 ${amazonItems.map(x=>esc(x.name)).join('・')}</div>`;
+  if(mineItems.length) shopHtml+=`<div onclick="switchTab('shop');switchShopTab('memo')" style="cursor:pointer;font-size:12px;color:#A98B68;line-height:1.6;margin-top:${(unchecked.length||needed.length||amazonItems.length)?3:0}px">🛒 ${mineItems.map(x=>esc(x.name)).join('・')}</div>`;
   if(!shopHtml) shopHtml='<span style="color:var(--text-faint)">空です</span>';
   document.getElementById('homeShopSummary').innerHTML=shopHtml;
 }
@@ -2019,20 +2024,29 @@ function renderShop(){
   if(D.shopItems.some(x=>x.checked))h+=`<button class="shop-clear-btn" onclick="clearChecked()">チェック済みを削除</button>`;
   }
   const priSort={urgent:0,normal:1,low:2};
-  const needed=(D.pantryItems||[]).filter(x=>x.status==='needed').sort((a,b)=>(priSort[a.priority||'normal']||1)-(priSort[b.priority||'normal']||1)||a.name.localeCompare(b.name,'ja'));
-  if(needed.length){
-    h+=`<div style="margin-top:16px;padding:0 2px"><div style="font-size:11px;color:var(--text-faint);margin-bottom:6px;letter-spacing:.05em">🔴 欠品（タップで買った！）</div><div class="card" style="margin-bottom:8px">`;
-    needed.forEach((x,i)=>{
+  const byBuy=(a,b)=>(priSort[a.priority||'normal']||1)-(priSort[b.priority||'normal']||1)||a.name.localeCompare(b.name,'ja');
+  // 行き先別の買い物セクション（行タップ＝買った→在庫あり／小ボタンで行き先を変更）
+  const buySection=(status,title)=>{
+    const items=(D.pantryItems||[]).filter(x=>x.status===status).sort(byBuy);
+    if(!items.length)return '';
+    const others=['needed','amazon','mine'].filter(s=>s!==status);
+    let s=`<div style="margin-top:16px;padding:0 2px"><div style="font-size:11px;color:var(--text-faint);margin-bottom:6px;letter-spacing:.05em">${PANTRY_ICON[status]} ${title}</div><div class="card" style="margin-bottom:8px">`;
+    items.forEach(x=>{
       const pri=x.priority||'normal';
-      const priIcon=pri==='urgent'?'🔥 ':pri==='low'?'💤 ':'';
-      const cls=needed.length===1?'only':'';
-      h+=`<div class="shop-item ${cls}" onclick="setPantryStatus('${x.id}','in_stock')" style="cursor:pointer">
+      const priIcon=status==='needed'?(pri==='urgent'?'🔥 ':pri==='low'?'💤 ':''):'';
+      const cls=items.length===1?'only':'';
+      const reroute=others.map(o=>`<button class="buy-reroute" title="${PANTRY_LABEL[o]}へ" onclick="event.stopPropagation();setPantryStatus('${x.id}','${o}')">${PANTRY_ICON[o]}</button>`).join('');
+      s+=`<div class="shop-item ${cls}" onclick="setPantryStatus('${x.id}','in_stock')" style="cursor:pointer">
         <div style="font-size:14px;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${priIcon}${esc(x.name)}</div>
-        <span style="font-size:11px;color:var(--text-faint)">🟢</span>
+        ${reroute}
+        <span style="font-size:11px;color:var(--text-faint)" title="買った">🟢</span>
       </div>`;
     });
-    h+=`</div></div>`;
-  }
+    return s+`</div></div>`;
+  };
+  h+=buySection('needed','欠品（夫・LINE／タップで買った！）');
+  h+=buySection('amazon','Amazon購入待機（タップで買った！）');
+  h+=buySection('mine','自分で買う（LINEに出さない）');
   el.innerHTML=h;
 }
 function togShop(id){
@@ -2075,7 +2089,7 @@ function renderShopSuggest(flash){
   const listHtml=matches.length
     ?`<div class="shop-suggest-hint">在庫リストにあります（タップで欠品に）</div>`+matches.map(x=>{
         const isNeeded=x.status==='needed';
-        return`<button class="shop-suggest-item${isNeeded?' done':''}"${isNeeded?' disabled':` onclick="quickNeed('${x.id}')"`}>${isNeeded?'🔴':x.status==='amazon'?'📦':'🟢'} ${esc(x.name)}${isNeeded?'（すでに欠品中）':''}</button>`;
+        return`<button class="shop-suggest-item${isNeeded?' done':''}"${isNeeded?' disabled':` onclick="quickNeed('${x.id}')"`}>${PANTRY_ICON[x.status]||'🟢'} ${esc(x.name)}${isNeeded?'（すでに欠品中）':''}</button>`;
       }).join('')
     :'';
   el.innerHTML=flashHtml+listHtml;
@@ -2164,6 +2178,10 @@ function switchShopTab(tab){
 }
 let _pantryOpenMenu=null;
 let _pantryFilter='all';
+// 在庫の4状態（順序＝メニュー表示順）。mine=自分で買う（LINEに出さない）
+const PANTRY_STATUSES=[['needed','🔴 欠品'],['amazon','📦 Amazon'],['mine','🛒 自分で買う'],['in_stock','🟢 在庫あり']];
+const PANTRY_ICON={needed:'🔴',amazon:'📦',mine:'🛒',in_stock:'🟢'};
+const PANTRY_LABEL={needed:'欠品',amazon:'Amazon',mine:'自分で買う',in_stock:'在庫あり'};
 function renderPantryFilterBar(){
   const bar=document.getElementById('pantryFilterBar');if(!bar)return;
   const cats=getPantryCats();
@@ -2171,6 +2189,7 @@ function renderPantryFilterBar(){
     {f:'all',label:'全て'},
     {f:'needed',label:'🔴 欠品'},
     {f:'amazon',label:'📦 Amazon'},
+    {f:'mine',label:'🛒 自分'},
   ];
   const statusRow=`<div class="pantry-filter-row">${tabs.map(({f,label})=>`<button class="pantry-filter-btn${_pantryFilter===f?' active':''}" onclick="setPantryFilter('${f}')">${label}</button>`).join('')}</div>`;
   const catRow=`<div class="pantry-filter-row">${cats.map(c=>`<button class="pantry-filter-cat-btn${_pantryFilter===`cat:${c}`?' active':''}" onclick="setPantryFilter('cat:${c}')">${c}</button>`).join('')}</div>`;
@@ -2235,12 +2254,10 @@ function renderPantry(){
       ?`<img src="${x.image_url}" class="pantry-img-thumb" onclick="openPantryImgMenu('${x.id}')" alt="">`
       :`<button class="pantry-cam-btn" onclick="openPantryImgMenu('${x.id}')">📷</button>`;
     const menuOpen=_pantryOpenMenu===x.id;
-    const badgeCls=st==='needed'?'needed':st==='amazon'?'amazon':'in-stock';
-    const badgeLabel=st==='needed'?'🔴':st==='amazon'?'📦':'🟢';
+    const badgeCls=st==='needed'?'needed':st==='amazon'?'amazon':st==='mine'?'mine':'in-stock';
+    const badgeLabel=st==='needed'?'🔴':st==='amazon'?'📦':st==='mine'?'🛒':'🟢';
     const nameCls=st==='in_stock'?'in-stock':'';
-    const menuBtns=st==='in_stock'
-      ?`<button class="pantry-smenu-btn" onclick="setPantryStatus('${x.id}','needed')">🔴 欠品</button><button class="pantry-smenu-btn" onclick="setPantryStatus('${x.id}','amazon')">📦 Amazon</button>`
-      :`<button class="pantry-smenu-btn" onclick="setPantryStatus('${x.id}','in_stock')">🟢 在庫あり</button>`;
+    const menuBtns=PANTRY_STATUSES.filter(([s])=>s!==st).map(([s,l])=>`<button class="pantry-smenu-btn" onclick="setPantryStatus('${x.id}','${s}')">${l}</button>`).join('');
     const menuHtml=menuOpen?`<div class="pantry-smenu">${menuBtns}</div>`:'';
     const amazonSearchBtn=st==='amazon'?`<button class="pantry-amazon-btn" data-name="${esc(x.name)}" onclick="searchAmazonItem(this.dataset.name)" title="Amazonで検索">🔍</button>`:'';
     const pri=x.priority||'normal';
