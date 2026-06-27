@@ -130,8 +130,12 @@ supabase/functions/line-webhook/index.ts      ── LINE Webhook（Deno/Edge Fu
 **現在一時停止中**（`initSageMessages` でウィッシュ提案呼び出しをコメントアウト）。
 
 ### 毎日（必須）カード（2026-06 追加）
-`homeDailySection`／`renderHomeDaily()`。ホームから毎日（必須）ルーティンを**直接チェック**（`togR`）。項目名＋チェックボックス、右上に `done/total`（コンプ時👑）。`isDailyR` の routine のみ。週グリッド（`homeWeeklySection`）の直上に配置し、毎日→今週の並び。daily が無ければ非表示。
+`homeDailySection`／`renderHomeDaily()`。ホームから毎日（必須）ルーティンを**直接チェック**（`togR`）。項目名＋チェックボックス、右上に `done/total`（コンプ時👑）。`isDailyR` の routine のみ。daily が無ければ非表示。リストは `#homeDailyList.home-check`（CSSで `.check-item` を `padding:7px` 等にコンパクト化）。
 > これに伴い `updateHomeSummary` の「くらし」サマリーからルーティンのドット行は削除（二重表示回避）。サマリーは未完タスク・週間タスクのみ表示。
+
+### ホームカードの並び（2026-06 更新）
+天気 →（☀️毎日 `homeDailySection`）→（🌿今週グリッド `homeWeeklySection`）→（☑くらし `homeSeiikiSummary`）→（🛒買い物 `homeShopSummary`）→（🗑捨て活＝**捨て活カレンダー** `homeDiscardHeatmap`）→ セージチャット。
+- 捨て活カレンダーはログタブと共通の `discardHeatmapHtml()` を `discardHeatmap`/`homeDiscardHeatmap` 両方へ描画（`renderDiscardHeatmap`）。旧 `homeStampMini` は廃止（要素削除、`renderHomeStampMini` は no-op 化）
 
 ### くらしサマリーカード
 `homeSeiikiSummary`（`updateHomeSummary()` で更新）。※旧称「聖域サマリー」

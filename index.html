@@ -87,6 +87,10 @@ body{font-family:var(--font-body);background:var(--bg);color:var(--text);min-hei
 .checkbox.checked-task{border-color:var(--task-done);background:var(--task-done)}
 .checkbox[class*="checked-"]::after{content:'✓';color:#fff;font-size:13px;font-weight:700}
 .check-label{font-size:14px;flex:1;line-height:1.4}
+.home-check .check-item{padding:7px 14px;gap:10px}
+.home-check .check-item:last-child{border-bottom:none}
+.home-check .checkbox{width:19px;height:19px}
+.home-check .check-label{font-size:13px}
 .item-delete{width:26px;height:26px;border:none;background:none;color:var(--text-faint);font-size:15px;cursor:pointer;display:flex;align-items:center;justify-content:center;border-radius:50%;flex-shrink:0}
 .add-item{display:flex;align-items:center;padding:12px 14px;gap:12px;cursor:pointer;color:var(--text-faint);font-size:14px;border-top:1px solid var(--border)}
 .add-item:first-child{border-top:none}
@@ -776,20 +780,20 @@ body{font-family:var(--font-body);background:var(--bg);color:var(--text);min-hei
         </div>
         <div id="calUpdatedAt" style="font-size:9px;color:var(--text-faint);text-align:right;margin-top:3px;padding-top:3px;border-top:1px solid var(--border)"></div>
       </div>
+      <div class="home-summary-card" id="homeDailySection" style="cursor:default;display:none;flex-direction:column;align-items:stretch">
+        <div class="home-card-label" style="margin-bottom:6px;display:flex;justify-content:space-between;align-items:center"><span>☀️ 毎日（必須）</span><span id="homeDailyCount" style="font-size:11px;color:var(--text-faint)"></span></div>
+        <div id="homeDailyList" class="home-check" style="margin:0 -14px -11px"></div>
+      </div>
+      <div class="home-summary-card" id="homeWeeklySection" style="cursor:default;display:none;flex-direction:column;align-items:stretch">
+        <div class="home-card-label" style="margin-bottom:6px">🌿 今週のゆるめ習慣</div>
+        <div id="homeWeeklyGrid" style="overflow-x:auto;margin:0 -14px -11px"></div>
+      </div>
       <div class="home-summary-card" style="cursor:default">
         <div style="flex:1;min-width:0">
           <div class="home-card-label">☑ くらし</div>
           <div class="home-card-value" id="homeSeiikiSummary">読み込み中…</div>
         </div>
         <div class="home-card-arrow" onclick="gotoSeiiki('today')" style="cursor:pointer;padding-left:8px;align-self:stretch;display:flex;align-items:center">›</div>
-      </div>
-      <div class="home-summary-card" id="homeDailySection" style="cursor:default;display:none;flex-direction:column;align-items:stretch">
-        <div class="home-card-label" style="margin-bottom:6px;display:flex;justify-content:space-between;align-items:center"><span>☀️ 毎日（必須）</span><span id="homeDailyCount" style="font-size:11px;color:var(--text-faint)"></span></div>
-        <div id="homeDailyList" style="margin:0 -14px -11px"></div>
-      </div>
-      <div class="home-summary-card" id="homeWeeklySection" style="cursor:default;display:none;flex-direction:column;align-items:stretch">
-        <div class="home-card-label" style="margin-bottom:6px">🌿 今週のゆるめ習慣</div>
-        <div id="homeWeeklyGrid" style="overflow-x:auto;margin:0 -14px -11px"></div>
       </div>
       <div class="home-summary-card" style="cursor:default">
         <div style="flex:1;min-width:0">
@@ -798,7 +802,10 @@ body{font-family:var(--font-body);background:var(--bg);color:var(--text);min-hei
         </div>
         <div class="home-card-arrow" onclick="switchTab('shop');switchShopTab('memo')" style="cursor:pointer;padding-left:8px;align-self:stretch;display:flex;align-items:center">›</div>
       </div>
-      <div id="homeStampMini" class="home-stamp-mini" onclick="gotoSeiiki('disclog')"></div>
+      <div class="home-summary-card" style="cursor:default;flex-direction:column;align-items:stretch">
+        <div class="home-card-label" style="margin-bottom:8px"><span onclick="gotoSeiiki('disclog')" style="cursor:pointer">🗑 捨て活</span></div>
+        <div id="homeDiscardHeatmap"></div>
+      </div>
       <div id="sageChatCard" class="sage-chat-card" style="display:none">
         <div class="sage-chat-header">
           <img src="apple-touch-icon.png" class="sage-chat-icon" alt="">
@@ -1884,7 +1891,10 @@ function discardCountByDate(){
 }
 function shiftDiscardCal(dir){_discardCalMonth=Math.min(0,_discardCalMonth+dir);renderDiscardHeatmap();}
 function renderDiscardHeatmap(){
-  const el=document.getElementById('discardHeatmap');if(!el)return;
+  const html=discardHeatmapHtml();
+  ['discardHeatmap','homeDiscardHeatmap'].forEach(id=>{const el=document.getElementById(id);if(el)el.innerHTML=html;});
+}
+function discardHeatmapHtml(){
   const counts=discardCountByDate();
   const now=new Date();
   const base=new Date(now.getFullYear(),now.getMonth()+_discardCalMonth,1);
@@ -1906,7 +1916,7 @@ function renderDiscardHeatmap(){
     h+=`<div class="dch-cell lvl${lvl}${ds===today?' today':''}" title="${c>0?c+'個手放した':''}">${d}</div>`;
   }
   h+=`</div><div class="dch-legend">少 <i style="background:var(--bg-warm)"></i><i style="background:#DBEFEC"></i><i style="background:#A9DBD3"></i><i style="background:#7EC4C0"></i> 多</div>`;
-  el.innerHTML=h;
+  return h;
 }
 function renderDiscardLog(){
   renderDiscardHeatmap();
