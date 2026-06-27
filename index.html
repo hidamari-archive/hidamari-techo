@@ -767,6 +767,10 @@ body{font-family:var(--font-body);background:var(--bg);color:var(--text);min-hei
         </div>
         <div class="home-card-arrow" onclick="gotoSeiiki('today')" style="cursor:pointer;padding-left:8px;align-self:stretch;display:flex;align-items:center">›</div>
       </div>
+      <div class="home-summary-card" id="homeWeeklySection" style="cursor:default;display:none;flex-direction:column;align-items:stretch">
+        <div class="home-card-label" style="margin-bottom:6px">🌿 今週のゆるめ習慣</div>
+        <div id="homeWeeklyGrid" style="overflow-x:auto;margin:0 -14px -11px"></div>
+      </div>
       <div class="home-summary-card" style="cursor:default">
         <div style="flex:1;min-width:0">
           <div class="home-card-label">🛒 買い物リスト</div>
@@ -1690,12 +1694,9 @@ function weekDates(){
   }
   return out;
 }
-function renderWeeklyRoutines(){
-  const sec=document.getElementById('weeklyRoutineSection');const grid=document.getElementById('weeklyRoutineGrid');
-  if(!sec||!grid)return;
+function weeklyGridHtml(){
   const wr=D.routines.filter(r=>r.kind==='weekly');
-  if(!wr.length){sec.style.display='none';grid.innerHTML='';return;}
-  sec.style.display='';
+  if(!wr.length)return '';
   const days=weekDates();
   const on=(rid,date)=>(D.weekChecks||[]).some(c=>c.routine_id===rid&&c.date===date);
   let h=`<div class="wgrid"><div class="wgrid-row wgrid-head"><div class="wgrid-name"></div>`
@@ -1708,7 +1709,17 @@ function renderWeeklyRoutines(){
         return `<div class="${cls}"${d.isFuture?'':` onclick="togWeekCell('${r.id}','${d.date}')"`}>${c?'✓':''}</div>`;
       }).join('')+`</div>`;
   });
-  grid.innerHTML=h+`</div>`;
+  return h+`</div>`;
+}
+function renderWeeklyRoutines(){
+  const html=weeklyGridHtml();
+  const pairs=[['weeklyRoutineSection','weeklyRoutineGrid'],['homeWeeklySection','homeWeeklyGrid']];
+  pairs.forEach(([secId,gridId])=>{
+    const sec=document.getElementById(secId),grid=document.getElementById(gridId);
+    if(!sec||!grid)return;
+    if(!html){sec.style.display='none';grid.innerHTML='';}
+    else{sec.style.display=secId==='homeWeeklySection'?'flex':'';grid.innerHTML=html;}
+  });
 }
 function togWeekCell(rid,date){
   const arr=D.weekChecks||(D.weekChecks=[]);
