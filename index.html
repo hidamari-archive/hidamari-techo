@@ -8,7 +8,10 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <title>灯だまり手帖</title>
+<link rel="preconnect" href="https://fypsfmrmxcgydpwkjhlc.supabase.co" crossorigin>
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@400;600&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
@@ -1233,11 +1236,22 @@ let curModal=null,curTaskType='once',curShopCat='食品・日用品',curShopCatF
 // ═══════════════════════════════════════════════
 // データ読み込み
 // ═══════════════════════════════════════════════
-async function loadData(){
-  const today=gt();
+let _healthLoaded=false;
+async function loadHealthData(force){
+  if(_healthLoaded&&!force)return;
   const since=new Date(Date.now()-HEALTH_DAYS*864e5);
   const sinceStr=since.getFullYear()+'-'+String(since.getMonth()+1).padStart(2,'0')+'-'+String(since.getDate()).padStart(2,'0');
-  const [rR,cR,tR,dR,lR,mR,ltR,wR,sR,fR,wtR,pR,fmR,hfR,hbR,hdR,heR]=await Promise.all([
+  const [hdR,heR]=await Promise.all([
+    db.from('health_daily_log').select('*').gte('date',sinceStr).order('date',{ascending:false}),
+    db.from('health_extra_intake').select('*').gte('date',sinceStr).order('created_at',{ascending:false}),
+  ]);
+  D.hDaily=hdR.data||[];
+  D.hExtra=heR.data||[];
+  _healthLoaded=true;
+}
+async function loadData(){
+  const today=gt();
+  const [rR,cR,tR,dR,lR,mR,ltR,wR,sR,fR,wtR,pR,fmR,hfR,hbR]=await Promise.all([
     db.from('hk_routines').select('*').order('sort_order').order('created_at'),
     db.from('hk_routine_checks').select('*').eq('date',today),
     db.from('hk_tasks').select('*').order('created_at'),
@@ -1253,8 +1267,6 @@ async function loadData(){
     db.from('flash_memos').select('*').order('created_at',{ascending:false}),
     db.from('health_food_master').select('*').order('sort_order').order('name'),
     db.from('health_base_meal').select('*'),
-    db.from('health_daily_log').select('*').gte('date',sinceStr).order('date',{ascending:false}),
-    db.from('health_extra_intake').select('*').gte('date',sinceStr).order('created_at',{ascending:false}),
   ]);
   let routines=rR.data||[];
   if(!routines.length){
@@ -1277,8 +1289,8 @@ async function loadData(){
   D.flashMemos=fmR.data||[];
   D.hFood=hfR.data||[];
   D.hBase={};(hbR.data||[]).forEach(b=>{D.hBase[b.meal]=b});
-  D.hDaily=hdR.data||[];
-  D.hExtra=heR.data||[];
+  // 健康の90日ぶんは重いので起動経路から外す。日付替わりの再読み込み時のみ、既読なら裏で更新
+  if(_healthLoaded){loadHealthData(true).then(()=>{const ht=document.getElementById('tab-health');if(ht&&ht.classList.contains('active'))renderHealth()})}
   let feeds=fR.data||[];
   if(!feeds.length){
     const seeds=DEFAULT_FEEDS.map(f=>({name:f.name,url:f.url,cat:f.cat}));
@@ -1301,7 +1313,7 @@ function switchTab(tab){
   document.getElementById('tab-'+tab).classList.add('active');
   document.getElementById('wishFab').classList.toggle('show',tab==='shop'&&_shopTab==='wishlist');
   if(tab==='news'&&!_newsLoaded)loadNews();
-  if(tab==='health')renderHealth();
+  if(tab==='health'){if(_healthLoaded)renderHealth();else loadHealthData().then(renderHealth);}
 }
 document.querySelectorAll('.stab').forEach(t=>{
   t.addEventListener('click',()=>{
@@ -3208,6 +3220,8 @@ async function fetchIcalText(url,cacheKey,force=false){
   // キャッシュバスター：プロキシのサーバーキャッシュも強制的に無効化
   const targetUrl=force?url+(url.includes('?')?'&':'?')+'_cb='+Date.now():url;
   const proxies=[
+    // 自前の中継（Supabase Edge Function）を最優先。未デプロイ時は下の従来プロキシに落ちる
+    `${SUPABASE_URL}/functions/v1/ical-proxy?url=${encodeURIComponent(targetUrl)}`,
     `https://corsproxy.io/?${encodeURIComponent(targetUrl)}`,
     `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(targetUrl)}`,
   ];

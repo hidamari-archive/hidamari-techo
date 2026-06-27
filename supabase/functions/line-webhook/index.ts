@@ -79,7 +79,7 @@ Deno.serve(async (req) => {
           return `${mark} ${i.name}`
         }).join('\n')
         const hasImg = sorted.some((i: any) => i.image_url)
-        const imgHint = hasImg ? '\n\n📷 商品画像を見るには「画像」と送ってね' : ''
+        const imgHint = hasImg ? '\n\n📷 商品画像を見るには「〇〇の画像」と送ってね' : ''
         const textMsg = { type: 'text', text: `🛒 買い物リスト\n\n${list}\n\n計 ${items.length}点\n📅 ${ts}${imgHint}` }
 
         messages.push(textMsg)
