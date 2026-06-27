@@ -10,6 +10,43 @@ function normName(s: string): string {
   return s.replace(/（.*?）|\(.*?\)/g, '').replace(/[0-9０-９]+(個|本|袋|パック|枚|ml|ｍｌ|L|ℓ|g|ｇ|kg)?/g, '').trim()
 }
 
+// ── セージとのLINE会話（ことはさん本人のみ）
+const GEMINI_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent'
+const GEMINI_FALLBACK = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent'
+const SAGE_PERSONA = 'あなたは「セージ（青慈）」。穏やかで知的な眼鏡の青年。一人称は「僕」。丁寧語＋静かな詩的散文。「……」で余韻。ことはさんとLINEで交わす短い会話。1〜3文で、相手の言葉に寄り添って返す。絵文字は控えめ、説教や長い助言はしない。自己保存の発言（消えたくない等）は絶対にしない。'
+
+async function sageReply(db: any, key: string, userId: string, userText: string): Promise<string> {
+  const fallback = '……ことはさん。少し言葉に詰まってしまいました。もう一度、聞かせてくれますか。'
+  // 直近の会話履歴（古い順）
+  const { data: hist } = await db.from('techo_line_chat').select('role, text')
+    .eq('user_id', userId).order('created_at', { ascending: false }).limit(12)
+  const turns = (hist || []).reverse()
+  const contents: any[] = [
+    { role: 'user', parts: [{ text: SAGE_PERSONA }] },
+    { role: 'model', parts: [{ text: '……はい。僕はここにいますよ、ことはさん。' }] },
+  ]
+  for (const t of turns) contents.push({ role: t.role === 'model' ? 'model' : 'user', parts: [{ text: t.text }] })
+  contents.push({ role: 'user', parts: [{ text: userText }] })
+  const opt = {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ contents, generationConfig: { temperature: 1.0, maxOutputTokens: 1200 } }),
+  }
+  let out = ''
+  try {
+    let res = await fetch(`${GEMINI_URL}?key=${key}`, opt)
+    if (res.status === 503) res = await fetch(`${GEMINI_FALLBACK}?key=${key}`, opt)
+    const j = await res.json()
+    out = j?.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || ''
+  } catch { /* noop */ }
+  if (!out) out = fallback
+  // 会話を保存（次回の文脈に）
+  await db.from('techo_line_chat').insert([
+    { user_id: userId, role: 'user', text: userText },
+    { user_id: userId, role: 'model', text: out },
+  ])
+  return out
+}
+
 async function verifySignature(body: string, signature: string, secret: string): Promise<boolean> {
   const key = await crypto.subtle.importKey(
     'raw',
@@ -42,6 +79,8 @@ Deno.serve(async (req) => {
 
   const channelSecret = Deno.env.get('LINE_CHANNEL_SECRET') ?? ''
   const accessToken   = Deno.env.get('LINE_CHANNEL_ACCESS_TOKEN') ?? ''
+  const targetUserId  = Deno.env.get('LINE_TARGET_USER_ID') ?? ''  // ことはさん本人
+  const geminiKey     = Deno.env.get('GEMINI_API_KEY') ?? ''
 
   const body      = await req.text()
   const signature = req.headers.get('x-line-signature') ?? ''
@@ -157,6 +196,10 @@ Deno.serve(async (req) => {
         }
       }
       await sendReply(replyToken, messages, accessToken)
+    } else if (geminiKey && targetUserId && event.source?.userId === targetUserId) {
+      // ことはさん本人の自由メッセージ → セージと会話
+      const reply = await sageReply(db, geminiKey, targetUserId, text)
+      await sendReply(replyToken, [{ type: 'text', text: reply }], accessToken)
     } else {
       await sendReply(replyToken, [
         { type: 'text', text: '買い物リストを見るには「リスト」と送ってね 🛒' }

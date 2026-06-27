@@ -58,6 +58,7 @@ supabase/functions/line-webhook/index.ts      ── LINE Webhook（Deno/Edge Fu
 | `flash_memos` | ひらめきメモ（text）※情報タブに移設 |
 | `techo_links` | 便利リンク集（name, url, sort_order）※情報タブ。`techo_links_setup.sql` で作成 |
 | `techo_reminders` | セージのリマインダー（label, time HH:MM, enabled, last_sent_date）。`reminders_setup.sql` で作成 |
+| `techo_line_chat` | セージとのLINE会話履歴（user_id, role, text）。`line_chat_setup.sql` で作成 |
 | `techo_rss_feeds` | ニュースフィード定義（name, url, cat） |
 | `health_food_master` | 食品マスタ（name, category, carb_g, kcal, unit, favorite, sort_order） |
 | `health_base_meal` | ベース食設定（meal: 朝/昼/夜・unique, carb_g, description） |
@@ -338,6 +339,9 @@ searchAmazonItem(name)      // Amazon商品名検索を開く
 - **セットアップ順**: ①SQLでテーブル作成 → ②line-webhook 再デプロイ →「マイID」でuserId取得 → ③reminder-tick デプロイ（JWToff）＋Secrets設定 → ④SQLの cron 部分を実行。
 
 ## LINE連携（マステシステム）
+
+### セージとのLINE会話（2026-06 追加）
+`line-webhook` で、買い物コマンド以外の自由メッセージが**ことはさん本人（`event.source.userId === LINE_TARGET_USER_ID`）**から来たら、セージとして Gemini 返信（`sageReply`）。`techo_line_chat` に直近12件を保存し文脈をつなぐ。夫さん等の非コマンドは従来の使い方案内のまま。`gemini-3-flash-preview`（503時2.5）。要 Secret: `GEMINI_API_KEY`・`LINE_TARGET_USER_ID`。`line_chat_setup.sql` でテーブル作成 → line-webhook 再デプロイ。
 
 ### Supabase Edge Function
 - ファイル: `supabase/functions/line-webhook/index.ts`（Deno）
