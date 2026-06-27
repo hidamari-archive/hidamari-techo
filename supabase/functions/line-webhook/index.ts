@@ -63,6 +63,12 @@ Deno.serve(async (req) => {
     const text: string       = event.message.text
     const replyToken: string = event.replyToken
 
+    if (text.trim() === 'マイID' || text.trim() === 'ID') {
+      const uid = event.source?.userId ?? '(取得できませんでした)'
+      await sendReply(replyToken, [{ type: 'text', text: `あなたの LINE userId:\n${uid}\n\nこれを Supabase の Secret「LINE_TARGET_USER_ID」に設定すると、セージのリマインダーが届きます。` }], accessToken)
+      continue
+    }
+
     if (BOUGHT_RE.test(text)) {
       const { data: needed } = await db
         .from('pantry_items')

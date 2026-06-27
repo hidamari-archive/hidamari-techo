@@ -906,6 +906,16 @@ body{font-family:var(--font-body);background:var(--bg);color:var(--text);min-hei
         </div>
       </div>
       <div class="section">
+        <div class="section-title" style="margin-bottom:10px">セージのリマインダー（LINE）</div>
+        <div class="card" id="reminderList"></div>
+        <div style="display:flex;gap:8px;padding:8px 2px 0;align-items:center">
+          <input type="time" id="reminderTime" class="modal-input" value="08:00" style="flex:0 0 auto;width:auto;margin:0">
+          <input type="text" id="reminderLabel" class="modal-input" placeholder="内容（例：猫の薬）" style="margin:0;flex:1;min-width:0">
+          <button class="modal-btn primary" onclick="addReminder()" style="flex:none">追加</button>
+        </div>
+        <div style="font-size:11px;color:var(--text-faint);padding:8px 2px 0;line-height:1.5">設定した時刻に、セージがその日の様子にあわせた言葉でLINEに届けます。<br>※ 初回のみ Supabase 側の設定が必要です（仕組みは別途）。</div>
+      </div>
+      <div class="section">
         <div class="section-title" style="margin-bottom:10px">AI連携</div>
         <div class="card">
           <div class="ai-key-wrap">
@@ -1336,7 +1346,7 @@ let D={
   routines:[],routineChecks:[],weekChecks:[],todayTasks:[],todayDiscards:[],
   discardLog:[],longTasks:[],weeklyTasks:[],
   wishItems:[],shopItems:[],pantryItems:[],rssFeeds:[],
-  hFood:[],hBase:{},hDaily:[],hExtra:[],links:[],
+  hFood:[],hBase:{},hDaily:[],hExtra:[],links:[],reminders:[],
   routineMessageDate:'',routineRarity:'',
   _loadedDate:'',
 };
@@ -1360,7 +1370,7 @@ async function loadHealthData(force){
 }
 async function loadData(){
   const today=gt();
-  const [rR,cR,tR,dR,lR,mR,ltR,wR,sR,fR,wtR,pR,fmR,hfR,hbR]=await Promise.all([
+  const [rR,cR,tR,dR,lR,mR,ltR,wR,sR,fR,wtR,pR,fmR,hfR,hbR,remR]=await Promise.all([
     db.from('hk_routines').select('*').order('sort_order').order('created_at'),
     db.from('hk_routine_checks').select('*').gte('date',getWeekKey()),
     db.from('hk_tasks').select('*').order('created_at'),
@@ -1376,6 +1386,7 @@ async function loadData(){
     db.from('flash_memos').select('*').order('created_at',{ascending:false}),
     db.from('health_food_master').select('*').order('sort_order').order('name'),
     db.from('health_base_meal').select('*'),
+    db.from('techo_reminders').select('*').order('time'),
   ]);
   let routines=rR.data||[];
   if(!routines.length){
@@ -1387,6 +1398,7 @@ async function loadData(){
   const seen=new Set();
   D.routines=routines.filter(r=>{if(seen.has(r.text))return false;seen.add(r.text);return true});
   D.weekChecks=cR.data||[];
+  D.reminders=remR.data||[];
   D.routineChecks=D.weekChecks.filter(c=>c.date===today).map(c=>c.routine_id);
   D.todayTasks=(tR.data||[]).filter(t=>!t.done||t.done_date===today);
   D.todayDiscards=dR.data||[];
@@ -2108,6 +2120,31 @@ function delR(id){
   const r=D.routines.find(x=>x.id===id);if(!r||!confirm(`「${r.text}」を削除しますか？`))return;
   D.routines=D.routines.filter(x=>x.id!==id);D.routineChecks=D.routineChecks.filter(c=>c!==id);
   dbw(db.from('hk_routines').delete().eq('id',id),'r.del');renderAll();
+}
+// セージのリマインダー（LINE push）
+function renderReminders(){
+  const el=document.getElementById('reminderList');if(!el)return;
+  const items=(D.reminders||[]).slice().sort((a,b)=>(a.time||'').localeCompare(b.time||''));
+  if(!items.length){el.innerHTML='<div style="padding:16px;text-align:center;color:var(--text-faint);font-size:13px">まだリマインダーがありません</div>';return;}
+  el.innerHTML=items.map(r=>`<div class="settings-item"><span style="display:flex;align-items:center;gap:9px;min-width:0"><span style="font-variant-numeric:tabular-nums;font-weight:700;color:var(--text);flex-shrink:0">${esc(r.time||'')}</span><span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:${r.enabled?'var(--text)':'var(--text-faint)'}">${esc(r.label||'')}</span></span><span style="display:flex;gap:6px;align-items:center;flex-shrink:0"><button class="reset-btn" onclick="toggleReminder('${r.id}')">${r.enabled?'🔔':'🔕'}</button><button class="reset-btn" onclick="delReminder('${r.id}')">削除</button></span></div>`).join('');
+}
+function addReminder(){
+  const t=document.getElementById('reminderTime').value;const lab=document.getElementById('reminderLabel').value.trim();
+  if(!t||!lab)return;
+  const id=uuid();
+  D.reminders=[...(D.reminders||[]),{id,time:t,label:lab,enabled:true,days:'daily',last_sent_date:null,created_at:new Date().toISOString()}];
+  document.getElementById('reminderLabel').value='';
+  renderReminders();
+  dbw(db.from('techo_reminders').insert({id,time:t,label:lab,enabled:true,days:'daily'}),'rem.ins');
+}
+function toggleReminder(id){
+  const r=(D.reminders||[]).find(x=>x.id===id);if(!r)return;
+  r.enabled=!r.enabled;renderReminders();
+  dbw(db.from('techo_reminders').update({enabled:r.enabled}).eq('id',id),'rem.upd');
+}
+function delReminder(id){
+  D.reminders=(D.reminders||[]).filter(x=>x.id!==id);renderReminders();
+  dbw(db.from('techo_reminders').delete().eq('id',id),'rem.del');
 }
 async function resetToday(){
   if(!confirm('今日のチェックをリセットしますか？'))return;
@@ -3981,7 +4018,7 @@ function calMonthNext(){
 // 一括レンダー
 // ═══════════════════════════════════════════════
 function renderAll(){
-  updateDate();renderRoutines();renderTasks();renderWeeklyPanel();renderDiscards();renderDiscardStampCard();renderHomeStampMini();renderDiscardLog();renderLongTasks();renderRS();renderWish();renderShop();renderPantry();renderHealth();updateHomeSummary();
+  updateDate();renderRoutines();renderTasks();renderWeeklyPanel();renderDiscards();renderDiscardStampCard();renderHomeStampMini();renderDiscardLog();renderLongTasks();renderRS();renderReminders();renderWish();renderShop();renderPantry();renderHealth();updateHomeSummary();
   const k=getGeminiKey();const el=document.getElementById('geminiKeyInput');if(el)el.value=k;
   const iu=getIcalUrl();const iel=document.getElementById('icalUrlInput');if(iel)iel.value=iu;
   const iu2=getIcalUrl2();const iel2=document.getElementById('icalUrlInput2');if(iel2)iel2.value=iu2;
