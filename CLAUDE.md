@@ -187,7 +187,9 @@ CREATE POLICY "auth_only" ON flash_memos
 
 `switchShopTab(tab)` で切り替え。タブキー: `list` / `pantry`。
 - **🛍 買い物メモ**: `shopping_list` テーブル。個人用（絵具・化粧品等）の買い物メモ
+  - **在庫サジェスト（2026-06）**: 入力中に `pantry_items` の品名と部分一致照合し、入力欄下にサジェスト表示（`renderShopSuggest`）。タップで `quickNeed(id)`→`setPantryStatus(id,'needed')` でワンタップ欠品化。在庫が増えて探しづらい問題への対処（メモ入力＝必要物の入口に統合）
 - **📦 在庫管理**: `pantry_items` テーブル。台所在庫マステシステム（LINE連携あり）
+  - **＋追加のカテゴリ既定値（2026-06）**: `togPantryAdd` 展開時、カテゴリ絞り込み中（`_pantryFilter` が `cat:*`）ならそのカテゴリを追加先に自動選択
 
 ---
 

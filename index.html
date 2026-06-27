@@ -271,6 +271,12 @@ body{font-family:var(--font-body);background:var(--bg);color:var(--text);min-hei
 .shop-input{flex:1;min-width:0;padding:8px 12px;border:1px solid var(--border);border-radius:var(--radius-sm);font-size:14px;font-family:var(--font-body);color:var(--text);background:var(--bg-card);outline:none}
 .shop-input:focus{border-color:var(--accent)}
 .shop-add-btn{padding:8px 14px;background:var(--accent);color:#fff;border:none;border-radius:var(--radius-sm);font-size:14px;font-family:var(--font-body);cursor:pointer;white-space:nowrap}
+.shop-suggest{display:flex;flex-direction:column;gap:5px}
+.shop-suggest-hint{font-size:11px;color:var(--text-light);margin-bottom:1px}
+.shop-suggest-item{text-align:left;padding:8px 12px;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-sm);font-size:14px;font-family:var(--font-body);color:var(--text);cursor:pointer;display:flex;align-items:center;gap:8px}
+.shop-suggest-item:active{background:var(--bg-warm)}
+.shop-suggest-item.done{color:var(--text-faint);cursor:default}
+.shop-suggest-flash{font-size:12px;color:var(--discard-done,#7EC4C0);padding:2px 2px}
 .shop-cat-pills{display:flex;gap:6px;overflow-x:auto;padding-bottom:2px;-webkit-overflow-scrolling:touch}
 .shop-cat-pills::-webkit-scrollbar{display:none}
 .shop-cat-pill{padding:4px 12px;border-radius:14px;border:1px solid var(--border);background:var(--bg);font-size:12px;cursor:pointer;white-space:nowrap;font-family:var(--font-body);color:var(--text-light);flex-shrink:0;transition:all .2s}
@@ -914,9 +920,10 @@ body{font-family:var(--font-body);background:var(--bg);color:var(--text);min-hei
     <div class="shop-stab-panel" id="shop-stab-memo">
       <div class="shop-add-bar">
         <div class="shop-input-row">
-          <input class="shop-input" id="shopInput" type="text" placeholder="品名を入力…" autocomplete="off">
+          <input class="shop-input" id="shopInput" type="text" placeholder="品名を入力…" autocomplete="off" oninput="renderShopSuggest()">
           <button class="shop-add-btn" onclick="addShopItem()">追加</button>
         </div>
+        <div class="shop-suggest" id="shopSuggest" style="display:none"></div>
       </div>
       <div class="shop-content" id="shopContent"></div>
     </div>
@@ -2051,8 +2058,34 @@ function addShopItem(){
   D.shopItems.unshift({id,item:text,checked:false,created_at:new Date().toISOString()});
   document.getElementById('shopInput').value='';
   document.getElementById('shopInput').focus();
+  renderShopSuggest();
   renderShop();updateHomeSummary();
   dbw(db.from('shopping_list').insert({id,item:text}),'s.ins');
+}
+// 買い物メモ入力中、在庫リストの品名と照合してサジェスト表示（タップで欠品に）
+function renderShopSuggest(flash){
+  const inp=document.getElementById('shopInput');const el=document.getElementById('shopSuggest');
+  if(!inp||!el)return;
+  const q=inp.value.trim().toLowerCase();
+  if(!q&&!flash){el.style.display='none';el.innerHTML='';return;}
+  const matches=q?(D.pantryItems||[]).filter(x=>(x.name||'').toLowerCase().includes(q)).slice(0,6):[];
+  if(!matches.length&&!flash){el.style.display='none';el.innerHTML='';return;}
+  el.style.display='';
+  const flashHtml=flash?`<div class="shop-suggest-flash">🔴 ${esc(flash)} を欠品にしたよ</div>`:'';
+  const listHtml=matches.length
+    ?`<div class="shop-suggest-hint">在庫リストにあります（タップで欠品に）</div>`+matches.map(x=>{
+        const isNeeded=x.status==='needed';
+        return`<button class="shop-suggest-item${isNeeded?' done':''}"${isNeeded?' disabled':` onclick="quickNeed('${x.id}')"`}>${isNeeded?'🔴':x.status==='amazon'?'📦':'🟢'} ${esc(x.name)}${isNeeded?'（すでに欠品中）':''}</button>`;
+      }).join('')
+    :'';
+  el.innerHTML=flashHtml+listHtml;
+}
+// サジェストから在庫アイテムを欠品にする
+function quickNeed(id){
+  const it=(D.pantryItems||[]).find(x=>x.id===id);if(!it)return;
+  setPantryStatus(id,'needed');
+  const inp=document.getElementById('shopInput');if(inp)inp.value='';
+  renderShopSuggest(it.name);
 }
 document.getElementById('shopInput').addEventListener('keydown',e=>{if(e.key==='Enter')addShopItem()});
 
@@ -2353,7 +2386,15 @@ function togPantryAdd(){
   if(!row)return;
   const open=row.classList.toggle('open');
   if(btn)btn.classList.toggle('open',open);
-  if(open)setTimeout(()=>{const inp=document.getElementById('pantryInput');if(inp)inp.focus();},0);
+  if(open){
+    // いま見ているカテゴリで絞り込み中なら、追加先カテゴリもそれに合わせる
+    const sel=document.getElementById('pantryCatSelect');
+    if(sel&&_pantryFilter.startsWith('cat:')){
+      const c=_pantryFilter.slice(4);
+      if([...sel.options].some(o=>o.value===c))sel.value=c;
+    }
+    setTimeout(()=>{const inp=document.getElementById('pantryInput');if(inp)inp.focus();},0);
+  }
 }
 // ─ 画像URLパネル ─
 let _pantryUrlTarget=null;
