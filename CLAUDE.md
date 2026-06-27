@@ -129,14 +129,16 @@ supabase/functions/line-webhook/index.ts      ── LINE Webhook（Deno/Edge Fu
 「今日はいいかな」タップで当日中非表示（`localStorage['hidamari_sage_s_cache']` に `__dismissed__` を保存）。
 **現在一時停止中**（`initSageMessages` でウィッシュ提案呼び出しをコメントアウト）。
 
+### 毎日（必須）カード（2026-06 追加）
+`homeDailySection`／`renderHomeDaily()`。ホームから毎日（必須）ルーティンを**直接チェック**（`togR`）。項目名＋チェックボックス、右上に `done/total`（コンプ時👑）。`isDailyR` の routine のみ。週グリッド（`homeWeeklySection`）の直上に配置し、毎日→今週の並び。daily が無ければ非表示。
+> これに伴い `updateHomeSummary` の「くらし」サマリーからルーティンのドット行は削除（二重表示回避）。サマリーは未完タスク・週間タスクのみ表示。
+
 ### くらしサマリーカード
 `homeSeiikiSummary`（`updateHomeSummary()` で更新）。※旧称「聖域サマリー」
-- ルーティン達成率: `■□` ドットで表示（`mkDots(done,total)`）
 - 未完タスク名
 - 週間タスク: 未完のものを「週」バッジ付きで表示。件数を `X/Y` 形式で表示
-- 一日一捨て: 捨てたアイテム名 or「🗑 まだです」
-- **台所在庫の欠品アイテムを赤文字で表示**
-- すべて完了（ルーティン・通常タスク・週間タスク）で👑表示
+- 何も未完が無ければ「タスクは片付いています」
+- すべて完了（毎日ルーティン・通常タスク・週間タスク）で👑表示（`updateHomeSummary` の allDone）
 
 ### セージ簡易チャットカード
 `sageChatCard`。ホームカード最下部。Gemini APIキー設定済み時のみ表示。
