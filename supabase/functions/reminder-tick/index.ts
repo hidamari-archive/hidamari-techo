@@ -27,7 +27,8 @@ async function sageText(key: string, label: string, time: string, done: boolean,
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         contents: [{ role: 'user', parts: [{ text: `${persona}\n\n${ctx}\n\nセージのLINEメッセージ本文だけを出力してください。` }] }],
-        generationConfig: { maxOutputTokens: 320, temperature: 1.0 },
+        // gemini-2.5-flash は思考トークンを消費するため、思考を無効化(0)＋出力上限を広めに取る
+        generationConfig: { maxOutputTokens: 600, temperature: 1.0, thinkingConfig: { thinkingBudget: 0 } },
       }),
     })
     const j = await res.json()
