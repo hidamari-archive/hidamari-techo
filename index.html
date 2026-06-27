@@ -266,6 +266,20 @@ body{font-family:var(--font-body);background:var(--bg);color:var(--text);min-hei
 .shop-stab.active::after{content:'';position:absolute;bottom:-1px;left:14px;right:14px;height:2px;border-radius:2px;background:var(--accent)}
 .shop-stab-panel{display:none}
 .shop-stab-panel.active{display:block}
+/* 情報タブ サブタブ（shop-tabs と同じ見た目） */
+.info-tabs{display:flex;gap:0;padding:0 16px;border-bottom:1px solid var(--border);position:sticky;top:var(--header-h,74px);z-index:90;background:var(--bg);overflow-x:auto;scrollbar-width:none}
+.info-tabs::-webkit-scrollbar{display:none}
+.info-stab{padding:9px 14px;font-size:12px;font-weight:500;color:var(--text-light);border:none;background:none;cursor:pointer;position:relative;transition:color .2s;white-space:nowrap}
+.info-stab.active{color:var(--text)}
+.info-stab.active::after{content:'';position:absolute;bottom:-1px;left:14px;right:14px;height:2px;border-radius:2px;background:var(--accent)}
+.info-stab-panel{display:none}
+.info-stab-panel.active{display:block}
+/* 便利リンク */
+.link-item{display:flex;align-items:center;gap:8px;padding:12px 14px;border-bottom:1px solid var(--border)}
+.link-item:last-child,.link-item.only{border-bottom:none}
+.link-item-main{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px;text-decoration:none}
+.link-item-name{font-size:14px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.link-item-url{font-size:11px;color:var(--text-faint);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .shop-add-bar{background:var(--bg);border-bottom:1px solid var(--border);padding:12px 16px}
 .shop-input-row{display:flex;gap:8px;margin-bottom:8px}
 .shop-input{flex:1;min-width:0;padding:8px 12px;border:1px solid var(--border);border-radius:var(--radius-sm);font-size:14px;font-family:var(--font-body);color:var(--text);background:var(--bg-card);outline:none}
@@ -901,14 +915,45 @@ body{font-family:var(--font-body);background:var(--bg);color:var(--text);min-hei
 
   <!-- ニュースタブ -->
   <div class="tab-panel" id="tab-news">
-    <div class="news-header">
-      <span class="news-header-title">📰 ニュース</span>
-      <button class="news-refresh-btn" onclick="toggleFeedManage()" id="newsManageBtn" title="フィード管理">⚙</button>
-      <button class="news-refresh-btn" onclick="refreshNews()" title="更新">↺</button>
+    <div class="info-tabs">
+      <button class="info-stab active" data-istab="news" onclick="switchInfoTab('news')">📰 ニュース</button>
+      <button class="info-stab" data-istab="links" onclick="switchInfoTab('links')">🔗 便利リンク</button>
+      <button class="info-stab" data-istab="flash" onclick="switchInfoTab('flash')">✨ ひらめき</button>
     </div>
-    <div id="newsFeedManage" style="display:none"></div>
-    <div class="news-cat-row" id="newsCatRow"></div>
-    <div class="panel-body" id="newsList"></div>
+    <!-- ニュース -->
+    <div class="info-stab-panel active" id="info-stab-news">
+      <div class="news-header">
+        <span class="news-header-title">📰 ニュース</span>
+        <button class="news-refresh-btn" onclick="toggleFeedManage()" id="newsManageBtn" title="フィード管理">⚙</button>
+        <button class="news-refresh-btn" onclick="refreshNews()" title="更新">↺</button>
+      </div>
+      <div id="newsFeedManage" style="display:none"></div>
+      <div class="news-cat-row" id="newsCatRow"></div>
+      <div class="panel-body" id="newsList"></div>
+    </div>
+    <!-- 便利リンク -->
+    <div class="info-stab-panel" id="info-stab-links">
+      <div class="shop-add-bar">
+        <div class="shop-input-row">
+          <input class="shop-input" id="linkNameInput" type="text" placeholder="名前（例：バス時刻表）" autocomplete="off">
+        </div>
+        <div class="shop-input-row" style="margin-top:8px">
+          <input class="shop-input" id="linkUrlInput" type="url" placeholder="https://…" autocomplete="off" inputmode="url">
+          <button class="shop-add-btn" onclick="addLink()">追加</button>
+        </div>
+      </div>
+      <div class="panel-body" id="linkList"></div>
+    </div>
+    <!-- ひらめきメモ -->
+    <div class="info-stab-panel" id="info-stab-flash">
+      <div class="flash-memo-section">
+        <div class="flash-memo-add-row">
+          <input class="shop-input" id="flashMemoInput" type="text" placeholder="思いついたこと…" autocomplete="off">
+          <button class="shop-add-btn" onclick="addFlashMemo()">追加</button>
+        </div>
+        <div id="flashMemoList"></div>
+      </div>
+    </div>
   </div>
 
   <!-- 買い物タブ -->
@@ -917,7 +962,6 @@ body{font-family:var(--font-body);background:var(--bg);color:var(--text);min-hei
       <button class="shop-stab" data-stab="memo" onclick="switchShopTab('memo')">🛒 買い物</button>
       <button class="shop-stab active" data-stab="stock" onclick="switchShopTab('stock')">🧺 在庫</button>
       <button class="shop-stab" data-stab="wishlist" onclick="switchShopTab('wishlist')">💫 ウィッシュ</button>
-      <button class="shop-stab" data-stab="flash" onclick="switchShopTab('flash')">✨ ひらめき</button>
     </div>
     <!-- メモパネル -->
     <div class="shop-stab-panel" id="shop-stab-memo">
@@ -966,16 +1010,6 @@ body{font-family:var(--font-body);background:var(--bg);color:var(--text);min-hei
       </div>
       <div class="panel-body" id="wishList"></div>
       <button class="wish-fab" id="wishFab" onclick="openModal('wish-add')">＋</button>
-    </div>
-    <!-- ひらめきメモパネル -->
-    <div class="shop-stab-panel" id="shop-stab-flash">
-      <div class="flash-memo-section">
-        <div class="flash-memo-add-row">
-          <input class="shop-input" id="flashMemoInput" type="text" placeholder="思いついたこと…" autocomplete="off">
-          <button class="shop-add-btn" onclick="addFlashMemo()">追加</button>
-        </div>
-        <div id="flashMemoList"></div>
-      </div>
     </div>
   </div>
 
@@ -1040,7 +1074,7 @@ body{font-family:var(--font-body);background:var(--bg);color:var(--text);min-hei
     <span class="btab-icon">🌿</span><span class="btab-label">健康</span>
   </button>
   <button class="btab" data-tab="news" onclick="switchTab('news')">
-    <span class="btab-icon">📰</span><span class="btab-label">ニュース</span>
+    <span class="btab-icon">📋</span><span class="btab-label">情報</span>
   </button>
   <button class="btab" data-tab="shop" onclick="switchTab('shop')">
     <span class="btab-icon">🧺</span><span class="btab-label">ほしいもの</span>
@@ -1237,7 +1271,7 @@ let D={
   routines:[],routineChecks:[],todayTasks:[],todayDiscards:[],
   discardLog:[],longTasks:[],weeklyTasks:[],
   wishItems:[],shopItems:[],pantryItems:[],rssFeeds:[],
-  hFood:[],hBase:{},hDaily:[],hExtra:[],
+  hFood:[],hBase:{},hDaily:[],hExtra:[],links:[],
   routineMessageDate:'',routineRarity:'',
   _loadedDate:'',
 };
@@ -1322,7 +1356,7 @@ function switchTab(tab){
   document.querySelectorAll('.btab').forEach(b=>b.classList.toggle('active',b.dataset.tab===tab));
   document.getElementById('tab-'+tab).classList.add('active');
   document.getElementById('wishFab').classList.toggle('show',tab==='shop'&&_shopTab==='wishlist');
-  if(tab==='news'&&!_newsLoaded)loadNews();
+  if(tab==='news')switchInfoTab(_infoTab);
   if(tab==='health'){if(_healthLoaded)renderHealth();else loadHealthData().then(renderHealth);}
 }
 document.querySelectorAll('.stab').forEach(t=>{
@@ -2174,7 +2208,54 @@ function switchShopTab(tab){
   document.querySelectorAll('.shop-stab-panel').forEach(x=>x.classList.remove('active'));
   const p=document.getElementById('shop-stab-'+tab);if(p)p.classList.add('active');
   const fab=document.getElementById('wishFab');if(fab)fab.classList.toggle('show',tab==='wishlist');
+}
+// ── 情報タブ サブタブ（ニュース／便利リンク／ひらめき）
+let _infoTab='news';
+function switchInfoTab(tab){
+  _infoTab=tab;
+  document.querySelectorAll('.info-stab').forEach(x=>x.classList.toggle('active',x.dataset.istab===tab));
+  document.querySelectorAll('.info-stab-panel').forEach(x=>x.classList.remove('active'));
+  const p=document.getElementById('info-stab-'+tab);if(p)p.classList.add('active');
+  if(tab==='news'&&!_newsLoaded)loadNews();
+  if(tab==='links')renderLinks();
   if(tab==='flash')renderFlashMemos();
+}
+// ── 便利リンク（techo_links：遅延ロード）
+let _linksLoaded=false;
+async function loadLinks(){
+  const {data}=await db.from('techo_links').select('*').order('sort_order').order('created_at');
+  D.links=data||[];_linksLoaded=true;
+}
+function renderLinks(){
+  const el=document.getElementById('linkList');if(!el)return;
+  if(!_linksLoaded){el.innerHTML='<div class="pantry-empty">読み込み中…</div>';loadLinks().then(renderLinks);return;}
+  const items=D.links||[];
+  if(!items.length){el.innerHTML='<div class="pantry-empty">まだリンクがありません</div>';return;}
+  el.innerHTML=`<div class="card" style="margin:8px 16px">`+items.map(x=>`
+    <div class="link-item${items.length===1?' only':''}">
+      <a class="link-item-main" href="${esc(x.url)}" target="_blank" rel="noopener">
+        <span class="link-item-name">${esc(x.name)}</span>
+        <span class="link-item-url">${esc(x.url.replace(/^https?:\/\//,''))}</span>
+      </a>
+      <button class="item-delete" onclick="delLink('${x.id}')">×</button>
+    </div>`).join('')+`</div>`;
+}
+function addLink(){
+  const ni=document.getElementById('linkNameInput'),ui=document.getElementById('linkUrlInput');
+  let name=(ni.value||'').trim();let url=(ui.value||'').trim();
+  if(!url)return;
+  if(!/^https?:\/\//i.test(url))url='https://'+url;
+  if(!name)name=url.replace(/^https?:\/\//,'').replace(/\/.*$/,'');
+  const id=uuid();const sort=(D.links||[]).length;
+  D.links=[...(D.links||[]),{id,name,url,sort_order:sort,created_at:new Date().toISOString()}];
+  ni.value='';ui.value='';
+  renderLinks();
+  dbw(db.from('techo_links').insert({id,name,url,sort_order:sort}),'link.ins');
+}
+function delLink(id){
+  D.links=(D.links||[]).filter(x=>x.id!==id);
+  renderLinks();
+  dbw(db.from('techo_links').delete().eq('id',id),'link.del');
 }
 let _pantryOpenMenu=null;
 let _pantryFilter='all';
@@ -2322,6 +2403,8 @@ function delPantryItem(id){
 }
 document.getElementById('pantryInput').addEventListener('keydown',e=>{if(e.key==='Enter')addPantryItem()});
 document.getElementById('flashMemoInput').addEventListener('keydown',e=>{if(e.key==='Enter')addFlashMemo()});
+document.getElementById('linkNameInput').addEventListener('keydown',e=>{if(e.key==='Enter')document.getElementById('linkUrlInput').focus()});
+document.getElementById('linkUrlInput').addEventListener('keydown',e=>{if(e.key==='Enter')addLink()});
 document.getElementById('pantryCatInput').addEventListener('keydown',e=>{if(e.key==='Enter')addPantryCat()});
 let _pantryMenuTarget=null;
 function openPantryImgMenu(id){

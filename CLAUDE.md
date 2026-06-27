@@ -23,8 +23,10 @@ supabase/functions/line-webhook/index.ts      ── LINE Webhook（Deno/Edge Fu
 | home | 🏠 | tab-home | ホーム（天気・予定・くらしサマリー・買い物サマリー・セージ） |
 | seiiki | ☑ | tab-seiiki | くらし（ルーティン・今日のタスク・捨て活ログ・設定） |
 | health | 🌿 | tab-health | 健康（糖質量×体感マネジメント。朝の体感入力・食事追加・ベース食・デイリーサマリー） |
-| news | 📰 | tab-news | ニュース（RSS フィード） |
-| shop | 🧺 | tab-shop | ほしいもの（🛒買い物 / 🧺在庫 / 💫ウィッシュ / ✨ひらめき の4サブタブ） |
+| news | 📋 | tab-news | 情報（📰ニュース / 🔗便利リンク / ✨ひらめき の3サブタブ） |
+| shop | 🧺 | tab-shop | ほしいもの（🛒買い物 / 🧺在庫 / 💫ウィッシュ の3サブタブ） |
+
+> **2026-06 改修**: 旧「ニュース」タブ（tab-news・key `news`・id 据え置き）を「情報」に改称し、`switchInfoTab(tab)`（tab: `news`/`links`/`flash`）でサブタブ化。`switchShopTab` の `flash`（ひらめき）を情報タブへ移設し、買い物サブタブは3つに。便利リンクは `techo_links` テーブル＋遅延ロード（`loadLinks`/`renderLinks`/`addLink`/`delLink`）。
 
 > **2026-05 改修**: 旧「ウィッシュ」タブ（tab-wish）を廃止し、買い物タブに吸収。ボトムタブは5→4。タブ名「買い物」→「ほしいもの」🧺。`switchWishTab` は廃止し `switchShopTab(tab)` に統合（tab: `memo`/`stock`/`wishlist`/`flash`）。FAB（wishFab）は shop タブ＋wishlist サブタブ時のみ表示。
 
@@ -53,7 +55,8 @@ supabase/functions/line-webhook/index.ts      ── LINE Webhook（Deno/Edge Fu
 | `wishlist` | ウィッシュリスト（title, category, memo, status: want/done, completed_at） |
 | `shopping_list` | 買い物リスト（item, category, checked） |
 | `pantry_items` | 台所在庫（name, status: in_stock/needed/amazon, image_url, category, updated_by: app/line） |
-| `flash_memos` | ひらめきメモ（text） |
+| `flash_memos` | ひらめきメモ（text）※情報タブに移設 |
+| `techo_links` | 便利リンク集（name, url, sort_order）※情報タブ。`techo_links_setup.sql` で作成 |
 | `techo_rss_feeds` | ニュースフィード定義（name, url, cat） |
 | `health_food_master` | 食品マスタ（name, category, carb_g, kcal, unit, favorite, sort_order） |
 | `health_base_meal` | ベース食設定（meal: 朝/昼/夜・unique, carb_g, description） |
@@ -160,10 +163,9 @@ supabase/functions/line-webhook/index.ts      ── LINE Webhook（Deno/Edge Fu
 - ○ / × ボタンは横並び（`wish-actions` flex-direction: row）
 - 細長い付箋スタイル（padding 小さめ、margin-bottom:5px）
 
-### ひらめきメモ サブタブ（2026-05 追加）
-`switchWishTab(tab)` で切り替え。タブキー: `wishlist` / `memo`。
-- **💫 ウィッシュ**: 従来のウィッシュリスト（FAB はこのタブのみ表示）
-- **✨ ひらめきメモ**: `flash_memos` テーブル。テキスト入力のみシンプルな一覧
+### ひらめきメモ（2026-06：情報タブへ移設）
+旧・買い物タブ内のひらめきメモは**情報タブの ✨ひらめき サブタブ**に移動済み。
+- **✨ ひらめきメモ**: `flash_memos` テーブル。テキスト入力のみシンプルな一覧（`info-stab-flash`）
   - `addFlashMemo()` / `delFlashMemo(id)` / `renderFlashMemos()`
   - 作成日時を `M/D HH:mm` 形式で表示
   - 新着順（`created_at DESC`）
@@ -180,6 +182,13 @@ CREATE POLICY "auth_only" ON flash_memos
   FOR ALL USING (auth.role() = 'authenticated')
   WITH CHECK (auth.role() = 'authenticated');
 ```
+
+### 便利リンク サブタブ（2026-06 追加）
+情報タブの 🔗便利リンク。バス時刻表など、よく見るサイトのリンク集。
+- `techo_links` テーブル（name, url, sort_order）。`techo_links_setup.sql` で作成（RLS＋GRANT）
+- `_linksLoaded` フラグで遅延ロード（`loadLinks`）。サブタブ初回表示で取得
+- `addLink()`: URL欄のみ必須。`http(s)://` が無ければ自動付与（`javascript:` 等のスキーム注入もこの前置で無害化）。名前未入力ならホスト名を自動採用
+- `renderLinks()`: `<a target="_blank" rel="noopener">` で別タブ表示。`delLink(id)` で削除
 
 ---
 
