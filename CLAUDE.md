@@ -331,7 +331,7 @@ searchAmazonItem(name)      // Amazon商品名検索を開く
 設定タブの「セージのリマインダー（LINE）」で時刻＋内容を登録（`techo_reminders`）。設定時刻に、その日のルーティン状況に連動した**AI生成のセージ文**を LINE で push する。
 
 - **アプリ側**: `renderReminders`/`addReminder`/`toggleReminder`/`delReminder`。`D.reminders`（loadData で取得）。`#stab-settings` 内。
-- **Edge Function**: `supabase/functions/reminder-tick/index.ts`。cron（5分おき）で起動。JST現在時刻と `time` を比較し、当日未送信（`last_sent_date`）かつ30分の猶予窓内のものを送信。ラベルに一致する daily ルーティンが完了済みなら「労い」、未完なら「促し」を Gemini（`gemini-2.5-flash`）で生成（失敗時は定型フォールバック）。送信後 `last_sent_date=今日`。
+- **Edge Function**: `supabase/functions/reminder-tick/index.ts`。cron（5分おき）で起動。JST現在時刻と `time` を比較し、当日未送信（`last_sent_date`）かつ30分の猶予窓内のものを送信。ラベルに一致する daily ルーティンが完了済みなら「労い」、未完なら「促し」を Gemini（`gemini-3-flash-preview`、503時 `gemini-2.5-flash` にフォールバック・`maxOutputTokens:1200`）で生成（失敗時は定型フォールバック）。送信後 `last_sent_date=今日`。
 - **userId 採取**: `line-webhook` に「マイID」/「ID」と送ると `event.source.userId` を返す。これを Secret `LINE_TARGET_USER_ID` に設定。
 - **必要 Secret**: `LINE_CHANNEL_ACCESS_TOKEN`（既存・共通）/ `LINE_TARGET_USER_ID` / `GEMINI_API_KEY`。
 - **スケジューラ**: `reminders_setup.sql` の pg_cron（`*/5 * * * *`）→ pg_net で `reminder-tick` を叩く。reminder-tick も **JWT Verification: Disabled**。

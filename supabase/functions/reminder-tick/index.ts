@@ -9,7 +9,8 @@
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
-const GEMINI_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent'
+const GEMINI_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent'
+const GEMINI_FALLBACK = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent'
 const pad = (n: number) => String(n).padStart(2, '0')
 
 async function sageText(key: string, label: string, time: string, done: boolean, undone: string[]): Promise<string> {
@@ -21,16 +22,15 @@ async function sageText(key: string, label: string, time: string, done: boolean,
   const ctx = done
     ? `テーマ「${label}」は今日もう完了済み。リマインドはせず、さりげなく労う一言を。`
     : `いま ${time}、テーマ「${label}」の時刻になった。さりげなく促す。今日まだ終わっていない毎日の習慣: ${undone.length ? undone.join('、') : 'なし'}。必要なら1つだけ自然に触れてよい（羅列はしない）。`
+  const body = JSON.stringify({
+    contents: [{ role: 'user', parts: [{ text: `${persona}\n\n${ctx}\n\nセージのLINEメッセージ本文だけを出力してください。` }] }],
+    // 手帖本体と同じ作法：思考トークンの余地を残すため上限を広めに取る（途中切れ防止）
+    generationConfig: { temperature: 1.0, maxOutputTokens: 1200 },
+  })
   try {
-    const res = await fetch(`${GEMINI_URL}?key=${key}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        contents: [{ role: 'user', parts: [{ text: `${persona}\n\n${ctx}\n\nセージのLINEメッセージ本文だけを出力してください。` }] }],
-        // gemini-2.5-flash は思考トークンを消費するため、思考を無効化(0)＋出力上限を広めに取る
-        generationConfig: { maxOutputTokens: 600, temperature: 1.0, thinkingConfig: { thinkingBudget: 0 } },
-      }),
-    })
+    const opt = { method: 'POST', headers: { 'Content-Type': 'application/json' }, body }
+    let res = await fetch(`${GEMINI_URL}?key=${key}`, opt)
+    if (res.status === 503) res = await fetch(`${GEMINI_FALLBACK}?key=${key}`, opt) // 混雑時のみ2.5へ
     const j = await res.json()
     const t = j?.candidates?.[0]?.content?.parts?.[0]?.text
     return (t && String(t).trim()) || fallback
