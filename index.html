@@ -124,6 +124,22 @@ body{font-family:var(--font-body);background:var(--bg);color:var(--text);min-hei
 .ai-key-wrap{padding:14px;display:flex;flex-direction:column;gap:9px}
 .ai-key-note{font-size:11px;color:var(--text-faint);line-height:1.5}
 
+/* ─── 捨て活カレンダー（ヒートマップ） ─── */
+.dch-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.dch-title{font-size:13px;color:var(--text);font-family:var(--font-accent)}
+.dch-total{font-size:12px;color:var(--discard-done);font-weight:700;margin-left:4px}
+.dch-nav{background:none;border:1px solid var(--border);border-radius:8px;width:28px;height:28px;color:var(--text-light);cursor:pointer;flex-shrink:0;font-size:15px;line-height:1}
+.dch-nav:disabled{opacity:.3;cursor:default}
+.dch-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
+.dch-dow{text-align:center;font-size:10px;color:var(--text-faint);padding-bottom:2px}
+.dch-cell{aspect-ratio:1;display:flex;align-items:center;justify-content:center;border-radius:7px;font-size:12px;color:var(--text-faint);background:var(--bg-warm)}
+.dch-cell.empty{background:none}
+.dch-cell.lvl1{background:#DBEFEC;color:#4A8378;font-weight:600}
+.dch-cell.lvl2{background:#A9DBD3;color:#23574D;font-weight:700}
+.dch-cell.lvl3{background:#7EC4C0;color:#fff;font-weight:700}
+.dch-cell.today{box-shadow:0 0 0 2px var(--accent)}
+.dch-legend{display:flex;align-items:center;justify-content:flex-end;gap:4px;margin-top:8px;font-size:10px;color:var(--text-faint)}
+.dch-legend i{width:12px;height:12px;border-radius:3px;display:inline-block}
 /* ─── 捨て活ログ ─── */
 .log-date-header{font-family:var(--font-accent);font-size:12px;color:var(--text-light);padding:10px 14px 5px}
 .log-item{display:flex;align-items:center;padding:9px 14px;gap:9px;border-bottom:1px solid var(--border);font-size:14px}
@@ -854,6 +870,7 @@ body{font-family:var(--font-body);background:var(--bg);color:var(--text);min-hei
     </div>
     <!-- 捨て活ログ -->
     <div class="stab-panel panel-body" id="stab-disclog">
+      <div id="discardHeatmap" class="card" style="padding:12px 14px;margin-bottom:8px"></div>
       <div id="discardStampCard"></div>
       <div style="padding:4px 2px 12px">
         <button onclick="openModal('discard')" style="width:100%;padding:13px 16px;background:linear-gradient(135deg,#7EC4C0,#5BAEA9);color:#fff;border:none;border-radius:var(--radius-sm);font-size:14px;font-family:var(--font-accent);cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;letter-spacing:.05em;box-shadow:0 3px 10px rgba(91,174,169,.35)">
@@ -1843,7 +1860,41 @@ function delD(id){
   renderDiscards();renderDiscardLog();renderDiscardStampCard();
   dbw(db.from('hk_discard_log').delete().eq('id',id),'dl.del');
 }
+// 捨て活カレンダー（手放した日が点いていく、見える表）
+let _discardCalMonth=0; // 0=今月, -1=先月…
+function discardCountByDate(){
+  const m={},seen=new Set();
+  (D.discardLog||[]).forEach(e=>{if(seen.has(e.id))return;seen.add(e.id);m[e.date]=(m[e.date]||0)+1;});
+  return m;
+}
+function shiftDiscardCal(dir){_discardCalMonth=Math.min(0,_discardCalMonth+dir);renderDiscardHeatmap();}
+function renderDiscardHeatmap(){
+  const el=document.getElementById('discardHeatmap');if(!el)return;
+  const counts=discardCountByDate();
+  const now=new Date();
+  const base=new Date(now.getFullYear(),now.getMonth()+_discardCalMonth,1);
+  const y=base.getFullYear(),mo=base.getMonth();
+  const last=new Date(y,mo+1,0).getDate();
+  const firstDow=new Date(y,mo,1).getDay();
+  const today=gt();
+  const fmt=d=>y+'-'+String(mo+1).padStart(2,'0')+'-'+String(d).padStart(2,'0');
+  let monthTotal=0;for(let d=1;d<=last;d++)monthTotal+=counts[fmt(d)]||0;
+  const wd=['日','月','火','水','木','金','土'];
+  let h=`<div class="dch-head"><button class="dch-nav" onclick="shiftDiscardCal(-1)">‹</button>`
+    +`<div class="dch-title">${y}年${mo+1}月<span class="dch-total">${monthTotal}個 手放した</span></div>`
+    +`<button class="dch-nav" onclick="shiftDiscardCal(1)"${_discardCalMonth>=0?' disabled':''}>›</button></div>`;
+  h+=`<div class="dch-grid">`+wd.map(w=>`<div class="dch-dow">${w}</div>`).join('');
+  for(let i=0;i<firstDow;i++)h+=`<div class="dch-cell empty"></div>`;
+  for(let d=1;d<=last;d++){
+    const ds=fmt(d),c=counts[ds]||0;
+    const lvl=c===0?0:c===1?1:c===2?2:3;
+    h+=`<div class="dch-cell lvl${lvl}${ds===today?' today':''}" title="${c>0?c+'個手放した':''}">${d}</div>`;
+  }
+  h+=`</div><div class="dch-legend">少 <i style="background:var(--bg-warm)"></i><i style="background:#DBEFEC"></i><i style="background:#A9DBD3"></i><i style="background:#7EC4C0"></i> 多</div>`;
+  el.innerHTML=h;
+}
 function renderDiscardLog(){
+  renderDiscardHeatmap();
   const el=document.getElementById('discardLog'),sum=document.getElementById('discardSummary');
   const logs=D.discardLog;
   if(!logs.length){
