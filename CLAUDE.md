@@ -136,6 +136,7 @@ supabase/functions/line-webhook/index.ts      ── LINE Webhook（Deno/Edge Fu
 ### ホームカードの並び（2026-06 更新）
 天気 →（☀️毎日 `homeDailySection`）→（🌿今週グリッド `homeWeeklySection`）→（☑くらし `homeSeiikiSummary`）→（🛒買い物 `homeShopSummary`）→（🗑捨て活＝**捨て活カレンダー** `homeDiscardHeatmap`）→ セージチャット。
 - 捨て活カレンダーはログタブと共通の `discardHeatmapHtml()` を `discardHeatmap`/`homeDiscardHeatmap` 両方へ描画（`renderDiscardHeatmap`）。旧 `homeStampMini` は廃止（要素削除、`renderHomeStampMini` は no-op 化）
+- **日タップで「その日の捨て活」モーダル**（`discardDayOverlay`／`openDiscardDay(date)`）: その日の手放したものをチップ表示（`renderDiscardDayItems`・×で `delDiscardDay`）＋入力で記録（`addDiscardForDate`）。今日に追加すると `triggerDiscardGacha`（モーダルを閉じてから）、過去日はガチャなしで連続追加可。未来日はタップ不可（`.dch-cell.future`）
 
 ### くらしサマリーカード
 `homeSeiikiSummary`（`updateHomeSummary()` で更新）。※旧称「聖域サマリー」

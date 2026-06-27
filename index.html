@@ -136,8 +136,11 @@ body{font-family:var(--font-body);background:var(--bg);color:var(--text);min-hei
 .dch-nav:disabled{opacity:.3;cursor:default}
 .dch-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
 .dch-dow{text-align:center;font-size:10px;color:var(--text-faint);padding-bottom:2px}
-.dch-cell{aspect-ratio:1;display:flex;align-items:center;justify-content:center;border-radius:7px;font-size:12px;color:var(--text-faint);background:var(--bg-warm)}
-.dch-cell.empty{background:none}
+.dch-cell{aspect-ratio:1;display:flex;align-items:center;justify-content:center;border-radius:7px;font-size:12px;color:var(--text-faint);background:var(--bg-warm);cursor:pointer;-webkit-tap-highlight-color:transparent;transition:transform .1s}
+.dch-cell:active{transform:scale(.9)}
+.dch-cell.empty{background:none;cursor:default}
+.dch-cell.future{opacity:.4;cursor:default}
+.dch-cell.future:active{transform:none}
 .dch-cell.lvl1{background:#DBEFEC;color:#4A8378;font-weight:600}
 .dch-cell.lvl2{background:#A9DBD3;color:#23574D;font-weight:700}
 .dch-cell.lvl3{background:#7EC4C0;color:#fff;font-weight:700}
@@ -1240,6 +1243,19 @@ body{font-family:var(--font-body);background:var(--bg);color:var(--text);min-hei
   </div>
 </div>
 
+<!-- 捨て活：日別モーダル -->
+<div class="modal-overlay" id="discardDayOverlay" onclick="closeDiscardDay(event)">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-title" id="discardDayTitle">この日の捨て活</div>
+    <div id="discardDayItems" style="margin-bottom:12px"></div>
+    <input class="modal-input" id="discardDayInput" type="text" placeholder="手放したもの…" autocomplete="off">
+    <div class="modal-actions">
+      <button class="modal-btn secondary" onclick="closeDiscardDay()">閉じる</button>
+      <button class="modal-btn primary" onclick="addDiscardForDate()">記録する</button>
+    </div>
+  </div>
+</div>
+
 <!-- PINロック -->
 <div class="pin-overlay" id="pinOverlay" style="display:none">
   <img src="apple-touch-icon.png" class="pin-logo" alt="">
@@ -1913,11 +1929,58 @@ function discardHeatmapHtml(){
   for(let d=1;d<=last;d++){
     const ds=fmt(d),c=counts[ds]||0;
     const lvl=c===0?0:c===1?1:c===2?2:3;
-    h+=`<div class="dch-cell lvl${lvl}${ds===today?' today':''}" title="${c>0?c+'個手放した':''}">${d}</div>`;
+    const isFuture=ds>today;
+    h+=`<div class="dch-cell lvl${lvl}${ds===today?' today':''}${isFuture?' future':''}"${isFuture?'':` onclick="openDiscardDay('${ds}')"`} title="${c>0?c+'個手放した':'タップで記録'}">${d}</div>`;
   }
   h+=`</div><div class="dch-legend">少 <i style="background:var(--bg-warm)"></i><i style="background:#DBEFEC"></i><i style="background:#A9DBD3"></i><i style="background:#7EC4C0"></i> 多</div>`;
   return h;
 }
+// 捨て活カレンダー：日タップ→その日のものを見る／記録する
+let _discardDayDate=null;
+function openDiscardDay(date){
+  _discardDayDate=date;
+  const d=new Date(date+'T00:00:00'),ds=['日','月','火','水','木','金','土'];
+  const isToday=date===gt();
+  document.getElementById('discardDayTitle').textContent=(isToday?'今日':`${d.getMonth()+1}/${d.getDate()}（${ds[d.getDay()]}）`)+' の捨て活';
+  const inp=document.getElementById('discardDayInput');
+  inp.value='';inp.placeholder=isToday?'手放したもの…':'この日に手放したもの…';
+  renderDiscardDayItems();
+  document.getElementById('discardDayOverlay').classList.add('show');
+  setTimeout(()=>inp.focus(),300);
+}
+function renderDiscardDayItems(){
+  const el=document.getElementById('discardDayItems');if(!el)return;
+  const seen=new Set();
+  const items=(D.discardLog||[]).filter(e=>{if(e.date!==_discardDayDate||seen.has(e.id))return false;seen.add(e.id);return true;});
+  el.innerHTML=items.length
+    ?`<div class="log-chips">`+items.map(it=>`<span class="log-chip">${esc(it.text)}<button class="log-chip-del" onclick="delDiscardDay('${it.id}')">×</button></span>`).join('')+`</div>`
+    :`<div style="font-size:13px;color:var(--text-faint);padding:2px 0">まだ記録はありません</div>`;
+}
+function delDiscardDay(id){
+  D.discardLog=D.discardLog.filter(e=>e.id!==id);
+  D.todayDiscards=D.todayDiscards.filter(e=>e.id!==id);
+  dbw(db.from('hk_discard_log').delete().eq('id',id),'dl.del');
+  renderDiscardDayItems();renderAll();
+}
+function addDiscardForDate(){
+  const inp=document.getElementById('discardDayInput');const text=(inp.value||'').trim();
+  if(!text||!_discardDayDate)return;
+  const isToday=_discardDayDate===gt();
+  const id=uuid(),item={id,text,date:_discardDayDate,done:true,created_at:new Date().toISOString()};
+  D.discardLog.unshift(item);
+  if(isToday){D.todayDiscards.push(item);_discardNewlyFilled=true;}
+  inp.value='';
+  dbw(db.from('hk_discard_log').insert({id,text,date:_discardDayDate,done:true}),'dl.ins');
+  addDailyEvent(`「${text}」を手放しました`);
+  renderAll();
+  if(isToday){closeDiscardDay();triggerDiscardGacha(text);}
+  else{renderDiscardDayItems();inp.focus();}
+}
+function closeDiscardDay(e){
+  if(e&&e.target&&e.target!==document.getElementById('discardDayOverlay'))return;
+  document.getElementById('discardDayOverlay').classList.remove('show');_discardDayDate=null;
+}
+document.getElementById('discardDayInput').addEventListener('keydown',e=>{if(e.key==='Enter')addDiscardForDate()});
 function renderDiscardLog(){
   renderDiscardHeatmap();
   const el=document.getElementById('discardLog'),sum=document.getElementById('discardSummary');
