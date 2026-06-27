@@ -2,8 +2,8 @@
 // 数分おきに cron で叩かれ、到来したリマインダーをセージの言葉にして LINE に push する。
 // 必要な環境変数（Edge Functions の Secrets）:
 //   SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY（自動付与）
-//   LINE_CHANNEL_ACCESS_TOKEN（買い物webhookと共通）
-//   LINE_TARGET_USER_ID（ことはさんの userId。webhook に「マイID」と送ると返る）
+//   SAGE_LINE_CHANNEL_ACCESS_TOKEN / SAGE_LINE_TARGET_USER_ID（セージ専用ボット。推奨）
+//     ※未設定なら旧 LINE_CHANNEL_ACCESS_TOKEN / LINE_TARGET_USER_ID にフォールバック
 //   GEMINI_API_KEY（セージ文生成。未設定ならフォールバック定型文）
 // JWT Verification は Disabled で運用すること。
 
@@ -41,8 +41,9 @@ async function sageText(key: string, label: string, time: string, done: boolean,
 
 Deno.serve(async () => {
   const db = createClient(Deno.env.get('SUPABASE_URL') ?? '', Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '')
-  const lineToken = Deno.env.get('LINE_CHANNEL_ACCESS_TOKEN') ?? ''
-  const userId = Deno.env.get('LINE_TARGET_USER_ID') ?? ''
+  // セージ専用ボットがあればそちらへ（買い物ボットと分離）。無ければ旧設定にフォールバック
+  const lineToken = Deno.env.get('SAGE_LINE_CHANNEL_ACCESS_TOKEN') ?? Deno.env.get('LINE_CHANNEL_ACCESS_TOKEN') ?? ''
+  const userId = Deno.env.get('SAGE_LINE_TARGET_USER_ID') ?? Deno.env.get('LINE_TARGET_USER_ID') ?? ''
   const geminiKey = Deno.env.get('GEMINI_API_KEY') ?? ''
   if (!lineToken || !userId) return new Response('missing line config', { status: 200 })
 

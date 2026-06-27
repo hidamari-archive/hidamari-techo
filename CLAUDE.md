@@ -340,8 +340,12 @@ searchAmazonItem(name)      // Amazon商品名検索を開く
 
 ## LINE連携（マステシステム）
 
-### セージとのLINE会話（2026-06 追加）
-`line-webhook` で、買い物コマンド以外の自由メッセージが**ことはさん本人（`event.source.userId === LINE_TARGET_USER_ID`）**から来たら、セージとして Gemini 返信（`sageReply`）。`techo_line_chat` に直近12件を保存し文脈をつなぐ。夫さん等の非コマンドは従来の使い方案内のまま。`gemini-3-flash-preview`（503時2.5）。要 Secret: `GEMINI_API_KEY`・`LINE_TARGET_USER_ID`。`line_chat_setup.sql` でテーブル作成 → line-webhook 再デプロイ。
+### ボット2系統（2026-06：買い物とセージを分離）
+夫さんと共有する買い物ボットに、ことはさんの私的な会話を混ぜたくない（心理的安全）ため、**LINEチャンネルを2つに分離**:
+- **買い物ボット**（`line-webhook`）: 夫さんと共有。買い物コマンドのみ（`リスト`/`○○買った`/`画像`）。セージ会話・マイID採取は**持たない**（撤去済み）。
+- **セージボット**（`sage-webhook`・新チャンネル・ことはさん専用）: 会話だけ。`SAGE_LINE_CHANNEL_SECRET`/`SAGE_LINE_CHANNEL_ACCESS_TOKEN` で署名・返信。`マイID`で userId 採取→ `SAGE_LINE_TARGET_USER_ID`。本人（or未設定時は誰でも）の自由文に `sageReply`（`techo_line_chat` 直近12件・`gemini-3-flash-preview`/503時2.5）。夫さんは友だち登録しない＝物理的に交わらない。
+- **リマインダー**（`reminder-tick`）: push 先は `SAGE_LINE_CHANNEL_ACCESS_TOKEN`/`SAGE_LINE_TARGET_USER_ID`（無ければ旧 `LINE_*` にフォールバック）。
+- 必要 Secret: `SAGE_LINE_CHANNEL_SECRET`/`SAGE_LINE_CHANNEL_ACCESS_TOKEN`/`SAGE_LINE_TARGET_USER_ID`/`GEMINI_API_KEY`。LINE Developers でセージ用チャンネルを新規作成し Webhook を `sage-webhook` に向ける。`line_chat_setup.sql` でテーブル作成。
 
 ### Supabase Edge Function
 - ファイル: `supabase/functions/line-webhook/index.ts`（Deno）
