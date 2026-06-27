@@ -2070,9 +2070,10 @@ function renderShop(){
       const priIcon=status==='needed'?(pri==='urgent'?'🔥 ':pri==='low'?'💤 ':''):'';
       const cls=items.length===1?'only':'';
       const reroute=others.map(o=>`<button class="buy-reroute" title="${PANTRY_LABEL[o]}へ" onclick="event.stopPropagation();setPantryStatus('${x.id}','${o}')">${PANTRY_ICON[o]}</button>`).join('');
+      const azBtn=status==='amazon'?`<button class="buy-reroute" data-name="${esc(x.name)}" title="Amazonで検索" onclick="event.stopPropagation();searchAmazonItem(this.dataset.name)">🔍</button>`:'';
       s+=`<div class="shop-item ${cls}" onclick="setPantryStatus('${x.id}','in_stock')" style="cursor:pointer">
         <div style="font-size:14px;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${priIcon}${esc(x.name)}</div>
-        ${reroute}
+        ${azBtn}${reroute}
         <span style="font-size:11px;color:var(--text-faint)" title="買った">🟢</span>
       </div>`;
     });
