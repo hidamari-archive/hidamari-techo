@@ -2,6 +2,13 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
 const KEYWORDS = ['リスト', '買い物', 'ある？', '何がいる', '買い物ある']
 const IMG_KEYWORDS = ['画像']
+// 「買った／購入／ゲット」等で欠品→在庫ありに戻す
+const BOUGHT_RE = /買っ|買え|購入|ゲット/
+const ALL_RE = /全部|ぜんぶ|すべて|全て/
+// 品名照合用：（）内・数量/単位を落として核を取り出す
+function normName(s: string): string {
+  return s.replace(/（.*?）|\(.*?\)/g, '').replace(/[0-9０-９]+(個|本|袋|パック|枚|ml|ｍｌ|L|ℓ|g|ｇ|kg)?/g, '').trim()
+}
 
 async function verifySignature(body: string, signature: string, secret: string): Promise<boolean> {
   const key = await crypto.subtle.importKey(
@@ -56,7 +63,45 @@ Deno.serve(async (req) => {
     const text: string       = event.message.text
     const replyToken: string = event.replyToken
 
-    if (KEYWORDS.some(k => text.includes(k))) {
+    if (BOUGHT_RE.test(text)) {
+      const { data: needed } = await db
+        .from('pantry_items')
+        .select('id, name')
+        .eq('status', 'needed')
+        .order('name')
+
+      if (!needed || needed.length === 0) {
+        await sendReply(replyToken, [{ type: 'text', text: 'いま欠品はないみたいだよ。ありがとう！🛒' }], accessToken)
+        continue
+      }
+
+      const all = ALL_RE.test(text)
+      const matched = all
+        ? needed
+        : needed.filter((it: any) => {
+            const core = normName(it.name)
+            return text.includes(it.name) || (core.length > 0 && text.includes(core))
+          })
+
+      if (matched.length === 0) {
+        await sendReply(replyToken, [{ type: 'text', text: 'どれを買ったか分からなかった…🙏\n「牛乳 買った」みたいに品名を入れて送ってね。\nぜんぶなら「全部買った」でOK！' }], accessToken)
+        continue
+      }
+
+      const ids = matched.map((m: any) => m.id)
+      const { error } = await db
+        .from('pantry_items')
+        .update({ status: 'in_stock', updated_by: 'line' })
+        .in('id', ids)
+
+      if (error) {
+        await sendReply(replyToken, [{ type: 'text', text: '⚠️ うまく更新できなかったみたい…もう一度試してみてね' }], accessToken)
+        continue
+      }
+
+      const names = matched.map((m: any) => m.name).join('・')
+      await sendReply(replyToken, [{ type: 'text', text: `✅ ${names} を在庫ありにしたよ！\nお買い物ありがとう 🛒` }], accessToken)
+    } else if (KEYWORDS.some(k => text.includes(k))) {
       const { data: items } = await db
         .from('pantry_items')
         .select('name, image_url, priority')
