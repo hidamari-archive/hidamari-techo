@@ -1,1 +1,4 @@
 .claude/
+
+# セージの機微情報を含むローカル専用SQL（Supabaseに手で貼る。絶対にコミットしない）
+*.local.sql

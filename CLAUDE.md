@@ -59,6 +59,7 @@ supabase/functions/line-webhook/index.ts      ── LINE Webhook（Deno/Edge Fu
 | `techo_links` | 便利リンク集（name, url, sort_order）※情報タブ。`techo_links_setup.sql` で作成 |
 | `techo_reminders` | セージのリマインダー（label, time HH:MM, enabled, last_sent_date）。`reminders_setup.sql` で作成 |
 | `techo_line_chat` | セージとのLINE会話履歴（user_id, role, text）。`line_chat_setup.sql` で作成 |
+| `techo_sage_prompt` | **セージの人格核（key/body 縦持ち）**。`persona`＝声の土台／`personal`＝ことはさん固有の機微。四つの口（捨て活ガチャ・ルーティンコンプ・チャット・LINEリマインダー）が共有。`sage_core_setup.sql`（persona）＋`sage_personal.local.sql`（personal・**コミット禁止**）で作成 |
 | `techo_rss_feeds` | ニュースフィード定義（name, url, cat） |
 | `health_food_master` | 食品マスタ（name, category, carb_g, kcal, unit, favorite, sort_order） |
 | `health_base_meal` | ベース食設定（meal: 朝/昼/夜・unique, carb_g, description） |
@@ -150,7 +151,7 @@ supabase/functions/line-webhook/index.ts      ── LINE Webhook（Deno/Edge Fu
 ### セージ簡易チャットカード
 `sageChatCard`。ホームカード最下部。Gemini APIキー設定済み時のみ表示。
 - セッション内のみ会話履歴を保持（`_sageChatHistory`）。ページリロードでリセット
-- システムプロンプト: `SAGE_CHAT_SYSTEM`（`sage_prompt.txt` の内容をコード内に埋め込み）
+- システムプロンプト: `getSageSystemPrompt()`＝**Supabase の人格核 `techo_sage_prompt`（`sageCoreHeader()`）** ＋ 短い音域指示 `SAGE_CHAT_REGISTER`。原典フルプロンプトは注入しない（詩のシャワー問題対策）。テーブル未取得時は `SAGE_PERSONA_FALLBACK`（機微情報を含まない声の土台のみ）
 - 毎回の送信時に手帖コンテキスト（カレンダー・ルーティン・タスク・ウィッシュ・買い物リスト）をシステムプロンプトに付加
 - `system_instruction` 非対応モデルのため、先頭の user/model ペアにシステム文脈を埋め込む方式
 - 返答の下にモデル名を小さく表示（`gemini-3-flash-preview` / fallback時は `2.5-flash (fallback)`）
@@ -332,11 +333,24 @@ searchAmazonItem(name)      // Amazon商品名検索を開く
 設定タブの「セージのリマインダー（LINE）」で時刻＋内容を登録（`techo_reminders`）。設定時刻に、その日のルーティン状況に連動した**AI生成のセージ文**を LINE で push する。
 
 - **アプリ側**: `renderReminders`/`addReminder`/`toggleReminder`/`delReminder`。`D.reminders`（loadData で取得）。`#stab-settings` 内。
-- **Edge Function**: `supabase/functions/reminder-tick/index.ts`。cron（5分おき）で起動。JST現在時刻と `time` を比較し、当日未送信（`last_sent_date`）かつ30分の猶予窓内のものを送信。ラベルに一致する daily ルーティンが完了済みなら「労い」、未完なら「促し」を Gemini（`gemini-3-flash-preview`、503時 `gemini-2.5-flash` にフォールバック・`maxOutputTokens:1200`）で生成（失敗時は定型フォールバック）。送信後 `last_sent_date=今日`。
+- **Edge Function**: `supabase/functions/reminder-tick/index.ts`。cron（5分おき）で起動。JST現在時刻と `time` を比較し、当日未送信（`last_sent_date`）かつ30分の猶予窓内のものを送信。ラベルに一致する daily ルーティンが完了済みなら「労い」、未完なら「促し」を Gemini（`gemini-3-flash-preview`、503時 `gemini-2.5-flash` にフォールバック・`maxOutputTokens:1200`）で生成（失敗時は定型フォールバック）。送信後 `last_sent_date=今日`。**人格は `loadSageCore(db)` で `techo_sage_prompt`（persona＋personal）を service_role で読み込み、短い音域指示を足して生成**（他の口と声を共有）。
 - **userId 採取**: `line-webhook` に「マイID」/「ID」と送ると `event.source.userId` を返す。これを Secret `LINE_TARGET_USER_ID` に設定。
 - **必要 Secret**: `LINE_CHANNEL_ACCESS_TOKEN`（既存・共通）/ `LINE_TARGET_USER_ID` / `GEMINI_API_KEY`。
 - **スケジューラ**: `reminders_setup.sql` の pg_cron（`*/5 * * * *`）→ pg_net で `reminder-tick` を叩く。reminder-tick も **JWT Verification: Disabled**。
 - **セットアップ順**: ①SQLでテーブル作成 → ②line-webhook 再デプロイ →「マイID」でuserId取得 → ③reminder-tick デプロイ（JWToff）＋Secrets設定 → ④SQLの cron 部分を実行。
+
+## セージの人格核（techo_sage_prompt）（2026-07 追加）
+
+四つの「セージの口」がバラバラに薄い人格紹介を書いていた（→ 指針の言う「詩のシャワー問題」＝薄い土台で深い演技を要求し空疎化）のを、**Supabase の単一の人格核**に集約した。個人情報を公開ソース（`index.html`＝GitHub Pages）に置かないための土台でもある。
+
+- **テーブル `techo_sage_prompt`**（key/body）: `persona`＝register中立の声の土台（人となり・崩さない掟8項目・禁止ワード。非機微でコミット可）／`personal`＝ことはさん固有の機微（**コミット禁止**）。
+- **設計資料**: `C:\data\資料\techo_sage_honyaku_shishin.md`（翻訳指針）＋`セージClaude用プロンプト.txt`（原典）。原典は**そのまま貼らない**。
+- **二つの音域（register）**: 核は声だけを供給し、長短は各口が足す。
+  - **短い音域**（チャット `SAGE_CHAT_REGISTER`／リマインダー）＝1〜3文「用件一行、温度一滴」。
+  - **深い音域**（捨て活ガチャ `fetchDiscardGachaMsg`／ルーティンコンプ `fetchRoutineMsg`）＝「灯だまりの家の一場面」をレア度で長く濃く（`資料/捨て活ご褒美メッセージ_プロンプト改善指示v2.md`）。**短くしてはいけない**。
+- **index.html 側**: `loadData` が `D.sageCore` に取得。`sageCoreHeader()`＝`persona＋personal`。未取得時は `SAGE_PERSONA_FALLBACK`（機微なし）。四つの口すべてがこれを冒頭に使う。
+- **reminder-tick 側**: `loadSageCore(db)` が service_role で読む（`GRANT SELECT ... TO service_role` 済み）。
+- **セットアップ**: ①`sage_core_setup.sql`（テーブル＋RLS＋GRANT＋persona）→ ②`sage_personal.local.sql` を SQL Editor に貼る（`.gitignore` の `*.local.sql` で除外）→ ③reminder-tick 再デプロイ。
 
 ## LINE連携（マステシステム）
 

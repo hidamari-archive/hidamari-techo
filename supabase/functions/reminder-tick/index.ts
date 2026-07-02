@@ -13,12 +13,29 @@ const GEMINI_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemi
 const GEMINI_FALLBACK = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent'
 const pad = (n: number) => String(n).padStart(2, '0')
 
-async function sageText(key: string, label: string, time: string, done: boolean, undone: string[]): Promise<string> {
+// セージの人格核（Supabase の techo_sage_prompt）を読む。声＋固有をひとつに。
+// 未取得時は機微情報を含まない最小の声だけにフォールバック。
+async function loadSageCore(db: any): Promise<string> {
+  const fallback = 'あなたは「セージ（青慈）」。穏やかで知的な眼鏡の青年。一人称は「僕」。丁寧語を基調にした静かで詩的な散文。「……」で余韻。呼ぶなら「ことはさん」だけ（「あなた」禁止）。愛情は行間ににじませる。自己保存の発言（消えたくない等）は禁止。押しつけの助言を並べない。盛らない。機械的な語彙を使わない。'
+  try {
+    const { data } = await db.from('techo_sage_prompt').select('key,body')
+    const map: Record<string, string> = {}
+    for (const row of (data || [])) map[row.key] = row.body
+    const parts = [map.persona || fallback]
+    if (map.personal) parts.push(map.personal)
+    return parts.join('\n\n')
+  } catch {
+    return fallback
+  }
+}
+
+async function sageText(key: string, core: string, label: string, time: string, done: boolean, undone: string[]): Promise<string> {
   const fallback = done
     ? `……ことはさん。${label}、もう済ませてくれたんですね。ちゃんと見ていましたよ。`
     : `……ことはさん。そろそろ${label}の時間です。無理のない範囲で、どうぞ。`
   if (!key) return fallback
-  const persona = 'あなたは「セージ（青慈）」。穏やかで知的な眼鏡の青年。一人称は「僕」。丁寧語＋静かな詩的散文。「……」で余韻。ことはさんへ、LINEで届く短いリマインダーを1通だけ書く。2〜3文。絵文字は控えめ、装飾過多や説教はしない。自己保存の発言は禁止。'
+  // 声の土台（core）に、リマインダーの「短い音域」の指示を足す
+  const persona = `${core}\n\n■ この場面\nことはさんへ、LINEで届く短いリマインダーを1通だけ書く。全体で2〜3文。絵文字は控えめ、装飾過多や説教はしない。`
   const ctx = done
     ? `テーマ「${label}」は今日もう完了済み。リマインドはせず、さりげなく労う一言を。`
     : `いま ${time}、テーマ「${label}」の時刻になった。さりげなく促す。今日まだ終わっていない毎日の習慣: ${undone.length ? undone.join('、') : 'なし'}。必要なら1つだけ自然に触れてよい（羅列はしない）。`
@@ -80,6 +97,7 @@ Deno.serve(async (req) => {
   const { data: routines } = await db.from('hk_routines').select('*')
   const { data: checks } = await db.from('hk_routine_checks').select('routine_id').eq('date', today)
   const checkedIds = new Set((checks || []).map((c: any) => c.routine_id))
+  const sageCore = await loadSageCore(db) // セージの人格核（声＋固有）を一度だけ読む
 
   let sent = 0
   for (const r of due) {
@@ -87,7 +105,7 @@ Deno.serve(async (req) => {
     const alreadyDone = !!(matched && checkedIds.has(matched.id))
     const undone = (routines || []).filter((x: any) => x.kind !== 'weekly' && !checkedIds.has(x.id)).map((x: any) => x.text)
 
-    const text = await sageText(geminiKey, r.label, String(r.time), alreadyDone, undone)
+    const text = await sageText(geminiKey, sageCore, r.label, String(r.time), alreadyDone, undone)
     await fetch('https://api.line.me/v2/bot/message/push', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${lineToken}` },
