@@ -3158,6 +3158,15 @@ function sageCoreHeader(){
   if(c.personal)parts.push(c.personal);
   return parts.join('\n\n');
 }
+// 反映のしるし：Supabaseの人格核が読めているかを短く表す（メッセージ末尾のモデル名に添える）
+function sageCoreStatusLabel(){
+  const c=D.sageCore||{};
+  if(c.persona&&c.personal)return' ・核◎';        // 声＋固有ともに読めている（正常）
+  if(c.persona)return' ・核△(固有なし)';           // personaのみ（personal未投入）
+  return' ・核✗(フォールバック)';                   // テーブル未取得＝声の土台だけ
+}
+// 「あなた」の柵：セージの生成文に混ざった二人称「あなた」を「ことはさん」に直す（掟の最終防衛線）
+function sageFixVoice(t){return (t||'').replace(/あなた(がた|方|たち)?/g,'ことはさん');}
 
 // チャット／リマインダーの「短い音域」で足す指示（捨て活・ルーティンには足さない）
 const SAGE_CHAT_REGISTER=`■ この会話での振る舞い
@@ -3249,15 +3258,15 @@ async function sageChatSend(){
       btn.disabled=false;return;
     }
     const parts=data.candidates?.[0]?.content?.parts||[];
-    const reply=parts.filter(p=>!p.thought).map(p=>p.text||'').join('')||parts[0]?.text||'';
+    const reply=sageFixVoice((parts.filter(p=>!p.thought).map(p=>p.text||'').join('')||parts[0]?.text||'').trim());
     thinking.className='sage-chat-bubble sage';
-    thinking.innerHTML=esc(reply.trim()).replace(/\n/g,'<br>');
-    // モデルラベルを追加
+    thinking.innerHTML=esc(reply).replace(/\n/g,'<br>');
+    // モデルラベルを追加（末尾に人格核の反映しるしを添える）
     const label=document.createElement('div');
     label.className='sage-chat-model'+(usedFallback?' fallback':'');
-    label.textContent=usedFallback?'2.5-flash (fallback)':'gemini-3-flash-preview';
+    label.textContent=(usedFallback?'2.5-flash (fallback)':'gemini-3-flash-preview')+sageCoreStatusLabel();
     thinking.insertAdjacentElement('afterend',label);
-    _sageChatHistory.push({role:'user',parts:[{text}]},{role:'model',parts:[{text:reply.trim()}]});
+    _sageChatHistory.push({role:'user',parts:[{text}]},{role:'model',parts:[{text:reply}]});
     if(_sageChatHistory.length>40)_sageChatHistory=_sageChatHistory.slice(-40);
     saveSageChatHistory();
   }catch(e){
@@ -3440,9 +3449,10 @@ function showAiRoutineResult(data,rarityKey){
   let h='<div class="ai-badge">✨ ルーティン 完了</div>';
   if(hasA)h+=`<div class="ai-block"><div class="ai-block-label">📅 今日はなんの日</div><div class="ai-block-title">${esc(data.anniversary_name)}</div><div class="ai-block-desc">${esc(data.anniversary_desc||'')}</div></div><hr class="ai-divider">`;
   h+=`<div class="ai-rarity" style="color:${rc.color};margin-bottom:8px">${esc(starsDisplay)}</div>`;
-  h+=`<div class="ai-block-text" style="line-height:2">${esc(data.scene||'').replace(/\n/g,'<br>')}</div>`;
-  h+=`<div class="ai-model-label${_lastGeminiUsedFallback?' fallback':''}">${_lastGeminiUsedFallback?'2.5-flash (fallback)':'3-flash-preview'}</div>`;
-  _lastGachaScene=data.scene||'';
+  const scene=sageFixVoice(data.scene||'');
+  h+=`<div class="ai-block-text" style="line-height:2">${esc(scene).replace(/\n/g,'<br>')}</div>`;
+  h+=`<div class="ai-model-label${_lastGeminiUsedFallback?' fallback':''}">${_lastGeminiUsedFallback?'2.5-flash (fallback)':'3-flash-preview'}${sageCoreStatusLabel()}</div>`;
+  _lastGachaScene=scene;
   addDailyEvent(`ルーティン達成ガチャ（${rc.short}）`);
   document.getElementById('aiContent').innerHTML=h;
   document.getElementById('aiCloseBtn').style.display='';
@@ -3450,7 +3460,7 @@ function showAiRoutineResult(data,rarityKey){
 }
 function showAiDiscardResult(data,item){
   const title=data.item||item;
-  const h=`<div class="ai-block"><div class="ai-block-label">🕯 セージより</div><div class="ai-block-title" style="font-size:15px;margin-bottom:9px">「${esc(title)}」へ</div><div class="ai-block-text">${esc(data.message||'').replace(/\n/g,'<br>')}</div></div>`;
+  const h=`<div class="ai-block"><div class="ai-block-label">🕯 セージより</div><div class="ai-block-title" style="font-size:15px;margin-bottom:9px">「${esc(title)}」へ</div><div class="ai-block-text">${esc(sageFixVoice(data.message||'')).replace(/\n/g,'<br>')}</div></div>`;
   document.getElementById('aiContent').innerHTML=h;document.getElementById('aiCloseBtn').style.display='';
 }
 
@@ -3557,9 +3567,10 @@ function showDiscardGachaResult(data,rarity,isMilestone,cumCount,itemText,isCard
   }
   h+=`<div class="ai-block"><div class="ai-block-label">🕯「${esc(itemText)}」を手放して</div></div>`;
   h+=`<hr class="ai-divider"><div class="ai-rarity" style="color:${rc.color};margin-bottom:8px">${esc(starsDisplay)}</div>`;
-  h+=`<div class="ai-block-text" style="line-height:2">${esc(data.scene||'').replace(/\n/g,'<br>')}</div>`;
-  h+=`<div class="ai-model-label${_lastGeminiUsedFallback?' fallback':''}">${_lastGeminiUsedFallback?'2.5-flash (fallback)':'3-flash-preview'}</div>`;
-  _lastGachaScene=data.scene||'';
+  const scene=sageFixVoice(data.scene||'');
+  h+=`<div class="ai-block-text" style="line-height:2">${esc(scene).replace(/\n/g,'<br>')}</div>`;
+  h+=`<div class="ai-model-label${_lastGeminiUsedFallback?' fallback':''}">${_lastGeminiUsedFallback?'2.5-flash (fallback)':'3-flash-preview'}${sageCoreStatusLabel()}</div>`;
+  _lastGachaScene=scene;
   addDailyEvent(`捨て活ガチャ「${itemText}」（${rc.short}）`);
   document.getElementById('aiContent').innerHTML=h;
   document.getElementById('aiCloseBtn').style.display='';
